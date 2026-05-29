@@ -30,6 +30,16 @@ description: One-line trigger description — shown in skill list, used for invo
 # Content here
 ```
 
+Skills can also be packaged as `.skill` files — ZIP archives containing `SKILL.md` plus an optional `evals/` directory. **The bootstrap does not auto-symlink `.skill` packages** (it only globs directories); extract or install these manually.
+
+## Skills in this repo
+
+| Name | Format | Purpose |
+|------|--------|---------|
+| `git-forensics` | directory | Adversarial git index corruption and staged replacement detection |
+| `precise-coding-assistant` | `.skill` package | Four-phase gating workflow (Clarity → Simplicity → Scope → Verification) for engineering requests |
+| `decision-telemetry` | directory | Dual-face transparency artifacts: Sephirothic (clean decision) + Qliphothic (shadow trace) with certainty weights and Da'ath void node |
+
 ## Architecture
 
 ### Symlink model
