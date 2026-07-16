@@ -1,70 +1,112 @@
 ---
 name: ship
-description: Ship the current project — validate, commit, push, and verify deploy. Use when asked to "ship", "release", "commit and push", or "get this live". Commits after each milestone so session-limit cutoffs never lose progress.
+description: Ship work end-to-end — validate, prove the change behaves, commit in milestones, push, and handle protected-main/PR-only repos. Use when asked to "ship", "ship it", "release", "commit and push", "open a PR", or "get this live". Commits after each milestone so session-limit cutoffs never lose progress.
 ---
 
-# /ship
+# /ship (v2 — full workflow)
 
-Encodes the full release pipeline as committed milestones. Each step commits before moving to the next — a session cutoff loses at most one step, never everything.
+Encodes the whole shipping pipeline as committed milestones: a session cutoff
+loses at most one step, never everything. v2 adds what real repos demanded:
+behavioral proof before commit, and branch-protection-aware delivery
+(PR-only mains, required signatures, squash-only merges).
 
-## What it does
-
-1. **Validate** — run the project's check/test command; surface failures before touching git
-2. **Stage + commit** — stage changed files, write a descriptive commit, commit (GPG-signed if configured)
-3. **Push** — push to origin main (or current branch)
-4. **Verify** — confirm the remote accepted the push; note deploy URL if known
-
-## How to use
-
-When the user says `/ship` or asks to "ship", "commit and push", or "get this live":
-
-1. Identify the project's validation command (from CLAUDE.md or `package.json` scripts):
-   - Astro/blog: `npm run check`
-   - TypeScript: `npx tsc --noEmit`
-   - Generic: `npm test` or `make test`
-
-2. Run validation first. **Do not proceed if it fails.** Show the error, stop.
-
-3. Check git status — list what's staged and unstaged. Confirm with the user if unexpected files are present.
-
-4. Commit with a meaningful message. Follow the project's commit style (check `git log --oneline -5`). Always include the standard trailer:
-   ```
-   Co-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>
-   ```
-
-5. Push. Show the exact push output (`To <remote> <sha>..<sha> main -> main`).
-
-6. State the deploy URL if known (e.g., Cloudflare Pages auto-deploys on push to main).
-
-## Commit discipline (milestone commits)
-
-For multi-step work, commit after each logical unit — don't batch everything into one commit at the end. Pattern:
+## The pipeline
 
 ```
-feat: add X component
-fix: correct Y behavior  
-chore: update Z config
+0. Preflight   → where am I, what branch, what's dirty, what do the rules allow
+1. Validate    → build + tests green, zero NEW warnings
+2. Prove       → drive the actual change end-to-end and observe the behavior
+3. Commit      → milestone commits, project style, rich message
+4. Deliver     → push to main when allowed; branch + PR when protected
+5. Verify      → remote accepted it; CI/deploy noted; journal updated
 ```
 
-Not:
+### 0 · Preflight
 
-```
-WIP: lots of changes
-```
+- `git status --short` + `git log --oneline -5` — know the tree and the
+  commit style before touching anything. Confirm with the user if unexpected
+  files are staged.
+- Respect the repo's branch model (check its CLAUDE.md). If it says
+  "feature branches, PRs against main" — start on a branch, don't discover
+  the rule at push time.
 
-## Astro/blog specific
+### 1 · Validate
 
-Validation: `npm run check` (astro build + tsc — must pass)
-Deploy: Cloudflare Pages auto-deploys on push to `mazze93/mazze-leczzare-blog` main
-Verify live: `curl -sf https://mazzeleczzare.com/ | grep -o '<title>[^<]*</title>'`
+Find the project's real check command (CLAUDE.md, then `package.json`
+scripts, then `Package.swift`/Makefile):
+- Astro/blog: `npm run check` · TypeScript: `npx tsc --noEmit` ·
+  Swift: `swift build && swift test --parallel` · generic: `npm test`/`make test`
+- **Do not proceed on failure.** Show the error, stop.
+- Treat new warnings as failures-in-waiting (Swift 6 mode, deprecations) —
+  fix them now or state why not.
 
-## Gotchas
+### 2 · Prove (the step everyone skips)
 
-**GPG signing failures** — if `git commit` fails with a signing error:
-- `gpg-agent` not running → `gpgconf --launch gpg-agent`
-- Passphrase cache expired → `gpg --card-status` (if using a hardware key)
-- Wrong key configured → `git config --global user.signingkey` to check
+Tests passing is not the change working. Exercise the actual surface once:
+run the CLI with real flags, curl the endpoint, load the page. Capture the
+observed output — it goes in the commit/PR body as evidence. If the change
+can't be driven end-to-end, say so explicitly rather than implying it was.
 
-**Uncommitted changes in the wrong worktree** — always confirm `git status` output before staging. Worktrees share the remote but have separate working trees.
+### 3 · Commit
 
-**`npm run check` takes 10–30s on cold build** — expected; Astro rebuilds the full static site.
+- Milestone commits per logical unit (`feat: …`, `fix: …`, `test: …`,
+  `docs: …`) — never one `WIP: lots of changes` at the end.
+- Message body says WHY and cites the proof ("verified end-to-end: <observed>").
+- Follow the project's style from `git log`; include the current model's
+  standard `Co-Authored-By: Claude …` trailer.
+- If the work invalidates any CLAUDE.md claim (backlog items done, files
+  moved), update it **in the same commit** — map and territory together.
+
+### 4 · Deliver — the protection decision tree
+
+Try `git push origin main` only when the repo allows it. On rejection, read
+the error — it tells you the rules:
+
+| Rejection says | It means | Do |
+|---|---|---|
+| `Changes must be made through a pull request` | PR-only main | branch → push branch → `gh pr create` |
+| `Commits must have verified signatures` (GH013) | unsigned local commits can't land on main directly | PR flow; a **squash merge via GitHub** produces a GitHub-signed commit |
+| `Waiting for Code Scanning results` | required check | PR flow and let CI run |
+| `Merge commits are not allowed` | squash/rebase-only repo | `gh pr merge --squash` (never `--merge`) |
+
+PR body = what/why + the end-to-end proof + anything the reviewer must know.
+Merge only when the user asked you to; otherwise leave the PR open and hand
+over the URL.
+
+### 5 · Verify
+
+- Show the actual push/merge output — never claim delivery without it.
+- Note the deploy surface (e.g. Cloudflare Pages auto-deploys on push to
+  main; verify: `curl -sf <url> | grep -o '<title>[^<]*</title>'`).
+- Watch for post-push remote warnings (Dependabot alerts ride in on
+  `git push` output) — relay them, don't swallow them.
+- If a workspace journal exists (`docs/journal/DECISIONS.md`), record what
+  shipped and why.
+
+## Gotchas (all field-tested)
+
+- **Pipes eat exit codes.** `gh pr merge … | tail -2 || fallback` never runs
+  the fallback — the pipeline's status is `tail`'s. Check `$?` on the command
+  itself, or use `set -o pipefail`. A "merged" that wasn't is the worst
+  failure mode this skill exists to prevent.
+- **After a squash merge**, local `main` doesn't have the squash commit:
+  `git checkout main && git pull` before building on top; delete the branch
+  with `--delete-branch` at merge time.
+- **GPG signing failures** — `gpg-agent` not running → `gpgconf --launch
+  gpg-agent`; expired passphrase cache → `gpg --card-status`; wrong key →
+  `git config user.signingkey`.
+- **Beta toolchains lie.** A frontend crash compiling tests (Xcode-beta) can
+  masquerade as your bug — get a real diagnostic with a direct
+  `swift build --build-tests` before assuming fault.
+- **Worktrees share the remote, not the tree** — confirm `git status` is the
+  worktree you think it is before staging.
+- **`npm run check` takes 10–30s cold** on Astro — expected, full rebuild.
+
+## Project quick-reference
+
+- **mazze-leczzare-blog**: validate `npm run check`; Cloudflare Pages
+  auto-deploys main; verify title via curl on mazzeleczzare.com.
+- **context-synapse**: `swift build && swift test --parallel`; main is
+  PR-only + signed + squash-only + Code Scanning — always the PR path.
+- **stele**: pnpm (`pnpm build`, `pnpm test`); main is PR-only + signed —
+  PR path.
