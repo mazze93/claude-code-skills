@@ -23,7 +23,7 @@ else
     secure-pride/secure-pride-site*) PROJECT="secure-pride" ;;
     cognitive/praxis-aegis*)         PROJECT="praxis-aegis" ;;
     cognitive/ContextSynapse*)       PROJECT="context-synapse" ;;
-    cognitive/daedalus*)             PROJECT="daedalus" ;;
+    cognitive/daedalus-switch*)      PROJECT="daedalus-switch" ;;
     tools/stele*)                    PROJECT="stele" ;;
     secure-pride/aegis-icons*)       PROJECT="aegis-icons" ;;
     blog*)                           PROJECT="blog" ;;
