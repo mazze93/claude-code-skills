@@ -20,6 +20,21 @@ In the repo you're working in (the workspace container uses `docs/journal/`):
 
 Commit the scaffold immediately — the plan itself must survive a drop.
 
+### When there's no git repo (e.g. a cleanup/ops task in a plain directory)
+
+The journal's value was never the git history — it's that **state lives on disk
+instead of in conversation context**. With no repo you lose the phase-boundary
+commit trail, so compensate:
+
+- Put the three files in a durable, non-scratchpad location (a dedicated
+  `*-journal/` dir under the task's working area). Scratchpad dirs are
+  session-scoped and won't survive the drop you're guarding against.
+- **Date-stamp every entry** and keep DECISIONS.md strictly append-only, so
+  recovery order is reconstructable from timestamps alone — the stamps stand in
+  for the commit trail.
+- Update CHECKPOINT.md's "Last updated" line as your ordering signal in place of
+  the commit that would otherwise tick it.
+
 ## During work
 
 1. **Commit at every phase boundary**, not at the end. Message = phase label +
