@@ -20,6 +20,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # ubuntu-latest ships bash but not zsh, and most of these hooks are zsh.
+      # Without this the syntax step reports "command not found" as a failure
+      # for every zsh script.
+      - name: Install zsh
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq zsh
+
       - name: Shell syntax (each script with its own interpreter)
         run: |
           set -euo pipefail
