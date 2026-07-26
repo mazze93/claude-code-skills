@@ -14,40 +14,50 @@ IFS=$'\t' read -r CWD CTX_USED CTX_MAX < <(
 )
 [[ -z "$CWD" ]] && exit 0
 
-# CWD → project key (match relative to ~/Code/ to avoid username collision)
+# CWD → project key, relative to the workspace root.
+# ~/Code is a symlink to ~/Projects and Claude Code reports the resolved path,
+# so stripping only "$HOME/Code/" never matched anything. Strip either form.
 if [[ "$CWD" == */.claude-worktrees/* ]]; then
   PROJECT=$(basename "${CWD%%/.claude-worktrees*}")
 else
-  REL="${CWD#$HOME/Code/}"
+  REL="${CWD#$HOME/Projects}"   # no trailing slash, so the bare root maps too
+  REL="${REL#$HOME/Code}"
+  REL="${REL#/}"
   case "$REL" in
-    secure-pride/secure-pride-site*) PROJECT="secure-pride" ;;
-    cognitive/praxis-aegis*)         PROJECT="praxis-aegis" ;;
-    cognitive/ContextSynapse*)       PROJECT="context-synapse" ;;
-    cognitive/daedalus-switch*)      PROJECT="daedalus-switch" ;;
-    tools/stele*)                    PROJECT="stele" ;;
-    secure-pride/aegis-icons*)       PROJECT="aegis-icons" ;;
-    blog*)                           PROJECT="blog" ;;
-    adaptive-response*)              PROJECT="adaptive-response" ;;
-    *)                               PROJECT=$(basename "$CWD") ;;
+    blog/mazze-leczzare-blog*)     PROJECT="blog" ;;
+    secure-pride/secure-pride*)    PROJECT="secure-pride" ;;
+    cognitive/praxis-aegis*)       PROJECT="praxis-aegis" ;;
+    cognitive/context-synapse*)    PROJECT="context-synapse" ;;
+    cognitive/daedalus-switch*)    PROJECT="daedalus-switch" ;;
+    cognitive/stratum*)            PROJECT="stratum" ;;
+    tools/stele*)                  PROJECT="stele" ;;
+    tools/adaptive-response*)      PROJECT="adaptive-response" ;;
+    tools/meridian*)               PROJECT="meridian" ;;
+    apps/Tennis919-app*)           PROJECT="Tennis919-app" ;;
+    skills/claude-code-skills*)    PROJECT="claude-code-skills" ;;
+    "")                            PROJECT="workspace" ;;
+    *)                             PROJECT=$(basename "$CWD") ;;
   esac
 fi
 
-# Project → skill hints
-# Abbreviated: brainstorm=superpowers:brainstorming, tdd=test-driven-development,
-#   debug=systematic-debugging, plan=writing-plans, exec=executing-plans,
-#   verify=verification-before-completion, sec-review=security-review,
-#   commit-pr=commit-push-pr, config=update-config, revise-md=revise-claude-md,
-#   cf=cloudflare:cloudflare, wrangler=cloudflare:wrangler
+# Project → skill hints. Names are the skills actually installed as of
+# 2026-07-25 — the previous set named skills that no longer exist
+# (superpowers:*, cloudflare:wrangler, revise-claude-md), so it suggested
+# things that could not be invoked.
 typeset -A HINTS
 HINTS=(
-  secure-pride      "brainstorm · sec-review · commit-pr"
-  praxis-aegis      "plan · exec · verify · commit"
-  context-synapse   "debug · tdd · verify"
-  daedalus          "config · revise-md"
-  stele             "claude-api · plan · commit-pr"
-  aegis-icons       "brainstorm · commit"
-  blog              "cf · brainstorm · commit-pr"
-  adaptive-response "cf · wrangler · tdd"
+  blog               "run-mazze-leczzare-blog · web-perf · ship"
+  secure-pride       "security-review · touchstone · ship"
+  praxis-aegis       "session-journal · touchstone · ship"
+  context-synapse    "touchstone · session-journal"
+  daedalus-switch    "update-config"
+  stratum            "session-journal · ship"
+  stele              "claude-api · ship"
+  adaptive-response  "cloudflare · touchstone"
+  meridian           "touchstone"
+  Tennis919-app      "ship"
+  claude-code-skills "update-config · ship"
+  workspace          "workspace-sync · disk-audit"
 )
 
 # Git state (non-blocking)

@@ -21,7 +21,7 @@ echo "── Install hooks ─────────────────�
 mkdir -p "$HOOKS_DST"
 
 # Symlink each hook from the repo into ~/.claude/scripts/
-for hook in on-prompt.sh on-session-end.sh post-tool-use.sh; do
+for hook in on-prompt.sh on-session-end.sh post-tool-use.sh credential-guard.sh; do
   src="$HOOKS_SRC/$hook"
   dst="$HOOKS_DST/$hook"
 
@@ -35,24 +35,13 @@ for hook in on-prompt.sh on-session-end.sh post-tool-use.sh; do
   fi
 done
 
-# Ensure mem-map.conf exists (machine-specific, not version-controlled)
-MEM_MAP="$HOOKS_DST/mem-map.conf"
-if [[ ! -f "$MEM_MAP" ]]; then
-  _run "cat > '$MEM_MAP' << 'CONF'
-# mem-map.conf — project → memory file mapping for on-session-end.sh
-# Format: project_name  filename.md (relative to MEMORY_DIR)
-# Edit this file to add project-specific memory routing.
-typeset -A MEM_MAP
-MEM_MAP=(
-  secure-pride              secure-pride.md
-  secure-pride-aegis-icons  secure-pride.md
-  praxis-aegis              praxis.md
-  aegis-dns                 praxis.md
-  ContextSynapse            praxis.md
-  daedalus                  praxis.md
-)
-CONF"
-  _ok "created mem-map.conf (edit to add project mappings)"
-else
-  _skip "mem-map.conf"
+# mem-map.conf was generated here through on-session-end.sh v4. Dropped in v5:
+# memory is topic-scoped (an index plus named files) rather than one file per
+# project, so a project→file map had nothing real to point at — every entry it
+# shipped with named a memory file that does not exist. Remove the stale copy if
+# a previous bootstrap left one behind.
+STALE_MEM_MAP="$HOOKS_DST/mem-map.conf"
+if [[ -f "$STALE_MEM_MAP" ]]; then
+  _run "rm -f '$STALE_MEM_MAP'"
+  _ok "removed stale mem-map.conf (unused since on-session-end.sh v5)"
 fi

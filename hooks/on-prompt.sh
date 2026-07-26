@@ -1,7 +1,12 @@
 #!/bin/zsh
-# on-prompt.sh v3 — UserPromptSubmit hook
+# on-prompt.sh v4 — UserPromptSubmit hook
+# v4 (2026-07-25): dropped tier-2 memory injection — Claude Code's own auto-memory
+#     now loads MEMORY.md at session start and recalls memory files on demand, so
+#     injecting them here duplicated context. The MEM_MAP it used had also rotted:
+#     it pointed at praxis.md / secure-pride.md (neither exists) under project keys
+#     that no longer match any directory (ContextSynapse, aegis-dns).
 # v3: portable MEMORY_DIR derivation (no hardcoded username)
-# Tier 1 (always): classify + signal. Tier 2 (conditional): memory + git context.
+# Tier 1 (always): classify + signal. Tier 2 (conditional): git context.
 
 # ── JSON parsing (jq fast path, python3 fallback) ────────────────────────────
 INPUT=$(cat 2>/dev/null)
@@ -24,9 +29,6 @@ if [[ "$CWD" =~ "\.claude-worktrees" ]]; then
 else
   PROJECT=$(basename "$CWD")
 fi
-
-# Portable: derive from $HOME so this script works on any machine/username
-MEMORY_DIR="$HOME/.claude/projects/$(printf '%s' "$HOME" | sed 's|/|-|g')/memory"
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # TIER 1 — fast path, pure zsh
@@ -138,40 +140,9 @@ echo "${HINT}"
 
 [[ "$BUDGET" == "low" ]] && exit 0
 
-# Memory injection guard — once per session per project via flag file
-FLAG_DIR="/tmp/claude-ctx"
-mkdir -p "$FLAG_DIR"
-MEM_FLAG="${FLAG_DIR}/mem-${SESSION_ID}-${PROJECT}"
-
-if [[ ! -f "$MEM_FLAG" && "$TASK" != "debug" && "$TASK" != "review" ]]; then
-  touch "$MEM_FLAG"
-
-  # Project → memory file map (extend as workspace grows)
-  typeset -A MEM_MAP
-  MEM_MAP=(
-    secure-pride              secure-pride.md
-    secure-pride-aegis-icons  secure-pride.md
-    praxis-aegis              praxis.md
-    aegis-dns                 praxis.md
-    ContextSynapse            praxis.md
-    daedalus                  praxis.md
-    "daedalus-"               praxis.md
-  )
-
-  MAPPED="${MEM_MAP[$PROJECT]}"
-  if [[ -n "$MAPPED" && -f "${MEMORY_DIR}/${MAPPED}" ]]; then
-    echo ""
-    echo "── memory:${MAPPED} ──"
-    cat "${MEMORY_DIR}/${MAPPED}"
-  fi
-
-  EXACT="${MEMORY_DIR}/${PROJECT}.md"
-  if [[ -f "$EXACT" && "${PROJECT}.md" != "$MAPPED" ]]; then
-    echo ""
-    echo "── memory:${PROJECT}.md ──"
-    cat "$EXACT"
-  fi
-fi
+# Memory injection lived here through v3. Claude Code now loads MEMORY.md itself
+# at session start and surfaces individual memory files on recall, so re-reading
+# them here only spent context twice. Removed in v4.
 
 # Git context for high-stakes tasks
 if [[ "$TASK" == "implement" || "$TASK" == "refactor" || "$TASK" == "plan" ]]; then
