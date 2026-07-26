@@ -1,0 +1,70 @@
+name: verify
+
+# This repo had no CI at all: a syntax error in a hook, a skill with broken
+# frontmatter, or a dead reference would ship silently and only surface as
+# "why did my hook stop firing?" weeks later. Everything here is cheap and
+# runs on push as well as PR, so red is visible immediately.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Shell syntax (each script with its own interpreter)
+        run: |
+          set -euo pipefail
+          fail=0
+          for f in hooks/*.sh config/*.sh bootstrap/bootstrap.sh bootstrap/lib/*.sh; do
+            [ -f "$f" ] || continue
+            case "$(head -1 "$f")" in
+              *zsh*) checker="zsh -n" ;;
+              *)     checker="bash -n" ;;
+            esac
+            if $checker "$f"; then
+              echo "ok   $f ($checker)"
+            else
+              echo "FAIL $f ($checker)"; fail=1
+            fi
+          done
+          exit $fail
+
+      - name: Skill frontmatter is well-formed
+        run: |
+          set -euo pipefail
+          fail=0
+          for d in skills/*/; do
+            f="$d/SKILL.md"
+            [ -f "$f" ] || { echo "FAIL $d — no SKILL.md"; fail=1; continue; }
+            head -1 "$f" | grep -qx -- '---' || { echo "FAIL $f — missing opening ---"; fail=1; continue; }
+            grep -qE '^name:' "$f"        || { echo "FAIL $f — no name:"; fail=1; }
+            grep -qE '^description:' "$f" || { echo "FAIL $f — no description:"; fail=1; }
+            echo "ok   $f"
+          done
+          exit $fail
+
+      - name: Vendored Apache-2.0 skills keep LICENSE and NOTICE
+        run: |
+          set -euo pipefail
+          fail=0
+          # Apache-2.0 section 4 requires the license and a statement of changes
+          # to travel with the work. Losing either in a refactor is a licensing
+          # problem, not a cosmetic one.
+          for d in skills/cloudflare skills/cloudflare-one skills/web-perf; do
+            for f in LICENSE NOTICE; do
+              [ -f "$d/$f" ] && echo "ok   $d/$f" || { echo "FAIL $d/$f missing"; fail=1; }
+            done
+          done
+          exit $fail
+
+      - name: Bootstrap is dry-run clean
+        run: bash bootstrap/bootstrap.sh --dry-run
