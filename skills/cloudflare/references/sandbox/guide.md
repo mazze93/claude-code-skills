@@ -1,7 +1,7 @@
----
-name: sandbox-sdk
-description: Build sandboxed applications for secure code execution. Load when building AI code execution, code interpreters, CI/CD systems, interactive dev environments, or executing untrusted code. Covers Sandbox SDK lifecycle, commands, files, code interpreter, and preview URLs. Biases towards retrieval from Cloudflare docs over pre-trained knowledge.
----
+# Sandbox SDK — full guide
+
+> Consolidated into the `cloudflare` skill from the former standalone `sandbox-sdk` skill (2026-07-25). Original archived at `~/.claude/skills-archive/sandbox-sdk/`.
+
 
 # Cloudflare Sandbox SDK
 

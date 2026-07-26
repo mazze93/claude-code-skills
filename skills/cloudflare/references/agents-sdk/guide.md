@@ -1,7 +1,7 @@
----
-name: agents-sdk
-description: Build AI agents on Cloudflare Workers using the Agents SDK. Load when creating stateful agents, durable workflows, real-time WebSocket apps, scheduled tasks, MCP servers, chat applications, voice agents, or browser automation. Covers Agent class, state management, callable RPC, Workflows, durable execution, queues, retries, observability, and React hooks. Biases towards retrieval from Cloudflare docs over pre-trained knowledge.
----
+# Agents SDK — full guide
+
+> Consolidated into the `cloudflare` skill from the former standalone `agents-sdk` skill (2026-07-25). Original archived at `~/.claude/skills-archive/agents-sdk/`.
+
 
 # Cloudflare Agents SDK
 

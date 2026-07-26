@@ -1,6 +1,6 @@
 ---
 name: cloudflare
-description: Comprehensive Cloudflare platform skill covering Workers, Pages, storage (KV, D1, R2), AI (Workers AI, Vectorize, Agents SDK), feature flags (Flagship), networking (Tunnel, Spectrum), security (WAF, DDoS), and infrastructure-as-code (Terraform, Pulumi). Use for any Cloudflare development task. Biases towards retrieval from Cloudflare docs over pre-trained knowledge.
+description: "Cloudflare development: Workers, Wrangler CLI, Pages, Durable Objects, storage (KV/D1/R2/Queues), AI (Workers AI, Vectorize, Agents SDK), Sandbox SDK, Email Service, Turnstile setup, security (WAF, DDoS), networking, and IaC. Use for any Cloudflare build, deploy, or code-review task. Retrieval-first over pre-trained knowledge."
 references:
   - workers
   - pages
@@ -27,6 +27,22 @@ Fetch the **latest** information before citing specific numbers, API signatures,
 | Product changelogs | `https://developers.cloudflare.com/changelog/` | Recent changes to limits, features, deprecations |
 
 When a reference file and the docs disagree, **trust the docs**. This is especially important for: numeric limits, pricing tiers, type signatures, and configuration options.
+
+## Deep Guides
+
+Several reference directories carry a `guide.md` — a full standalone treatment consolidated from what used to be separate skills (2026-07-25). Load these when the task is substantially about that product, not just touching it:
+
+| Task | Load |
+|---|---|
+| Building agents, durable execution, streaming chat, voice, MCP, human-in-the-loop | `references/agents-sdk/guide.md` + the topic files beside it |
+| Writing or reviewing Worker code against production best practices | `references/workers/guide.md`, `references/workers/rules.md`, `references/workers/review.md` |
+| Any `wrangler` command — deploy, dev, secrets, bindings, resource management | `references/wrangler/guide.md` |
+| Durable Objects: RPC, SQLite storage, alarms, WebSockets, testing | `references/durable-objects/guide.md` + `rules.md`, `testing.md`, `workers.md` |
+| Sandboxed code execution, code interpreters, preview URLs | `references/sandbox/guide.md` + `api-quick-ref.md`, `examples.md` |
+| Sending/receiving transactional email, deliverability, SPF/DKIM/DMARC | `references/email-workers/guide.md` + `sending.md`, `deliverability.md`, `rest-api.md`, `routing.md`, `cli-and-mcp.md` |
+| Adding Turnstile to a project end-to-end (scan → create widget → embed → siteverify → validate) | `references/turnstile/spin.md`; per-framework snippets (`astro.md`, `nextjs-app.md`, `sveltekit.md`, `hugo.md`, `vanilla-html.md`) and `scripts/` beside it |
+
+For Zero Trust / SASE work (Access, Gateway, WARP, Tunnel, DLP, CASB), use the separate `cloudflare-one` skill.
 
 ## Quick Decision Trees
 

@@ -1,14 +1,8 @@
----
-name: turnstile-spin
-description: Set up Cloudflare Turnstile end-to-end in a project. Scan the codebase, create the widget via the Cloudflare API, embed it on the right forms, wire canonical server-side siteverify in the customer's existing backend, validate, and persist the skill. Load this when a user asks to add Turnstile, set up CAPTCHA, protect a form from bots, or fix a Turnstile integration. Mirrors developers.cloudflare.com/turnstile/spin.
-references:
-  - vanilla-html
-  - nextjs-app
-  - nextjs-pages
-  - astro
-  - sveltekit
-  - hugo
----
+# Turnstile Spin — end-to-end setup workflow
+
+> Consolidated into the `cloudflare` skill from the former standalone `turnstile-spin` skill (2026-07-25). Original archived at `~/.claude/skills-archive/turnstile-spin/`.
+> Helper scripts live in `scripts/`, tests in `tests/`, per-framework snippets in the framework `.md` files alongside this one.
+
 
 # Turnstile Spin skill
 

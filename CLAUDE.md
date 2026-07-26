@@ -39,6 +39,16 @@ Skills can also be packaged as `.skill` files — ZIP archives containing `SKILL
 | `git-forensics` | directory | Adversarial git index corruption and staged replacement detection |
 | `precise-coding-assistant` | `.skill` package | Four-phase gating workflow (Clarity → Simplicity → Scope → Verification) for engineering requests |
 | `decision-telemetry` | directory | Dual-face transparency artifacts: Sephirothic (clean decision) + Qliphothic (shadow trace) with certainty weights and Da'ath void node |
+| `cloudflare` | directory | Cloudflare development umbrella — router over `references/<product>/`; consolidated from 8 formerly separate skills (see "Vendored skills") |
+| `cloudflare-one` | directory | Cloudflare One Zero Trust / SASE; consolidated from 2 formerly separate skills |
+
+### Vendored skills
+
+`cloudflare` and `cloudflare-one` are **third-party content authored by Cloudflare**, not written here. They arrived as 10 separate bulk-installed skills whose combined listing entries cost ~1.2k resident tokens every session while the umbrella `cloudflare` skill already routed to all the same products.
+
+Commit `42caf2b` vendors them byte-exact as installed; the commit after it consolidates 10 → 2. Nothing was discarded — every satellite's `SKILL.md` body survives as a `guide.md` (or `turnstile/spin.md`) inside the umbrella's `references/` tree, and the deep reference files sit beside the umbrella's own. Recover any original with `git show 42caf2b:skills/<name>/SKILL.md`.
+
+They ship without a bundled LICENSE or attribution file. Confirm redistribution terms before this repo is pushed publicly.
 
 ## Architecture
 
