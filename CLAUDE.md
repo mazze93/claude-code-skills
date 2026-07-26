@@ -41,14 +41,15 @@ Skills can also be packaged as `.skill` files — ZIP archives containing `SKILL
 | `decision-telemetry` | directory | Dual-face transparency artifacts: Sephirothic (clean decision) + Qliphothic (shadow trace) with certainty weights and Da'ath void node |
 | `cloudflare` | directory | Cloudflare development umbrella — router over `references/<product>/`; consolidated from 8 formerly separate skills (see "Vendored skills") |
 | `cloudflare-one` | directory | Cloudflare One Zero Trust / SASE; consolidated from 2 formerly separate skills |
+| `web-perf` | directory | Core Web Vitals auditing via Chrome DevTools MCP (vendored, unmodified) |
 
 ### Vendored skills
 
-`cloudflare` and `cloudflare-one` are **third-party content authored by Cloudflare**, not written here. They arrived as 10 separate bulk-installed skills whose combined listing entries cost ~1.2k resident tokens every session while the umbrella `cloudflare` skill already routed to all the same products.
+`cloudflare`, `cloudflare-one`, and `web-perf` are **third-party content from [`cloudflare/skills`](https://github.com/cloudflare/skills), Apache-2.0**, not written here. All eleven upstream skills were installed together on 2026-07-23; their combined listing entries cost ~1.2k resident tokens every session while the umbrella `cloudflare` skill already routed to all the same products.
 
-Commit `42caf2b` vendors them byte-exact as installed; the commit after it consolidates 10 → 2. Nothing was discarded — every satellite's `SKILL.md` body survives as a `guide.md` (or `turnstile/spin.md`) inside the umbrella's `references/` tree, and the deep reference files sit beside the umbrella's own. Recover any original with `git show 42caf2b:skills/<name>/SKILL.md`.
+Commit `42caf2b` vendors them byte-exact as retrieved; the commit after it consolidates 10 → 2. Nothing was discarded — every satellite's `SKILL.md` body survives as a `guide.md` (or `turnstile/spin.md`) inside the umbrella's `references/` tree, and the deep reference files sit beside the umbrella's own. Recover any original with `git show 42caf2b:skills/<name>/SKILL.md`.
 
-They ship without a bundled LICENSE or attribution file. Confirm redistribution terms before this repo is pushed publicly.
+These directories stay under Apache-2.0 — the repo's MIT license does not cover them. Each carries its own `LICENSE` and a `NOTICE` stating the changes made, as Apache-2.0 §4b requires. **When editing them, update that NOTICE.** Root `NOTICE` is the index.
 
 ## Architecture
 

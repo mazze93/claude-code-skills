@@ -1,0 +1,41 @@
+Cloudflare One (Zero Trust / SASE) skill
+Derived from https://github.com/cloudflare/skills
+Copyright (c) Cloudflare, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+these files except in compliance with the License. A copy of the License is
+included alongside this file as LICENSE, and is also available at:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.
+
+================================================================================
+Statement of changes (Apache-2.0 section 4b)
+================================================================================
+
+Retrieved 2026-07-23. Modified 2026-07-25.
+
+This directory began as the upstream `cloudflare-one` skill, whose SKILL.md was
+a single 22KB document. It was restructured into a router plus references, and
+the upstream `cloudflare-one-migrations` skill was folded in:
+
+  - SKILL.md (22KB -> 3KB) now carries the frontmatter, retrieval guidance,
+    workflow, a reference index, output defaults, and API safety rules. Its
+    `description` was rewritten to cover the merged scope.
+
+  - references/assessment.md   <- upstream SKILL.md "Assessment Prompts"
+  - references/guardrails.md   <- upstream SKILL.md "Guardrails" (all subsections)
+  - references/validation.md   <- upstream SKILL.md "Validation Prompts"
+
+    These three are verbatim extracts. The only edit is the section heading,
+    promoted from `##` to `#` so each file reads as a document in its own right.
+
+  - references/migrations.md   <- the whole of the upstream
+                                  `cloudflare-one-migrations` skill, unmodified
+                                  apart from an added provenance header.
+
+No upstream content was deleted or reworded. The pre-consolidation state is
+preserved verbatim in this repository's git history at commit 42caf2b.

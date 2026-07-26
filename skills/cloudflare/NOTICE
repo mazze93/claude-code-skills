@@ -1,0 +1,52 @@
+Cloudflare development skill
+Derived from https://github.com/cloudflare/skills
+Copyright (c) Cloudflare, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+these files except in compliance with the License. A copy of the License is
+included alongside this file as LICENSE, and is also available at:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.
+
+================================================================================
+Statement of changes (Apache-2.0 section 4b)
+================================================================================
+
+Retrieved 2026-07-23. Modified 2026-07-25.
+
+This directory began as the upstream `cloudflare` skill. Seven further upstream
+skills, each previously distributed as its own top-level skill, were folded into
+its references/ tree. Their content is unmodified; only its location changed.
+
+  upstream skill            ->  location in this directory
+  ------------------------      --------------------------------------------
+  agents-sdk                ->  references/agents-sdk/     (19 topic files;
+                                SKILL.md body -> guide.md)
+  workers-best-practices    ->  references/workers/        (rules.md, review.md;
+                                SKILL.md body -> guide.md)
+  durable-objects           ->  references/durable-objects/ (rules.md,
+                                testing.md, workers.md; body -> guide.md)
+  sandbox-sdk               ->  references/sandbox/        (api-quick-ref.md,
+                                examples.md; body -> guide.md)
+  cloudflare-email-service  ->  references/email-workers/  (5 files;
+                                body -> guide.md)
+  wrangler                  ->  references/wrangler/guide.md
+  turnstile-spin            ->  references/turnstile/      (framework snippets,
+                                scripts/, tests/; body -> spin.md;
+                                README.md -> spin-README.md)
+
+Each relocated `guide.md` and `spin.md` carries a header naming the upstream
+skill it came from.
+
+Changes to upstream files themselves, in full:
+
+  - SKILL.md: the `description` frontmatter field was rewritten to cover the
+    merged scope, and a "Deep Guides" routing table was added so the skill can
+    reach the relocated material. No other section was altered.
+
+No upstream file was deleted, truncated, or rewritten. The pre-consolidation
+state is preserved verbatim in this repository's git history at commit 42caf2b.

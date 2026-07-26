@@ -1,0 +1,23 @@
+Web performance audit skill
+Derived from https://github.com/cloudflare/skills
+Copyright (c) Cloudflare, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License"); you may not use
+these files except in compliance with the License. A copy of the License is
+included alongside this file as LICENSE, and is also available at:
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software distributed
+under the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR
+CONDITIONS OF ANY KIND, either express or implied.
+
+================================================================================
+Statement of changes (Apache-2.0 section 4b)
+================================================================================
+
+Retrieved 2026-07-23. Unmodified.
+
+The skill's subject matter is Chrome DevTools MCP performance auditing rather
+than Cloudflare itself, but it is distributed from the same upstream repository
+under the same license, and is vendored here on the same terms.

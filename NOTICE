@@ -1,0 +1,37 @@
+claude-code-skills
+Copyright (c) 2026 Mazze LeCzzare Frazer
+
+This repository is MIT licensed (see LICENSE), with one exception.
+
+================================================================================
+Third-party content: Cloudflare skills (Apache-2.0)
+================================================================================
+
+The following directories are NOT covered by the MIT license above. They are
+derived from Cloudflare's agent skills and remain under the Apache License,
+Version 2.0:
+
+    skills/cloudflare/
+    skills/cloudflare-one/
+    skills/web-perf/
+
+    Source:    https://github.com/cloudflare/skills
+    Copyright: Cloudflare, Inc.
+    License:   Apache License, Version 2.0
+               Full text in each directory's LICENSE file, and at
+               http://www.apache.org/licenses/LICENSE-2.0
+    Retrieved: 2026-07-23
+
+Modifications made to the original work (Apache-2.0 section 4b):
+
+  Ten of the eleven skills retrieved from upstream were consolidated into two
+  on 2026-07-25. No upstream content was removed or rewritten — the merge is
+  structural only. web-perf is vendored unmodified. Per-directory detail is in
+  each skill's own NOTICE file.
+
+  See git history for the exact diff: commit 42caf2b vendors the ten skills
+  byte-for-byte as retrieved from upstream, and the commit following it
+  performs the consolidation.
+
+Everything else in this repository — skills/ (other than the two directories
+named above), hooks/, bootstrap/, config/ — is original work under MIT.
