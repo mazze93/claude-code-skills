@@ -18,7 +18,17 @@ echo "── Install settings ────────────────�
 
 command -v jq >/dev/null || { echo "  [settings] ✗ jq required — install with: brew install jq"; exit 1; }
 
-[[ -f "$SETTINGS" ]] || { echo "  [settings] ✗ $SETTINGS not found — launch Claude Code first"; exit 1; }
+# A real install needs settings.json to exist — Claude Code writes it on first
+# launch. A --dry-run must not fail for it, though: dry-run is a preview and is
+# how CI exercises bootstrap on a machine that has never run Claude Code.
+if [[ ! -f "$SETTINGS" ]]; then
+  if [[ "$DRY_RUN" == "--dry-run" ]]; then
+    echo "  [settings] dry: $SETTINGS absent — would be created by Claude Code's first launch; skipping"
+    exit 0
+  fi
+  echo "  [settings] ✗ $SETTINGS not found — launch Claude Code first"
+  exit 1
+fi
 
 # ── PostToolUse antipattern hook ──────────────────────────────────────────────
 HOOK_CMD="zsh ~/.claude/scripts/post-tool-use.sh"
