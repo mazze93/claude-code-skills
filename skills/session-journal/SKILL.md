@@ -9,6 +9,25 @@ Sessions die: API drops, usage limits, closed laptops. Work that lives only in
 conversation context dies with them. This skill makes every phase of a long
 task independently recoverable.
 
+## Phase 0 — pre-flight (before the scaffold)
+
+Deliver four things, then stop and wait for go-ahead:
+
+1. The request restated in your own words.
+2. The exact files/repos the work will modify.
+3. One load-bearing assumption that could be wrong.
+4. The result of checking that assumption against the filesystem or docs.
+
+Write all four into the scaffold, not just into the conversation: (1) and (2)
+become PLAN.md's header, (3) and (4) become DECISIONS.md's first dated entry. A
+verification that lives only in chat dies with the session.
+
+The assumption most worth checking is almost always **whether the thing you're
+about to build already exists.** Prompts and generated reports describe generic
+gaps, not this machine — this skill, the container's journal, and the
+unpushed-work Stop hook have each been proposed as new work after they already
+existed.
+
 ## Setup (first minutes of the session, before real work)
 
 In the repo you're working in (the workspace container uses `docs/journal/`):
