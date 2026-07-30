@@ -1,5 +1,7 @@
 # claude-code-skills
 
+![Claude Code Skills](.images/claude-code-skills.png)
+
 Personal Claude Code skills and config scripts, developed as part of [Praxis](../../cognitive/praxis/).
 
 Skills are symlinked into `~/.claude/skills/` — Claude Code loads them automatically.
