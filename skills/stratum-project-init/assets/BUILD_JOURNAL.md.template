@@ -1,0 +1,125 @@
+# Build Journal — {{PROJECT_NAME}}
+
+This is the operating manual for working on this project across sessions, including
+autonomous/looped sessions where no human is watching each step. It has two halves:
+a **cookbook** (how to run a burst of work) and a **ledger discipline** (how decisions
+get recorded so nothing is lost and nothing has to be re-litigated). Read this before
+starting any burst, whether you're {{OWNER}} or an agent picking this project back up cold.
+
+The epistemic ledger is [Stratum](https://stratum.mazzeleczzare.com) — live, append-only,
+event-sourced, canon at [github.com/mazze93/stratum](https://github.com/mazze93/stratum).
+This project's decisions live on their own Stratum log, `{{LOG_ID}}`, kept separate from
+the general `workspace` log so the trail is scoped and exportable on its own — the log id
+is also recorded in `.stratum-log` at the repo root, and `scripts/burst-summary.sh` /
+`scripts/stratum-link.sh` read it automatically. The `stratum` CLI is already installed
+and configured (`~/.config/stratum/config.json`) — override the log per-command with
+`--log {{LOG_ID}}`, or export `STRATUM_LOG={{LOG_ID}}` for a whole session.
+
+## Why this exists
+
+The mandate is to make forward motion durable even in short, interrupted, or unattended
+bursts — commit often, decide out loud, never let a burst end with only-in-context state.
+Adapt the specifics below to what this project actually is; don't let the ritual outweigh
+the work.
+
+## The burst workflow
+
+Work happens in **bursts**: one modular, self-contained unit of progress, small enough to
+finish and checkpoint even if the session ends immediately after. Do not start a burst
+you can't checkpoint within it.
+
+1. **Open the burst** — `stratum tessera --log {{LOG_ID}}` to see the current decision
+   state before touching anything. Don't re-decide something already settled; check
+   `stratum status <id> --log {{LOG_ID}}` if a prior decision looks relevant.
+2. **Do the work** — one concrete unit, scoped to something committable on its own.
+3. **Record the decision** — `stratum decide "…" --log {{LOG_ID}} --shadow "…"` for
+   anything that involved a real choice (an approach taken, an alternative rejected, an
+   assumption made). The `--shadow` is mandatory for any non-trivial choice — it's where
+   the "why," the road not taken, and an honest certainty level live. Don't decide
+   obvious mechanical steps; decide the things a future reader would otherwise have to
+   reconstruct or re-argue. Add `--pending` only if you intend to back the claim with
+   real evidence afterward — a plain `decide` is born `asserted`, and the contract's
+   transition guard only lets `asserted` reach `ratified` (human-only) or `disputed`,
+   never `validated` directly; `--pending` births it `pending_evidence`, the only status
+   `verify` can promote to `validated`.
+4. **Checkpoint.** If this machine has the global auto-commit hook
+   (`~/.claude/scripts/auto-commit.sh`, PostToolUse on Edit/Write) — check
+   `cat ~/.claude/settings.json | grep auto-commit` if unsure — file-level checkpointing
+   is already automatic: it stages and signs-commits each edited file as
+   `auto: <file> [HH:MM]`. Don't fight it or duplicate it with a manual commit after
+   every edit. What it doesn't capture is intent: at the end of a burst, if the
+   auto-commit trail doesn't already tell the story, add one deliberate commit narrating
+   the burst and referencing the Stratum decision id (`Ref: dec-…`).
+
+   If this machine has no such hook, `git add -A && git commit -S` is your manual
+   checkpoint and IS mandatory at the end of every burst — a burst that ends without a
+   commit did not happen as far as the next session is concerned.
+4b. **Correlate the two trails with this project's own scripts, not by hand.**
+   - `scripts/burst-summary.sh` — read-only. Lists commits and files changed since the
+     last commit that referenced a Stratum decision, and prints a `stratum decide`
+     template to fill in. Run it before step 3 if you're not sure what's accumulated.
+   - `scripts/stratum-link.sh <dec-id> [commit-ish]` — the one place besides
+     `decide`/`foreclose` that this project makes a live Stratum call, always explicit
+     and manual. Attaches the actual commit as checked evidence via `verify`. Only
+     works on a `--pending` decision — running it against a plain `asserted` one will
+     correctly fail with a guard refusal, which is the contract working, not a bug.
+5. **Close the burst** — if this was the last burst of the session, or the session is
+   about to be cut off, write/update `HANDOFF.md` per the standing session handoff
+   protocol: what was completed, what was blocked and why, exact next steps with file
+   paths and commands. The next session (human or agent) reads `HANDOFF.md` first, then
+   this file, then `stratum tessera --log {{LOG_ID}}` for the decision trail.
+
+Loop by repeating steps 1–4. Each burst is independently checkpointed, so looping and
+iterating autonomously is safe: worst case, a failed or interrupted burst loses only the
+work since the last commit, never the whole session.
+
+## Ledger discipline (append-only, no exceptions)
+
+- **Never hand-edit decision history.** Stratum is event-sourced — every `decide`,
+  `verify`, `ratify`, `dispute`, `foreclose` appends a new event; nothing is ever
+  mutated in place. If a prior decision was wrong, record a new one with
+  `--supersedes <id>`, don't pretend the old one never happened. The wrongness itself
+  is information. Note: `--supersedes`, like `verify`, only fires from a `validated`
+  status — it's not a general "this replaces that" tool, it specifically closes out
+  evidence-backed claims. A plain `asserted`/`narrative` decision can only reach
+  `ratified` or `disputed`, so correcting one means recording a fresh decision that
+  says so in its text, not a formal supersession — the guard will refuse it otherwise,
+  which is the contract working, not a bug to route around.
+- **Tiers mean something — don't inflate them.** A `decide` starts as `narrative`
+  (asserted, unverified). It only becomes `authoritative_verified` via
+  `stratum verify <id> --ref "…"` against real checked evidence — a passing test, a
+  live URL, an actual observation, never "looks right." `ratify` (→ axiomatic) is
+  reserved for explicit human sign-off — don't self-ratify from an autonomous burst.
+- **Foreclose roads explicitly.** When an approach is considered and rejected, that's
+  `stratum foreclose "…" --shadow "…"` — a ghost edge, not silence. Silence about a
+  rejected alternative is exactly what lets it get re-proposed and re-litigated later.
+- **The shadow trace is the point.** The clean decision text is what happened; the
+  `--shadow` is why, what else was considered, and how sure this really is. Never skip
+  it to save time — an undocumented "why" is the single biggest cause of work getting
+  silently redone.
+- **Certainty is honest, not optimistic.** A shaky assumption gets a low certainty
+  weight, not a confident-sounding sentence.
+- **Git commits and Stratum decisions cross-reference.** A commit that resolves or acts
+  on a decision should say so in its message (`Ref: dec-…`); a decision that produced a
+  commit should note the commit hash once it exists, via `scripts/stratum-link.sh` or a
+  follow-up `decide`. Neither ledger is authoritative alone — git is the artifact
+  history, Stratum is the reasoning history.
+
+## Resuming cold
+
+If you're picking this project up with no memory of prior sessions:
+
+1. Read `HANDOFF.md` if present — it will not be, once this file exists and the
+   discipline above is followed consistently, since every burst ends checkpointed and
+   HANDOFF.md is only for a genuinely interrupted session.
+2. Read `CLAUDE.md` for what this project is.
+3. Run `stratum tessera --log {{LOG_ID}}` for the full decision projection, and
+   `stratum export --log {{LOG_ID}}` if you need the raw event history.
+4. Run `git log --oneline` for the artifact history.
+5. Resume at the burst workflow above.
+
+## Genesis
+
+- `{{GENESIS_DEC_ID}}` — project stood up with a dedicated Stratum log. See
+  `stratum status {{GENESIS_DEC_ID}} --log {{LOG_ID}}` for the full entry and shadow trace.
+- Git commit `{{GENESIS_COMMIT}}` — initial commit.
