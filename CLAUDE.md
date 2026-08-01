@@ -36,6 +36,7 @@ Skills can also be packaged as `.skill` files — ZIP archives containing `SKILL
 
 | Name | Format | Purpose |
 |------|--------|---------|
+| `component-factory` | directory | Generate a design system from one token file behind a build-failing hex guard; makes palette drift structurally impossible and design migration safely delegable |
 | `git-forensics` | directory | Adversarial git index corruption and staged replacement detection |
 | `precise-coding-assistant` | `.skill` package | Four-phase gating workflow (Clarity → Simplicity → Scope → Verification) for engineering requests |
 | `decision-telemetry` | directory | Dual-face transparency artifacts: Sephirothic (clean decision) + Qliphothic (shadow trace) with certainty weights and Da'ath void node |

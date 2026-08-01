@@ -1,0 +1,20 @@
+{
+  "tokensCss": "src/styles/tokens.css",
+  "outRoot": "src",
+
+  "pages": [
+    {
+      "out": "preview/colors-status.html",
+      "group": "colors",
+      "title": "Status Colors",
+      "components": ["status-rows"],
+      "styles": "  .row { display: flex; gap: 12px; align-items: center; }\n  .hex { font-family: var(--font-mono); }",
+      "data": {
+        "rows": [
+          { "token": "--sp-status-protected", "label": "Protected", "desc": "Active, healthy" },
+          { "token": "--sp-status-blocked", "label": "Blocked", "desc": "Threat stopped" }
+        ]
+      }
+    }
+  ]
+}
