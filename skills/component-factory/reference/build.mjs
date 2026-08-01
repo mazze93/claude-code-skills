@@ -76,20 +76,58 @@ function rgbOf(name) {
 // {{var:field}}              -> var(--sp-x)      (styling)
 // {{hex:field}}              -> #rrggbb          (visible labels)
 // {{alpha:field:0.06}}       -> rgba(r,g,b,0.06) (derived tints)
+// Depth-aware loop expansion. A non-greedy regex closes the OUTER loop on the
+// INNER {{/each}}, silently mangling nested data (sections -> badges). Match
+// the balanced close instead.
+function expandLoops(tpl, ctx) {
+  const OPEN = /\{\{#each\s+([\w.]+)\}\}/;
+  let out = "";
+  let rest = tpl;
+
+  for (;;) {
+    const m = OPEN.exec(rest);
+    if (!m) return out + rest;
+
+    out += rest.slice(0, m.index);
+    const key = m[1];
+    const bodyStart = m.index + m[0].length;
+
+    let i = bodyStart;
+    let depth = 1;
+    let closeAt = -1;
+    while (depth > 0) {
+      const nextOpen = rest.indexOf("{{#each", i);
+      const nextClose = rest.indexOf("{{/each}}", i);
+      if (nextClose === -1) throw new Error(`Unclosed {{#each ${key}}}`);
+      if (nextOpen !== -1 && nextOpen < nextClose) {
+        depth++;
+        i = nextOpen + "{{#each".length;
+      } else {
+        depth--;
+        if (depth === 0) closeAt = nextClose;
+        i = nextClose + "{{/each}}".length;
+      }
+    }
+
+    const body = rest.slice(bodyStart, closeAt);
+    const list = ctx[key];
+    if (!Array.isArray(list)) throw new Error(`{{#each ${key}}} is not an array`);
+    out += list.map((item) => render(body, { ...ctx, ...item })).join("");
+    rest = rest.slice(closeAt + "{{/each}}".length);
+  }
+}
+
 function render(tpl, ctx) {
   // Loops first, so inner substitutions see the item context.
-  tpl = tpl.replace(
-    /\{\{#each\s+([\w.]+)\}\}([\s\S]*?)\{\{\/each\}\}/g,
-    (_, key, body) => {
-      const list = ctx[key];
-      if (!Array.isArray(list)) throw new Error(`{{#each ${key}}} is not an array`);
-      return list.map((item) => render(body, { ...ctx, ...item })).join("");
-    }
-  );
+  tpl = expandLoops(tpl, ctx);
 
-  tpl = tpl.replace(/\{\{alpha:([\w.]+):([\d.]+)\}\}/g, (_, f, a) => {
+  // Alpha may be a literal (0.06) or a data field, so one component can carry
+  // per-item intensities instead of being split into near-duplicate variants.
+  tpl = tpl.replace(/\{\{alpha:([\w.]+):([\w.]+)\}\}/g, (_, f, a) => {
     const [r, g, b] = rgbOf(ctx[f] ?? f);
-    return `rgba(${r},${g},${b},${a})`;
+    const alpha = a in ctx ? ctx[a] : a;
+    if (isNaN(Number(alpha))) throw new Error(`alpha is not numeric: ${a}`);
+    return `rgba(${r},${g},${b},${alpha})`;
   });
   tpl = tpl.replace(/\{\{var:([\w.]+)\}\}/g, (_, f) => {
     const name = ctx[f] ?? f;
@@ -107,12 +145,21 @@ function render(tpl, ctx) {
 // ─── HEX GUARD ───────────────────────────────────────────────
 // Components are the thing that must never carry literal colour.
 const HEX_RE = /#[0-9a-fA-F]{3}\b|#[0-9a-fA-F]{6}\b/;
+
+// {{hex:}} emits a literal colour. That is correct for text that *displays* a
+// value, and wrong for styling — it renders opaque where a tint was intended.
+// The raw-hex rule alone does not catch it, so check placement too.
+const HEX_IN_STYLE = /style\s*=\s*"[^"]*\{\{hex:/;
+
 function guard(name, src) {
   const problems = [];
   src.split("\n").forEach((line, i) => {
-    if (HEX_RE.test(line)) problems.push(`  ${name}:${i + 1}  raw hex: ${line.trim().slice(0, 70)}`);
-    if (line.includes("@font-face")) problems.push(`  ${name}:${i + 1}  inline @font-face`);
-    if (line.includes("fonts.googleapis.com")) problems.push(`  ${name}:${i + 1}  CDN font import`);
+    const at = `  ${name}:${i + 1}`;
+    if (HEX_RE.test(line)) problems.push(`${at}  raw hex: ${line.trim().slice(0, 70)}`);
+    if (HEX_IN_STYLE.test(line))
+      problems.push(`${at}  {{hex:}} inside style= — use {{var:}} for colour or {{alpha:token:N}} for a tint`);
+    if (line.includes("@font-face")) problems.push(`${at}  inline @font-face`);
+    if (line.includes("fonts.googleapis.com")) problems.push(`${at}  CDN font import`);
   });
   return problems;
 }

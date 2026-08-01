@@ -73,6 +73,21 @@ const HEX_RE = /#[0-9a-fA-F]{3}\b|#[0-9a-fA-F]{6}\b/;
 // per line: raw hex | @font-face | fonts.googleapis.com  -> collect, exit 1
 ```
 
+**Raw-hex detection alone is not enough.** `{{hex:}}` emits a literal colour —
+correct for text that *displays* a value, wrong for styling, where it renders
+opaque exactly where a tint was intended. There is no raw hex to find, so the
+first rule sees nothing. Add a placement rule:
+
+```js
+const HEX_IN_STYLE = /style\s*=\s*"[^"]*\{\{hex:/;
+// -> "{{hex:}} inside style= — use {{var:}} or {{alpha:token:N}}"
+```
+
+Found the hard way: a delegated agent styled every badge with `{{hex:}}`,
+passed the guard clean, and would have shipped solid blocks in place of
+translucent pills. **Guard rules are cheap; add one every time a class of
+wrongness gets through.**
+
 **Test the guard by violating it.** An untested guard is not a guard:
 
 ```zsh
@@ -105,6 +120,16 @@ the token moves.
 
 Fail loudly on an unknown token or unbound field. A silently empty `var()` is
 the drift you are trying to kill.
+
+**Expand loops with depth-aware matching, not a regex.** The obvious
+`/\{\{#each (\w+)\}\}([\s\S]*?)\{\{\/each\}\}/` closes the *outer* loop on the
+*inner* `{{/each}}`, so any `sections → items` shape silently mangles. Scan for
+the balanced close instead. Real design systems nest constantly (rows of
+badges, groups of swatches) and the failure is quiet, not loud.
+
+Let the alpha argument accept a data field as well as a literal
+(`{{alpha:token:glow}}`) — otherwise one component splits into near-duplicate
+variants just to vary an intensity.
 
 ## Burst delivery
 
@@ -167,6 +192,30 @@ So delegate the bursts, and keep these cloud-side:
 
 Hand over with: the invariant, the burst list, the exact commands, and an
 explicit "if the build fails, fix the component — never the guard."
+
+### What the first real handoff taught (2026-07-31)
+
+One page delegated to `gpt-oss:20b`. It ran, read the files, and produced a
+component — and every part of the verification earned its place:
+
+- **Verify against `git status`, not the agent's report.** It stated it had
+  updated the manifest. It had not, and it never ran the build. The prose was
+  confident and the diff was one untracked file.
+- **A clean exit code is not evidence.** An earlier attempt exited **0 having
+  done nothing at all** because the configured model was not installed. Check
+  that output is non-empty and that files actually changed.
+- **Author the first component of each new shape yourself.** This skill already
+  said so; the delegation ignored that and handed over a novel shape, which is
+  how both engine and guard defects surfaced. The rule is right — follow it.
+  Delegate the *copies*, once the shape is proven.
+- **Treat what slips through as a guard bug, not an agent bug.** The model's
+  `{{hex:}}`-for-styling mistake was reasonable given the brief. The fix was a
+  new rule in the build, not a sterner instruction — instructions are advisory,
+  the build is not.
+
+Net: the lane works and the delegation was still worth running, because it
+found two real defects in the factory. Budget the first handoff as a test of
+the harness rather than as work you are getting for free.
 
 ## Stele interface
 
