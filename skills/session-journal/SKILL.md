@@ -22,6 +22,12 @@ Write all four into the scaffold, not just into the conversation: (1) and (2)
 become PLAN.md's header, (3) and (4) become DECISIONS.md's first dated entry. A
 verification that lives only in chat dies with the session.
 
+**Also append one row to `docs/journal/INTENTS.md`** (create it from the header
+in an existing copy if absent): today's date, the restated ask (1), the
+load-bearing assumption (3), `outcome: —`, blank last column. This is the
+stated intent, recorded before contact — so the gap between it and what ships
+is measurable instead of forgotten. Do this even for a single-phase task.
+
 The assumption most worth checking is almost always **whether the thing you're
 about to build already exists.** Prompts and generated reports describe generic
 gaps, not this machine — this skill, the container's journal, and the
@@ -66,8 +72,26 @@ commit trail, so compensate:
 5. Sub-results that are cheap to regenerate (scans, summaries) still get
    written to files — regeneration costs budget.
 
+## Closing out
+
+Before the session ends — the moment work is done, or the moment you realise it
+won't be — set the `outcome` on this session's `docs/journal/INTENTS.md` row:
+
+- `as-stated` — shipped roughly what was asked, as specified.
+- `diverged` — shipped something else; say what, in the last column. (This is
+  the common case. It is not a failure — it is the record being honest.)
+- `abandoned` — stopped without shipping. Blocked, out of budget, superseded.
+
+A row left `—` means the session dropped before it could close itself out —
+which is itself the record. Do not backfill someone else's `—` row with a
+guess; leave it, and let `ws abandoned` surface it.
+
 ## Resuming after a drop
 
 Read CHECKPOINT.md → PLAN.md → DECISIONS.md, in that order, then continue at
 the first unchecked phase. Never re-derive decisions already logged; if one
 proves wrong, append a reversal entry rather than editing history.
+
+If this session's own `INTENTS.md` row diverged from the row you're resuming
+under, that divergence is the point — record it in the last column at close,
+don't quietly rewrite the intent to match what happened.

@@ -75,6 +75,16 @@ elif git -C "$CWD" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   fi
 fi
 
+# Open intent row for today — session-journal Phase 0 records the stated ask in
+# docs/journal/INTENTS.md with outcome "—"; closing out sets it. Only nudges
+# when a row for today is still open, so it's silent on sessions that never
+# opened one.
+INTENT_NUDGE=""
+_INTENTS="$HOME/Projects/docs/journal/INTENTS.md"
+if [[ -f "$_INTENTS" ]] && grep -qE "^\| *$(date '+%Y-%m-%d') *\|.*\| *— *\|" "$_INTENTS" 2>/dev/null; then
+  INTENT_NUDGE="◑ INTENTS.md has an open row from today — set its outcome (as-stated / diverged / abandoned) before you go."
+fi
+
 lines=()
 lines+=("◆ SESSION END $(date '+%Y-%m-%d %H:%M') | ${PROJECT} | ${TOOL_CALLS} tools | ${TOTAL_CHANGES} file changes")
 
@@ -82,11 +92,13 @@ if (( TOTAL_CHANGES == 0 && TOOL_CALLS < 5 )); then
   lines+=("Light session — no memory save needed.")
   [[ -n "$GIT_NUDGE" ]]      && lines+=("$GIT_NUDGE")
   [[ -n "$GIT_PUSH_NUDGE" ]] && lines+=("$GIT_PUSH_NUDGE")
+  [[ -n "$INTENT_NUDGE" ]]   && lines+=("$INTENT_NUDGE")
 else
   (( TOTAL_CHANGES > 0 )) && lines+=("${EDITS} edits, ${WRITES} writes — consider what's non-obvious from the diff.")
   (( TOOL_CALLS >= 15 ))  && lines+=("Heavy session — likely contains design decisions worth preserving.")
   [[ -n "$GIT_NUDGE" ]]      && lines+=("$GIT_NUDGE")
   [[ -n "$GIT_PUSH_NUDGE" ]] && lines+=("$GIT_PUSH_NUDGE")
+  [[ -n "$INTENT_NUDGE" ]]   && lines+=("$INTENT_NUDGE")
 
   # Memory is topic-scoped, not per-project: an index plus named files, written
   # by Claude Code itself. Point at what is actually on disk rather than guessing
