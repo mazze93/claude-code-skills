@@ -27,15 +27,16 @@ FILE=$(printf '%s' "$INPUT" | jq -r '.tool_input.file_path // .tool_input.path /
 CWD=$(_jval cwd)
 [[ -z "$CWD" ]] && CWD="$PWD"
 
-# ── Journal edited → keep the stamp + backlinks current on disk ───────────────
+# ── Container journal edited → keep the stamp + backlinks current on disk ──────
 # In-session half of the journal-mechanics pair (the pre-commit hook is the
-# authoritative rebuild + validation gate). Pure side effect, no output. Guarded
-# on path + script presence; scripts live in the workspace container.
-if [[ "$FILE" == */docs/journal/*.md ]]; then
-  _JREPO="${FILE%/docs/journal/*}"
+# authoritative rebuild + gate). CONTAINER ONLY: the "append at bottom" +
+# "Updated:" header conventions these scripts assume are ~/Projects/docs/journal
+# specific — context-synapse's journal prepends newest-first, and stratum is MAX
+# posture. Pure side effect, no output.
+if [[ "$FILE" == "$HOME/Projects/docs/journal/"*.md ]]; then
   for _s in journal_stamp journal_backlinks; do
     _script="$HOME/Projects/scripts/ops/${_s}.sh"
-    [[ -x "$_script" ]] && bash "$_script" "$_JREPO/docs/journal" >/dev/null 2>&1 || true
+    [[ -x "$_script" ]] && bash "$_script" "$HOME/Projects/docs/journal" >/dev/null 2>&1 || true
   done
 fi
 
