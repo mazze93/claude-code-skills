@@ -27,6 +27,7 @@ in an existing copy if absent): today's date, the restated ask (1), the
 load-bearing assumption (3), `outcome: —`, blank last column. This is the
 stated intent, recorded before contact — so the gap between it and what ships
 is measurable instead of forgotten. Do this even for a single-phase task.
+Write any literal `|` in the prose as `or` or `\|` — the row is pipe-delimited.
 
 The assumption most worth checking is almost always **whether the thing you're
 about to build already exists.** Prompts and generated reports describe generic
