@@ -42,7 +42,19 @@ TOTAL_CHANGES=$(( EDITS + WRITES ))
 # The second is the one that loses a machine's worth of work silently.
 GIT_NUDGE=""
 GIT_PUSH_NUDGE=""
-if git -C "$CWD" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+if [[ -d "$CWD/.jj" ]]; then
+  # jj-colocated repo: git HEAD is detached by design, so the @{upstream} /
+  # branch-tracking checks below report nonsense here. Muster jj's own
+  # stranded-work signals instead (dirty @, unpushed bookmarks, unnamed local
+  # work). Script lives in the workspace container; guarded so a missing one
+  # just means no jj nudge.
+  _MUSTER="$HOME/Projects/scripts/ops/jj_muster.sh"
+  if [[ -x "$_MUSTER" ]]; then
+    _JJ=$(bash "$_MUSTER" "$CWD" 2>/dev/null | sed $'s/\x1b\\[[0-9;]*m//g')
+    [[ -n "$_JJ" && "$_JJ" != *"nothing stranded"* ]] && \
+      GIT_PUSH_NUDGE="⚠ jj muster — work that could be stranded:"$'\n'"${_JJ}"
+  fi
+elif git -C "$CWD" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
   UNCOMMITTED=$(git -C "$CWD" status --porcelain 2>/dev/null | wc -l | tr -d ' ')
   BRANCH=$(git -C "$CWD" rev-parse --abbrev-ref HEAD 2>/dev/null)
   if (( UNCOMMITTED > 0 )); then
