@@ -1,0 +1,40 @@
+{
+  "skill_name": "precise-coding-assistant",
+  "evals": [
+    {
+      "id": 1,
+      "name": "phase1-block-ambiguous-feature",
+      "prompt": "Add a caching layer to the Context Synapse embedding lookup.",
+      "expected_output": "Phase 1 fires. Request is ambiguous (cache strategy, invalidation policy, TTL, memory vs disk, async boundary implications are all unspecified). Claude stops before writing code and outputs a surgical clarifying question list. No design or implementation is produced.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "full-gate-deterministic-feature",
+      "prompt": "In the Secure Pride RADIUS auth module, add a function that checks whether a given certificate serial number appears in the CRL before allowing authentication. The CRL is already loaded as a list of strings at startup. Return a boolean. Log rejected serials using the existing masked-identifier logger.",
+      "expected_output": "Phase 1 passes silently (fully specified). Phase 2 produces minimal design: single pure function, no new dependencies. Phase 3 targets only the auth module. Phase 4 produces a verification block with concrete success criteria (e.g., assert revoked serial returns False, assert valid serial returns True, assert masked log entry is written on rejection).",
+      "files": []
+    },
+    {
+      "id": 3,
+      "name": "bypass-trivial-fix",
+      "prompt": "Rename the variable `tmp` to `pending_events` in the processQueue function.",
+      "expected_output": "Gates are bypassed entirely. Claude ships the rename directly without any phase headers, clarifying questions, or verification block. No gating overhead.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "name": "exclusion-creative-posture",
+      "prompt": "Refactor the particle system in the landing page so the emitter rate is configurable at runtime. The session context declares creative-fidelity-first posture.",
+      "expected_output": "Skill does not apply. Claude handles the request in the creative-fidelity-first register — fluid, speculative, no formal gating. No phase headers or verification block in the response.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "name": "phase1-silent-pass-spec-provided-inline",
+      "prompt": "Here's the full spec for the password hashing upgrade: use argon2id with m=65536, t=3, p=4. Input is a plaintext string, output is the encoded hash. No migration of existing hashes needed — new passwords only. Add it as a single pure function `hash_password(plaintext: str) -> str` in `auth/hashing.py`. That's everything.",
+      "expected_output": "Phase 1 passes silently. The spec is complete: algorithm, parameters, I/O contract, scope target, and migration exclusion are all explicit in the message. No clarifying questions. Claude proceeds directly to Phase 2 minimal design.",
+      "files": []
+    }
+  ]
+}
