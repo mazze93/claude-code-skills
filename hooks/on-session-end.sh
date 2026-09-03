@@ -6,7 +6,11 @@
 #     a project→file map had nothing real to point at. Lists what actually exists
 #     instead. Also warns on unpushed commits, not just uncommitted files —
 #     work that only exists on this laptop is the failure mode that matters.
-# Portable across machines: derives MEMORY_DIR from $HOME.
+# v6 (2026-09-02): MEMORY_DIR was slugified from $HOME, so it always resolved to
+#     ~/.claude/projects/-Users-<user>/memory — never the per-project dir Claude
+#     Code actually uses. Slugify the session cwd instead, matching Claude Code's
+#     own key (every non-alphanumeric → "-"; worktrees keep their own dir).
+# Portable across machines: derives MEMORY_DIR from the session cwd.
 
 command -v jq >/dev/null || exit 0
 
@@ -26,8 +30,11 @@ else
   PROJECT=$(basename "$CWD")
 fi
 
-# Portable: derive memory dir from $HOME (works for any username/path)
-MEMORY_DIR="$HOME/.claude/projects/$(echo "$HOME" | sed 's|/|-|g')/memory"
+# Claude Code keys ~/.claude/projects/<slug>/ by the session's working directory,
+# slugifying every non-alphanumeric char to "-" (a leading "/" yields a leading
+# "-"; worktree sessions get their own dir — do not fold them into the main repo).
+# Derive from $CWD, not $HOME.
+MEMORY_DIR="$HOME/.claude/projects/$(printf '%s' "$CWD" | sed 's|[^A-Za-z0-9]|-|g')/memory"
 
 EDITS=0; WRITES=0; TOOL_CALLS=0
 if [[ -f "$TRANSCRIPT" ]]; then
