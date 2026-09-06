@@ -23,6 +23,10 @@ TRANSCRIPT=$(_jval transcript_path)
 SESSION_ID=$(_jval session_id)
 CWD=$(_jval cwd)
 [[ -z "$CWD" ]] && CWD="$PWD"
+# Strip any trailing slash: it would slugify to a stray trailing "-" and the
+# MEMORY_DIR lookup would miss. Claude Code doesn't send one today (checked
+# against 2 weeks of transcripts — only literal "/"), but normalize defensively.
+while [[ "$CWD" == */ && "$CWD" != "/" ]]; do CWD="${CWD%/}"; done
 
 if [[ "$CWD" =~ "\.claude-worktrees" ]]; then
   PROJECT=$(basename "${CWD%%/.claude-worktrees*}")
