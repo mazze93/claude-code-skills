@@ -1,0 +1,66 @@
+{
+  "_comment": "Single source of truth for how skills bundle into plugins. marketplace.json, every plugin.json, the plugin skill symlinks and INDEX.md are all GENERATED from this file by scripts/build_marketplace.py, and scripts/validate_marketplace.py fails CI if any of them drift. Edit this; never edit the generated artefacts.",
+  "marketplace": {
+    "name": "mazze93",
+    "owner": {
+      "name": "Mazze LeCzzare Frazer",
+      "url": "https://mazzeleczzare.com"
+    },
+    "description": "Skills for Claude Code, grouped by when you reach for them."
+  },
+  "plugins": {
+    "cloudflare-suite": {
+      "description": "Cloudflare platform and Cloudflare One / Zero Trust work, retrieval-first over embedded knowledge.",
+      "skills": [
+        "cloudflare",
+        "cloudflare-one"
+      ]
+    },
+    "continuity": {
+      "description": "Memory and handoff across sessions, so work survives a dropped context window.",
+      "skills": [
+        "engram",
+        "session-journal",
+        "transcript-handoff",
+        "stratum-project-init"
+      ]
+    },
+    "frontend": {
+      "description": "Interface work: design, component construction, performance, and the blog surface.",
+      "skills": [
+        "frontend-design",
+        "component-factory",
+        "web-perf",
+        "run-mazze-leczzare-blog"
+      ]
+    },
+    "lab": {
+      "description": "Probes and research aids that do not belong to one domain.",
+      "skills": [
+        "concurrency-probe",
+        "precise-coding-assistant",
+        "local-swarm",
+        "read-arxiv-paper"
+      ]
+    },
+    "rigor": {
+      "description": "Verification discipline: establish what a change is, challenge a claim that it is correct, and record the decision.",
+      "skills": [
+        "corroborate",
+        "touchstone",
+        "decision-telemetry"
+      ]
+    },
+    "workspace": {
+      "description": "Fleet and repository operations across a multi-repo workspace: sync, audit, triage, ship.",
+      "skills": [
+        "workspace-sync",
+        "claude-md-audit",
+        "disk-audit",
+        "ship",
+        "pr-triage",
+        "git-forensics"
+      ]
+    }
+  }
+}

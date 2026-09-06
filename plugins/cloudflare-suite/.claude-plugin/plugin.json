@@ -1,0 +1,10 @@
+{
+  "_generated": "by scripts/build_marketplace.py from skill-map.json \u2014 do not edit",
+  "name": "cloudflare-suite",
+  "description": "Cloudflare platform and Cloudflare One / Zero Trust work, retrieval-first over embedded knowledge.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Mazze LeCzzare Frazer",
+    "url": "https://mazzeleczzare.com"
+  }
+}

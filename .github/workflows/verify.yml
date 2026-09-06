@@ -74,3 +74,26 @@ jobs:
 
       - name: Bootstrap is dry-run clean
         run: bash bootstrap/bootstrap.sh --dry-run
+
+  # The marketplace layer. Each gate exists because of a failure that already
+  # happened: a plugin/skill name collision (caught on the validator's first
+  # run), a generated artefact hand-edited into drift, and an installer writing
+  # a pre-consolidation copy over two SKILL.md files that read as new work.
+  marketplace:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0        # check_revert needs history, not a shallow clone
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Generated artefacts match the map
+        run: python3 scripts/build_marketplace.py --check
+
+      - name: Collisions, orphans, frontmatter
+        run: python3 scripts/validate_marketplace.py
+
+      - name: No change silently restores an older version of itself
+        run: python3 scripts/check_revert.py --all

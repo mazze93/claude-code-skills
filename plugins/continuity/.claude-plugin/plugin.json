@@ -1,0 +1,10 @@
+{
+  "_generated": "by scripts/build_marketplace.py from skill-map.json \u2014 do not edit",
+  "name": "continuity",
+  "description": "Memory and handoff across sessions, so work survives a dropped context window.",
+  "version": "0.1.0",
+  "author": {
+    "name": "Mazze LeCzzare Frazer",
+    "url": "https://mazzeleczzare.com"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "_generated": "by scripts/build_marketplace.py from skill-map.json \u2014 do not edit",
+  "name": "mazze93",
+  "owner": {
+    "name": "Mazze LeCzzare Frazer",
+    "url": "https://mazzeleczzare.com"
+  },
+  "metadata": {
+    "description": "Skills for Claude Code, grouped by when you reach for them.",
+    "version": "0.1.0"
+  },
+  "plugins": [
+    {
+      "name": "cloudflare-suite",
+      "source": "./plugins/cloudflare-suite",
+      "description": "Cloudflare platform and Cloudflare One / Zero Trust work, retrieval-first over embedded knowledge.",
+      "version": "0.1.0"
+    },
+    {
+      "name": "continuity",
+      "source": "./plugins/continuity",
+      "description": "Memory and handoff across sessions, so work survives a dropped context window.",
+      "version": "0.1.0"
+    },
+    {
+      "name": "frontend",
+      "source": "./plugins/frontend",
+      "description": "Interface work: design, component construction, performance, and the blog surface.",
+      "version": "0.1.0"
+    },
+    {
+      "name": "lab",
+      "source": "./plugins/lab",
+      "description": "Probes and research aids that do not belong to one domain.",
+      "version": "0.1.0"
+    },
+    {
+      "name": "rigor",
+      "source": "./plugins/rigor",
+      "description": "Verification discipline: establish what a change is, challenge a claim that it is correct, and record the decision.",
+      "version": "0.1.0"
+    },
+    {
+      "name": "workspace",
+      "source": "./plugins/workspace",
+      "description": "Fleet and repository operations across a multi-repo workspace: sync, audit, triage, ship.",
+      "version": "0.1.0"
+    }
+  ]
+}
