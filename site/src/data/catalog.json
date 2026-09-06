@@ -1,0 +1,282 @@
+{
+  "_generated": "by scripts/build_marketplace.py \u2014 do not edit",
+  "marketplaceName": "mazze93",
+  "currency": "USD",
+  "licence": "MIT for free tiers; commercial licence for paid tiers",
+  "plugins": [
+    {
+      "name": "cloudflare-suite",
+      "description": "Cloudflare platform and Cloudflare One / Zero Trust work, retrieval-first over embedded knowledge.",
+      "tier": "free",
+      "price": 0,
+      "tierLabel": "Open",
+      "checkout": null,
+      "skills": [
+        {
+          "name": "cloudflare",
+          "plugin": "cloudflare-suite",
+          "description": "Cloudflare development: Workers, Wrangler CLI, Pages, Durable Objects, storage (KV/D1/R2/Queues), AI (Workers AI, Vectorize, Agents SDK), Sandbox SDK, Email Service, Turnstile setup, security (WAF, DDoS), networking, and IaC. Use for any Cloudflare build, deploy, or code-review task. Retrieval-first over pre-trained knowledge.",
+          "summary": "Cloudflare development: Workers, Wrangler CLI, Pages, Durable Objects, storage (KV/D1/R2/Queues), AI (Workers AI, Vectorize, Agents SDK), Sandbox SDK, Email Service, Turnstile setup, security (WAF, DD",
+          "added": "2026-07-25T22:39:11-04:00",
+          "isNew": false
+        },
+        {
+          "name": "cloudflare-one",
+          "plugin": "cloudflare-suite",
+          "description": "Cloudflare One Zero Trust / SASE: Access, Gateway, WARP, Tunnel, WAN, DLP, CASB, device posture, identity \u2014 design, configure, troubleshoot, review, and migrate from Zscaler/Palo Alto/legacy VPN. Retrieval-first: use current Cloudflare docs over embedded knowledge.",
+          "summary": "Cloudflare One Zero Trust / SASE: Access, Gateway, WARP, Tunnel, WAN, DLP, CASB, device posture, identity \u2014 design, configure, troubleshoot, review, and migrate from Zscaler/Palo Alto/legacy VPN.",
+          "added": "2026-07-25T22:39:11-04:00",
+          "isNew": false
+        }
+      ]
+    },
+    {
+      "name": "continuity",
+      "description": "Memory and handoff across sessions, so work survives a dropped context window.",
+      "tier": "free",
+      "price": 0,
+      "tierLabel": "Open",
+      "checkout": null,
+      "skills": [
+        {
+          "name": "engram",
+          "plugin": "continuity",
+          "description": ">- Memory-as-first-class system for Claude sessions across a multi-domain workspace (~15+ active projects). USE THIS SKILL for: (1) setting up ENGRAM on a new device (\"set up ENGRAM\", \"install memory system\", \"set up my context\", \"set up memory\"); (2) capturing thoughts in-session (\"remember X\", \"add to memory\", \"note that\", \"log that\", \"capture this\"); (3) surfacing project context (\"what's my context\", \"surface my memory\", \"what am I working on\", \"restore context\", \"what do I know about X\"); (4) inbox consolidation (\"consolidate my memory\", \"process my inbox\", \"clean up memory\"); (5) creating per-repo CLAUDE.md stubs. Trigger when any workspace project is mentioned and context appears missing. Trigger on new-device setup and memory restoration. Workspace source of truth: ~/Code/WORKSPACE.md",
+          "summary": ">- Memory-as-first-class system for Claude sessions across a multi-domain workspace (~15+ active projects).",
+          "added": "2026-07-30T03:39:05-04:00",
+          "isNew": false
+        },
+        {
+          "name": "session-journal",
+          "plugin": "continuity",
+          "description": "Checkpoint discipline for long autonomous sessions \u2014 journal plan/decisions/progress to disk and commit at phase boundaries so a dropped connection or usage cutoff never loses work. Use when starting any multi-phase autonomous task, or when asked to \"work with checkpoints\", \"make it recoverable\", or \"track your decisions\".",
+          "summary": "Checkpoint discipline for long autonomous sessions \u2014 journal plan/decisions/progress to disk and commit at phase boundaries so a dropped connection or usage cutoff never loses work.",
+          "added": "2026-07-15T05:06:13-04:00",
+          "isNew": false
+        },
+        {
+          "name": "stratum-project-init",
+          "plugin": "continuity",
+          "description": "Stand up a project (new or existing) with the full Stratum-backed build-journal workflow \u2014 git init, a dedicated Stratum epistemic decision log, BUILD_JOURNAL.md cookbook, and the burst-summary/stratum-link correlation scripts that tie git commits to Stratum decisions without adding live network calls to the auto-commit hook. Use this whenever the user asks to \"set up a project like lockdown-exploitability-triage\", \"wire up Stratum for this project\", \"add a build journal\", \"set up append-only decision logging\", \"let me commit and iterate on this autonomously without losing work\", or wants a project to support checkpointed, resumable, agent-driven bursts of work. Every step is idempotent \u2014 safe to re-run on a project that's already partially or fully set up; it detects existing state and only does what's missing.",
+          "summary": "Stand up a project (new or existing) with the full Stratum-backed build-journal workflow \u2014 git init, a dedicated Stratum epistemic decision log, BUILD_JOURNAL.md cookbook, and the burst-summary/stratu",
+          "added": "2026-07-30T03:15:45-04:00",
+          "isNew": false
+        },
+        {
+          "name": "transcript-handoff",
+          "plugin": "continuity",
+          "description": "Produce a structured markdown session export for a long-form creative, intellectual, or research project (essays, theses, multi-session design work, personal-history-driven writing) so a future session \u2014 by this user or a future Claude instance \u2014 can pick up with full continuity. Use this whenever the user asks to \"export this conversation,\" \"give me a transcript,\" \"systematize the handoff,\" \"save this session,\" wants a \"markdown export\" of a working conversation, or references continuing a project across sessions. Also trigger proactively near the end of a long, substantive working session on a recurring creative/research project, even if the user hasn't asked yet \u2014 mention it as an option. Do not use this for ordinary code projects with their own repo/README conventions, or for one-off factual Q&A with no project continuity.",
+          "summary": "Produce a structured markdown session export for a long-form creative, intellectual, or research project (essays, theses, multi-session design work, personal-history-driven writing) so a future sessio",
+          "added": "2026-07-30T03:39:05-04:00",
+          "isNew": false
+        }
+      ]
+    },
+    {
+      "name": "frontend",
+      "description": "Interface work: design, component construction, performance, and the blog surface.",
+      "tier": "free",
+      "price": 0,
+      "tierLabel": "Open",
+      "checkout": null,
+      "skills": [
+        {
+          "name": "component-factory",
+          "plugin": "frontend",
+          "description": "Convert a hand-maintained design system into generated output driven by one token file, with a build-failing guard that makes palette/type drift structurally impossible. Use when a design system has stale values scattered across pages, duplicated @font-face or CDN font imports, or a \"source of truth\" that nothing actually imports \u2014 and when delegating mechanical design migration to a cheaper agent needs a deterministic gate rather than trust.",
+          "summary": "Convert a hand-maintained design system into generated output driven by one token file, with a build-failing guard that makes palette/type drift structurally impossible.",
+          "added": "2026-07-31T23:26:46-04:00",
+          "isNew": false
+        },
+        {
+          "name": "frontend-design",
+          "plugin": "frontend",
+          "description": "Create distinctive, production-grade frontend interfaces with high design quality. Use this skill when the user asks to build web components, pages, artifacts, posters, or applications (examples include websites, landing pages, dashboards, React components, HTML/CSS layouts, or when styling/beautifying any web UI). Also use when building, styling, or refactoring Astro, React, or TypeScript sites targeting Cloudflare. Generates creative, polished code and UI design that avoids generic AI aesthetics.",
+          "summary": "Create distinctive, production-grade frontend interfaces with high design quality.",
+          "added": "2026-07-30T03:34:59-04:00",
+          "isNew": false
+        },
+        {
+          "name": "run-mazze-leczzare-blog",
+          "plugin": "frontend",
+          "description": "Run, build, screenshot, or smoke-test mazze-leczzare-blog. Use when asked to start the dev server, verify a change works in the browser, take a screenshot of the site, or confirm a page renders correctly.",
+          "summary": "Run, build, screenshot, or smoke-test mazze-leczzare-blog.",
+          "added": "2026-06-29T20:20:08-04:00",
+          "isNew": false
+        },
+        {
+          "name": "web-perf",
+          "plugin": "frontend",
+          "description": "Analyzes web performance using Chrome DevTools MCP. Measures Core Web Vitals (LCP, INP, CLS) and supplementary metrics (FCP, TBT, Speed Index), identifies render-blocking resources, network dependency chains, layout shifts, caching issues, and accessibility gaps. Use when asked to audit, profile, debug, or optimize page load performance, Lighthouse scores, or site speed. Biases towards retrieval from current documentation over pre-trained knowledge.",
+          "summary": "Analyzes web performance using Chrome DevTools MCP.",
+          "added": "2026-07-25T22:54:39-04:00",
+          "isNew": false
+        }
+      ]
+    },
+    {
+      "name": "lab",
+      "description": "Probes and research aids that do not belong to one domain.",
+      "tier": "free",
+      "price": 0,
+      "tierLabel": "Open",
+      "checkout": null,
+      "skills": [
+        {
+          "name": "concurrency-probe",
+          "plugin": "lab",
+          "description": "Verify a concurrency-adjacent claim (thread-safe, handles concurrent requests, session isolation, no race conditions, lock-protected) by actually running simultaneous execution, not sequential tests or code review. Use before declaring any fix \"verified\" or \"done\" that touches locking, shared state, FFI/native extensions, background threads, async concurrency, or \"two X at once\" behavior \u2014 especially in threading-heavy native code (Swift/C/Rust/Cython extensions with semaphores, locks, or callbacks). Also use when asked to stress-test, race-test, or check thread-safety.",
+          "summary": "Verify a concurrency-adjacent claim (thread-safe, handles concurrent requests, session isolation, no race conditions, lock-protected) by actually running simultaneous execution, not sequential tests o",
+          "added": "2026-09-03T08:17:21-04:00",
+          "isNew": true
+        },
+        {
+          "name": "local-swarm",
+          "plugin": "lab",
+          "description": "Fan out parallel review/analysis/summarization passes to on-device Ollama (claude-local) instead of cloud subagents, with the cloud session acting as orchestrator and verifier. Use when the user asks to \"use local inference\", \"leverage claude-local / on-device Ollama\", \"run parallel agents locally\", or when cloud session limits make spawning cloud subagents wasteful \u2014 especially for review passes, bulk classification, per-file summaries, and second-opinion scans.",
+          "summary": "Fan out parallel review/analysis/summarization passes to on-device Ollama (claude-local) instead of cloud subagents, with the cloud session acting as orchestrator and verifier.",
+          "added": "2026-07-16T19:22:33-04:00",
+          "isNew": false
+        },
+        {
+          "name": "precise-coding-assistant",
+          "plugin": "lab",
+          "description": "> Enforces a four-phase gating mechanism (Clarity \u2192 Simplicity \u2192 Scope \u2192 Verification) on every meaningful code modification, implementation, or refactoring request. Use this skill whenever a request involves a new feature, structural refactoring, multi-file changes, or logic rewriting where the solution space is open-ended. MUST activate for: \"implement X\", \"refactor Y to do Z\", \"add a new module for\", \"rewrite the logic that\", \"redesign the architecture of\", any auth/crypto/data-pipeline change, any multi-file or compliance-surfaced engineering task. Do NOT trigger for trivial micro-fixes (typos, variable renames, one-liner syntax corrections) or for requests explicitly in a narrative-first creative register where fluid iteration takes precedence over architectural isolation. The gates should feel like precision instruments, not bureaucracy.",
+          "summary": "> Enforces a four-phase gating mechanism (Clarity \u2192 Simplicity \u2192 Scope \u2192 Verification) on every meaningful code modification, implementation, or refactoring request.",
+          "added": "2026-09-03T08:42:16-04:00",
+          "isNew": true
+        },
+        {
+          "name": "read-arxiv-paper",
+          "plugin": "lab",
+          "description": "> Use this skill when asked to read an arxiv paper given an arxiv URL. Fetches the LaTeX source (not the PDF), unpacks it, locates the entrypoint, reads the full paper recursively through \\input{}/\\include{} directives, produces a project-contextualized summary at ./knowledge/summary_{tag}.md, and syncs it to Obsidian via the Local REST API plugin.",
+          "summary": "> Use this skill when asked to read an arxiv paper given an arxiv URL.",
+          "added": "2026-06-03T21:25:32-04:00",
+          "isNew": false
+        }
+      ]
+    },
+    {
+      "name": "rigor",
+      "description": "Verification discipline: establish what a change is, challenge a claim that it is correct, and record the decision.",
+      "tier": "pro",
+      "price": 29,
+      "tierLabel": "Commercial licence",
+      "checkout": null,
+      "skills": [
+        {
+          "name": "corroborate",
+          "plugin": "rigor",
+          "description": "Establish what an uncommitted or unfamiliar change actually IS before committing, discarding, pushing, or merging it \u2014 by making the artifact testify rather than reading the diff and inferring. Use when handling work you did not author: a dirty working tree, staged changes of unknown provenance, a stale-looking file, an unexplained deletion, an untracked directory, someone else's WIP, or any sweep that ends in \"commit what's finished.\" Also trigger before discarding anything, before committing a whole dirty tree, when a diff looks like a revert, when a deletion has no explanation, or when the user says \"clean this up,\" \"commit what's done,\" \"sync the fleet,\" or \"is this safe to commit.\" Complements touchstone: touchstone challenges a claim of correctness; corroborate establishes what a change is in the first place.",
+          "summary": "Establish what an uncommitted or unfamiliar change actually IS before committing, discarding, pushing, or merging it \u2014 by making the artifact testify rather than reading the diff and inferring.",
+          "added": "2026-09-06T07:30:40-04:00",
+          "isNew": true
+        },
+        {
+          "name": "decision-telemetry",
+          "plugin": "rigor",
+          "description": "> Build a dual-face decision transparency artifact: a visualization that shows both the clean recorded decision (Sephirothic face) and the shadow trace beneath it \u2014 the oscillation, discarded paths, and contradictions each clean node had to bury to stay coherent (Qliphothic face). Use when asked to make reasoning visible, build a reflection artifact about an LLM's decision process, or visualize how a system arrived at a conclusion. Anchors in the Tree of Life / Tree of Knowledge geometry; the canonical implementation is tree-of-knowledge.html in the decision-telemetry skill.",
+          "summary": "> Build a dual-face decision transparency artifact: a visualization that shows both the clean recorded decision (Sephirothic face) and the shadow trace beneath it \u2014 the oscillation, discarded paths, a",
+          "added": "2026-05-29T16:23:22-04:00",
+          "isNew": false
+        },
+        {
+          "name": "touchstone",
+          "plugin": "rigor",
+          "description": "Apply an adversarial verification posture to any claim of correctness, completeness, or \"passing\" status \u2014 tests, proofs, invariants, security reviews, audits, or a \"this is resolved\" / \"this is safe\" assertion. touchstone does not accept N/N passing as sufficient; it enumerates the boundaries the existing proof doesn't reach, builds concrete probes against the highest-risk ones, and reports honestly whether they held. Use this skill whenever the user asks to verify, audit, stress-test, adversarially probe, or sanity-check a claim of correctness or completion \u2014 including phrases like \"is this actually done,\" \"does this actually work,\" \"find the hole in this,\" \"before I ship this,\" \"is this really verified,\" or when reviewing test suites, security findings, proofs, invariants, or any status marked \"closed,\" \"verified,\" or \"resolved.\" Also trigger when a claim is stated with unusually high confidence (100%, all tests green, fully verified, no known issues) \u2014 exactly the pattern this skill exists to challenge.",
+          "summary": "Apply an adversarial verification posture to any claim of correctness, completeness, or \"passing\" status \u2014 tests, proofs, invariants, security reviews, audits, or a \"this is resolved\" / \"this is safe\"",
+          "added": "2026-07-16T19:05:13-04:00",
+          "isNew": false
+        }
+      ]
+    },
+    {
+      "name": "workspace",
+      "description": "Fleet and repository operations across a multi-repo workspace: sync, audit, triage, ship.",
+      "tier": "pro",
+      "price": 29,
+      "tierLabel": "Commercial licence",
+      "checkout": null,
+      "skills": [
+        {
+          "name": "claude-md-audit",
+          "plugin": "workspace",
+          "description": "Audit CLAUDE.md files across one or many repos for stale information \u2014 dead path references, obsolete workspace roots, old model names, drifted file maps. Use when asked to \"audit CLAUDE.md\", \"check for stale docs/instructions\", or after restructuring a repo.",
+          "summary": "Audit CLAUDE.md files across one or many repos for stale information \u2014 dead path references, obsolete workspace roots, old model names, drifted file maps.",
+          "added": "2026-07-15T05:06:13-04:00",
+          "isNew": false
+        },
+        {
+          "name": "disk-audit",
+          "plugin": "workspace",
+          "description": "Audit macOS disk usage end-to-end, explain what is filling the disk, and deliver an opinionated debrief with a tiered, safety-rated cut list. Use when the user reports low disk space, storage mysteries, or wants to find duplicate files.",
+          "summary": "Audit macOS disk usage end-to-end, explain what is filling the disk, and deliver an opinionated debrief with a tiered, safety-rated cut list.",
+          "added": "2026-07-15T05:06:33-04:00",
+          "isNew": false
+        },
+        {
+          "name": "git-forensics",
+          "plugin": "workspace",
+          "description": "Use when git repos show \"fatal: unable to read <hash>\", when investigating unauthorized git index modifications, when detecting staged file replacements across repos, or when correlating cross-repo git damage from a potential intrusion. Distinct from normal git debugging \u2014 this skill is for adversarial git manipulation scenarios.",
+          "summary": "Use when git repos show \"fatal: unable to read <hash>\", when investigating unauthorized git index modifications, when detecting staged file replacements across repos, or when correlating cross-repo gi",
+          "added": "2026-05-23T17:04:07-04:00",
+          "isNew": false
+        },
+        {
+          "name": "pr-triage",
+          "plugin": "workspace",
+          "description": "Triage open GitHub pull requests across one or all mazze93 repos by *what kind of stuck* they are (merge conflict, failing CI, changes requested, awaiting review, abandoned, ready-to-merge, healthy) rather than just sorting by age. Use when asked to \"triage PRs\", \"what PRs need attention\", \"find stuck/stale/abandoned PRs\", \"which PRs are ready to merge\", or to generate a PR status report for terminal, Slack, or a GitHub comment/markdown file.",
+          "summary": "Triage open GitHub pull requests across one or all mazze93 repos by *what kind of stuck* they are (merge conflict, failing CI, changes requested, awaiting review, abandoned, ready-to-merge, healthy) r",
+          "added": "2026-09-03T08:42:16-04:00",
+          "isNew": true
+        },
+        {
+          "name": "ship",
+          "plugin": "workspace",
+          "description": "Ship work end-to-end \u2014 validate, prove the change behaves, commit in milestones, push, and handle protected-main/PR-only repos. Use when asked to \"ship\", \"ship it\", \"release\", \"commit and push\", \"open a PR\", or \"get this live\". Commits after each milestone so session-limit cutoffs never lose progress.",
+          "summary": "Ship work end-to-end \u2014 validate, prove the change behaves, commit in milestones, push, and handle protected-main/PR-only repos.",
+          "added": "2026-06-29T20:44:12-04:00",
+          "isNew": false
+        },
+        {
+          "name": "workspace-sync",
+          "plugin": "workspace",
+          "description": "Reconcile the ~/Projects workspace against WORKSPACE.md and GitHub \u2014 clone missing repos into their domains, report drift, add/move projects with map-and-territory discipline. Use when asked to \"sync the workspace\", \"clone my repos\", \"add a repo to the workspace\", or \"check workspace status\".",
+          "summary": "Reconcile the ~/Projects workspace against WORKSPACE.md and GitHub \u2014 clone missing repos into their domains, report drift, add/move projects with map-and-territory discipline.",
+          "added": "2026-07-15T05:06:13-04:00",
+          "isNew": false
+        }
+      ]
+    }
+  ],
+  "recent": [
+    {
+      "name": "corroborate",
+      "plugin": "rigor",
+      "description": "Establish what an uncommitted or unfamiliar change actually IS before committing, discarding, pushing, or merging it \u2014 by making the artifact testify rather than reading the diff and inferring. Use when handling work you did not author: a dirty working tree, staged changes of unknown provenance, a stale-looking file, an unexplained deletion, an untracked directory, someone else's WIP, or any sweep that ends in \"commit what's finished.\" Also trigger before discarding anything, before committing a whole dirty tree, when a diff looks like a revert, when a deletion has no explanation, or when the user says \"clean this up,\" \"commit what's done,\" \"sync the fleet,\" or \"is this safe to commit.\" Complements touchstone: touchstone challenges a claim of correctness; corroborate establishes what a change is in the first place.",
+      "summary": "Establish what an uncommitted or unfamiliar change actually IS before committing, discarding, pushing, or merging it \u2014 by making the artifact testify rather than reading the diff and inferring.",
+      "added": "2026-09-06T07:30:40-04:00",
+      "isNew": true
+    },
+    {
+      "name": "precise-coding-assistant",
+      "plugin": "lab",
+      "description": "> Enforces a four-phase gating mechanism (Clarity \u2192 Simplicity \u2192 Scope \u2192 Verification) on every meaningful code modification, implementation, or refactoring request. Use this skill whenever a request involves a new feature, structural refactoring, multi-file changes, or logic rewriting where the solution space is open-ended. MUST activate for: \"implement X\", \"refactor Y to do Z\", \"add a new module for\", \"rewrite the logic that\", \"redesign the architecture of\", any auth/crypto/data-pipeline change, any multi-file or compliance-surfaced engineering task. Do NOT trigger for trivial micro-fixes (typos, variable renames, one-liner syntax corrections) or for requests explicitly in a narrative-first creative register where fluid iteration takes precedence over architectural isolation. The gates should feel like precision instruments, not bureaucracy.",
+      "summary": "> Enforces a four-phase gating mechanism (Clarity \u2192 Simplicity \u2192 Scope \u2192 Verification) on every meaningful code modification, implementation, or refactoring request.",
+      "added": "2026-09-03T08:42:16-04:00",
+      "isNew": true
+    },
+    {
+      "name": "pr-triage",
+      "plugin": "workspace",
+      "description": "Triage open GitHub pull requests across one or all mazze93 repos by *what kind of stuck* they are (merge conflict, failing CI, changes requested, awaiting review, abandoned, ready-to-merge, healthy) rather than just sorting by age. Use when asked to \"triage PRs\", \"what PRs need attention\", \"find stuck/stale/abandoned PRs\", \"which PRs are ready to merge\", or to generate a PR status report for terminal, Slack, or a GitHub comment/markdown file.",
+      "summary": "Triage open GitHub pull requests across one or all mazze93 repos by *what kind of stuck* they are (merge conflict, failing CI, changes requested, awaiting review, abandoned, ready-to-merge, healthy) r",
+      "added": "2026-09-03T08:42:16-04:00",
+      "isNew": true
+    }
+  ],
+  "totals": {
+    "plugins": 6,
+    "skills": 23
+  }
+}

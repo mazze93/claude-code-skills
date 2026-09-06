@@ -1,0 +1,281 @@
+---
+import '../styles/tokens.css';
+import Astrolabe from '../components/Astrolabe.tsx';
+import { loadCatalog } from '../lib/catalog';
+
+export interface Props {}
+
+const cat = loadCatalog();
+const rings = cat.plugins.map((p) => ({
+  name: p.name,
+  skills: p.skills.map((s) => s.name),
+  paid: p.price > 0,
+}));
+const stamp = new Date().toISOString().slice(0, 10);
+---
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{cat.marketplaceName} — skills for Claude Code</title>
+  <meta name="description" content={`${cat.totals.plugins} plugins, ${cat.totals.skills} skills. Verification discipline, fleet operations, and continuity for Claude Code.`} />
+  <link rel="canonical" href="https://store.mazzeleczzare.com/" />
+</head>
+<body>
+  <!-- The rail: an instrument bezel. Fixed, numbered, never scrolls. -->
+  <aside class="rail" aria-hidden="true">
+    <span class="rail-mark">{cat.marketplaceName.toUpperCase()}</span>
+    <span class="rail-ticks">
+      {cat.plugins.map((_, i) => <i style={`--i:${i}`}></i>)}
+    </span>
+    <span class="rail-mark rail-stamp">{stamp}</span>
+  </aside>
+
+  <main>
+    <header class="masthead">
+      <p class="coord">Marketplace · Claude Code · {cat.totals.plugins} plugins / {cat.totals.skills} skills</p>
+      <h1>
+        <span class="l1">SKILLS</span>
+        <span class="l2">FOR THE</span>
+        <span class="l3">FRONTIER</span>
+      </h1>
+      <p class="lede">
+        Instruments, not shortcuts. Each one encodes a discipline that was learned
+        the expensive way and refuses to let it be forgotten.
+      </p>
+      <div class="install mono">
+        <code>/plugin marketplace add mazze93/claude-code-skills</code>
+        <code>/plugin install rigor@{cat.marketplaceName}</code>
+      </div>
+    </header>
+
+    {cat.recent.length > 0 && (
+      <section class="new" aria-label="Recently added">
+        <span class="new-tag mono">NEW</span>
+        <ul>
+          {cat.recent.map((s) => (
+            <li>
+              <a href={`#plugin-${s.plugin}`}>
+                <strong>{s.name}</strong>
+                <span class="coord">{s.plugin} · {s.added?.slice(0, 10)}</span>
+                <span class="new-sum">{s.summary}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+
+    <section class="nav-plate">
+      <div class="nav-copy">
+        <h2>Navigate by ring</h2>
+        <p>
+          Every ring is a plugin; every star a skill. Trace one to see its
+          constellation, take it to land on the slab below.
+        </p>
+        <ol class="legend">
+          {cat.plugins.map((p) => (
+            <li>
+              <a href={`#plugin-${p.name}`}>
+                <span class="legend-name">{p.name}</span>
+                <span class="coord">{p.skills.length} · {p.price > 0 ? `$${p.price}` : 'open'}</span>
+              </a>
+            </li>
+          ))}
+        </ol>
+      </div>
+      <!-- Below the fold on small screens and non-urgent: defer until seen. -->
+      <Astrolabe client:visible rings={rings} />
+    </section>
+
+    <section class="slabs">
+      {cat.plugins.map((p, i) => (
+        <article class={`slab${p.price > 0 ? ' slab-paid' : ''}`} id={`plugin-${p.name}`} tabindex="-1">
+          <div class="slab-index coord">{String(i + 1).padStart(2, '0')}</div>
+          <div class="slab-head">
+            <h3>{p.name}</h3>
+            <p class="slab-desc">{p.description}</p>
+          </div>
+          <div class="slab-buy">
+            <span class="price">{p.price > 0 ? `$${p.price}` : 'OPEN'}</span>
+            <span class="coord">{p.tierLabel}</span>
+            {p.price > 0 ? (
+              p.checkout
+                ? <a class="cta" href={p.checkout} rel="noopener">Buy licence</a>
+                : <a class="cta cta-contact" href="mailto:mazze@mazzeleczzare.com?subject=Licence%20enquiry">Contact for licence</a>
+            ) : (
+              <code class="cta cta-free mono">/plugin install {p.name}@{cat.marketplaceName}</code>
+            )}
+          </div>
+          <ul class="skills">
+            {p.skills.map((s) => (
+              <li class={s.isNew ? 'is-new' : ''}>
+                <span class="skill-name mono">{s.name}{s.isNew && <em> new</em>}</span>
+                <span class="skill-sum">{s.summary}</span>
+              </li>
+            ))}
+          </ul>
+        </article>
+      ))}
+    </section>
+
+    <footer>
+      <p class="coord">{cat.licence}</p>
+      <p>
+        Source: <a href="https://github.com/mazze93/claude-code-skills">mazze93/claude-code-skills</a>.
+        This page is generated from <code class="mono">skill-map.json</code> at build time —
+        a new skill is a push, not an edit.
+      </p>
+    </footer>
+  </main>
+
+  <style>
+    /* ---- rail ------------------------------------------------------- */
+    .rail {
+      position: fixed; inset: 0 auto 0 0; width: var(--rail); z-index: 2;
+      display: flex; flex-direction: column; align-items: center;
+      justify-content: space-between; padding: 1.25rem 0;
+      border-right: 1px solid var(--rule);
+      background: linear-gradient(180deg, var(--graphite-900), var(--graphite-700));
+    }
+    .rail-mark {
+      font-family: var(--mono); font-size: .62rem; letter-spacing: .3em;
+      writing-mode: vertical-rl; color: var(--muted);
+    }
+    .rail-stamp { color: var(--instrument); }
+    .rail-ticks { display: flex; flex-direction: column; gap: .55rem; }
+    .rail-ticks i {
+      display: block; width: 1.1rem; height: 2px; background: var(--rule);
+      animation: tick .5s ease-out backwards; animation-delay: calc(var(--i) * 60ms + 200ms);
+    }
+    .rail-ticks i:nth-child(odd) { width: 1.9rem; background: var(--ignition); }
+    @keyframes tick { from { opacity: 0; transform: scaleX(0); transform-origin: left; } }
+
+    main { position: relative; z-index: 1; margin-left: var(--rail); }
+
+    /* ---- masthead: grid-breaking, not centred ------------------------ */
+    .masthead { padding: clamp(3rem, 9vw, 7rem) var(--step) clamp(2rem, 5vw, 4rem); max-width: 74rem; }
+    h1 {
+      font-family: var(--display); font-weight: 400; margin: .6rem 0 1.2rem;
+      line-height: .84; letter-spacing: -.02em; text-transform: uppercase;
+      display: grid;
+    }
+    h1 span { display: block; animation: rise .55s cubic-bezier(.2,.7,.2,1) backwards; }
+    .l1 { font-size: clamp(3.2rem, 13vw, 9.5rem); }
+    .l2 { font-size: clamp(1.6rem, 5.2vw, 3.6rem); color: var(--muted); margin-left: clamp(1rem, 9vw, 8rem); animation-delay: .09s; }
+    .l3 { font-size: clamp(3.2rem, 13vw, 9.5rem); color: var(--ignition); margin-left: clamp(.5rem, 4vw, 3.5rem); animation-delay: .18s; }
+    @keyframes rise { from { opacity: 0; transform: translateY(.5em); } }
+    .lede { max-width: 44ch; font-size: 1.12em; color: var(--fg); animation: rise .5s .3s backwards; }
+    .install { display: flex; flex-direction: column; gap: .4rem; margin-top: 2rem; animation: rise .5s .38s backwards; }
+    .install code {
+      display: inline-block; width: fit-content; padding: .5rem .8rem;
+      border: 1px solid var(--rule); border-left: 3px solid var(--instrument);
+      background: var(--graphite-900); color: var(--chalk); font-size: .82rem;
+    }
+
+    /* ---- new strip --------------------------------------------------- */
+    .new {
+      display: grid; grid-template-columns: auto 1fr; gap: var(--step);
+      align-items: start; margin: 0 var(--step) clamp(3rem, 7vw, 5rem);
+      padding: 1.1rem 1.2rem; border: 1px solid var(--ignition);
+      background: var(--ignition-dim);
+    }
+    .new-tag {
+      font-size: .68rem; letter-spacing: .22em; color: var(--graphite-900);
+      background: var(--ignition); padding: .2rem .5rem; align-self: center;
+    }
+    .new ul { list-style: none; display: flex; flex-wrap: wrap; gap: 1.4rem; margin: 0; padding: 0; }
+    .new a { display: grid; gap: .1rem; color: var(--fg); text-decoration: none; }
+    .new a:hover strong, .new a:focus-visible strong { color: var(--ignition); }
+    .new-sum { font-size: .8rem; color: var(--muted); max-width: 32ch; }
+
+    /* ---- navigator: asymmetric, instrument bleeds right -------------- */
+    .nav-plate {
+      display: grid; gap: var(--step); align-items: center;
+      grid-template-columns: minmax(0, 1fr);
+      padding: 0 var(--step) clamp(3rem, 8vw, 6rem);
+    }
+    @media (min-width: 62rem) {
+      .nav-plate { grid-template-columns: 26rem minmax(0, 1fr); }
+      .astrolabe { margin-right: calc(var(--step) * -2); }
+    }
+    .nav-copy h2 { font-family: var(--display); font-size: clamp(1.6rem, 3.4vw, 2.6rem); text-transform: uppercase; margin: 0 0 .6rem; letter-spacing: -.01em; }
+    .nav-copy p { color: var(--muted); max-width: 34ch; }
+    .legend { list-style: none; padding: 0; margin: 1.4rem 0 0; counter-reset: l; }
+    .legend li { counter-increment: l; border-top: 1px solid var(--rule); }
+    .legend a {
+      display: flex; justify-content: space-between; gap: 1rem; align-items: baseline;
+      padding: .55rem 0; text-decoration: none; color: var(--fg);
+    }
+    .legend a::before { content: counter(l, decimal-leading-zero); font-family: var(--mono); font-size: .7rem; color: var(--instrument); margin-right: .7rem; }
+    .legend-name { flex: 1; font-weight: 600; }
+    .legend a:hover, .legend a:focus-visible { color: var(--ignition); background: #ffffff08; }
+
+    .astrolabe { margin: 0; display: grid; justify-items: center; gap: .8rem; }
+    .astrolabe svg { width: min(100%, 34rem); height: auto; overflow: visible; }
+    .plate { fill: #ffffff03; stroke: var(--graphite-500); }
+    .graticule { stroke: var(--graphite-600); stroke-width: 1; }
+    .orbit { fill: none; stroke: var(--graphite-500); stroke-width: 1; }
+    .trace { fill: none; stroke: var(--instrument); stroke-width: 1; opacity: 0; transition: opacity .25s; }
+    .star { fill: var(--concrete); transition: r .2s, fill .2s; }
+    .hit { fill: var(--graphite-600); stroke: var(--instrument); stroke-width: 1.5; cursor: pointer; }
+    .ring.paid .hit { stroke: var(--ignition); }
+    .ring:hover .trace, .ring.on .trace { opacity: .85; }
+    .ring:hover .star, .ring.on .star { fill: var(--instrument); }
+    .ring.paid:hover .star, .ring.paid.on .star { fill: var(--ignition); }
+    .ring.paid:hover .trace, .ring.paid.on .trace { stroke: var(--ignition); }
+    .hub { fill: var(--graphite-900); stroke: var(--ignition); stroke-width: 2; }
+    .hub-l { font-family: var(--display); font-size: 15px; fill: var(--chalk); }
+    .hub-s { font-family: var(--mono); font-size: 9px; fill: var(--instrument); }
+
+    /* ---- slabs ------------------------------------------------------- */
+    .slabs { display: grid; gap: 1px; background: var(--rule); border-block: 1px solid var(--rule); }
+    .slab {
+      display: grid; gap: .6rem var(--step); padding: clamp(1.4rem, 3vw, 2.4rem) var(--step);
+      background: var(--graphite-800); outline: none;
+      grid-template-columns: auto 1fr;
+      grid-template-areas: 'idx head' 'idx buy' 'skills skills';
+    }
+    @media (min-width: 62rem) {
+      .slab { grid-template-columns: 3.5rem minmax(0, 1.4fr) minmax(14rem, .6fr); grid-template-areas: 'idx head buy' 'idx skills buy'; }
+    }
+    .slab:focus-visible { box-shadow: inset 0 0 0 2px var(--instrument); }
+    .slab-paid { background: linear-gradient(90deg, #ff6b1a0a, transparent 40%); }
+    .slab-index { grid-area: idx; padding-top: .35rem; }
+    .slab-head { grid-area: head; }
+    .slab h3 { font-family: var(--display); text-transform: uppercase; font-size: clamp(1.4rem, 3vw, 2.1rem); margin: 0 0 .3rem; letter-spacing: -.01em; }
+    .slab-desc { margin: 0; color: var(--muted); max-width: 52ch; }
+    .slab-buy { grid-area: buy; display: grid; gap: .3rem; align-content: start; justify-items: start; }
+    @media (min-width: 62rem) { .slab-buy { justify-items: end; text-align: right; } }
+    .price { font-family: var(--display); font-size: 1.9rem; line-height: 1; }
+    .slab-paid .price { color: var(--ignition); }
+    .cta {
+      margin-top: .5rem; padding: .6rem 1rem; border: 1px solid var(--ignition);
+      color: var(--ignition); text-decoration: none; font-family: var(--mono);
+      font-size: .78rem; letter-spacing: .06em; min-height: 44px; display: inline-flex; align-items: center;
+    }
+    .cta:hover, .cta:focus-visible { background: var(--ignition); color: var(--graphite-900); }
+    .cta-contact { border-color: var(--concrete); color: var(--concrete); }
+    .cta-contact:hover { background: var(--concrete); }
+    .cta-free { border-color: var(--rule); color: var(--muted); }
+    .skills { grid-area: skills; list-style: none; padding: 0; margin: .8rem 0 0; display: grid; gap: .45rem; }
+    .skills li { display: grid; grid-template-columns: minmax(9rem, auto) 1fr; gap: .8rem; align-items: baseline; border-top: 1px solid var(--graphite-600); padding-top: .45rem; }
+    .skill-name { font-size: .82rem; color: var(--instrument); }
+    .skills li.is-new .skill-name { color: var(--ignition); }
+    .skill-name em { font-style: normal; font-size: .6rem; letter-spacing: .14em; text-transform: uppercase; }
+    .skill-sum { font-size: .85rem; color: var(--muted); }
+
+    footer { padding: clamp(2rem, 6vw, 4rem) var(--step); display: grid; gap: .5rem; }
+    footer p { margin: 0; max-width: 60ch; color: var(--muted); }
+
+    @media (max-width: 40rem) { .skills li { grid-template-columns: 1fr; gap: .1rem; } }
+
+    /* Reduced motion: the instrument must still be steerable, just still. */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+      .trace { opacity: .35; }
+    }
+  </style>
+</body>
+</html>

@@ -1,5 +1,5 @@
 {
-  "_comment": "Single source of truth for how skills bundle into plugins. marketplace.json, every plugin.json, the plugin skill symlinks and INDEX.md are all GENERATED from this file by scripts/build_marketplace.py, and scripts/validate_marketplace.py fails CI if any of them drift. Edit this; never edit the generated artefacts.",
+  "_comment": "Single source of truth for how skills bundle into plugins AND for the storefront at store.mazzeleczzare.com. marketplace.json, every plugin.json, the plugin skill symlinks, INDEX.md and the site catalogue are all GENERATED from this file; scripts/validate_marketplace.py fails CI if any of them drift. Edit this; never edit the generated artefacts.",
   "marketplace": {
     "name": "mazze93",
     "owner": {
@@ -14,7 +14,9 @@
       "skills": [
         "cloudflare",
         "cloudflare-one"
-      ]
+      ],
+      "tier": "free",
+      "checkout": null
     },
     "continuity": {
       "description": "Memory and handoff across sessions, so work survives a dropped context window.",
@@ -23,7 +25,9 @@
         "session-journal",
         "transcript-handoff",
         "stratum-project-init"
-      ]
+      ],
+      "tier": "free",
+      "checkout": null
     },
     "frontend": {
       "description": "Interface work: design, component construction, performance, and the blog surface.",
@@ -32,7 +36,9 @@
         "component-factory",
         "web-perf",
         "run-mazze-leczzare-blog"
-      ]
+      ],
+      "tier": "free",
+      "checkout": null
     },
     "lab": {
       "description": "Probes and research aids that do not belong to one domain.",
@@ -41,7 +47,9 @@
         "precise-coding-assistant",
         "local-swarm",
         "read-arxiv-paper"
-      ]
+      ],
+      "tier": "free",
+      "checkout": null
     },
     "rigor": {
       "description": "Verification discipline: establish what a change is, challenge a claim that it is correct, and record the decision.",
@@ -49,7 +57,9 @@
         "corroborate",
         "touchstone",
         "decision-telemetry"
-      ]
+      ],
+      "tier": "pro",
+      "checkout": null
     },
     "workspace": {
       "description": "Fleet and repository operations across a multi-repo workspace: sync, audit, triage, ship.",
@@ -60,7 +70,24 @@
         "ship",
         "pr-triage",
         "git-forensics"
-      ]
+      ],
+      "tier": "pro",
+      "checkout": null
+    }
+  },
+  "commerce": {
+    "_comment": "Commercial scaffolding. `checkout` is the integration point \u2014 set it to a Stripe Payment Link, Polar, or Gumroad URL per plugin and the storefront wires the button to it. Nothing here processes payment; it carries the data a processor needs and fails visibly if a priced plugin has no checkout URL.",
+    "currency": "USD",
+    "licence": "MIT for free tiers; commercial licence for paid tiers",
+    "tiers": {
+      "free": {
+        "price": 0,
+        "label": "Open"
+      },
+      "pro": {
+        "price": 29,
+        "label": "Commercial licence"
+      }
     }
   }
 }

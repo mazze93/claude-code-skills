@@ -1,0 +1,76 @@
+/* Frontier instrumentation. Poured concrete carrying a precision instrument.
+   Every colour is a token; nothing is hardcoded at the point of use. */
+:root {
+  --graphite-900: #08090b;
+  --graphite-800: #0b0c0e;
+  --graphite-700: #141619;
+  --graphite-600: #1d2025;
+  --graphite-500: #2a2e35;
+  --concrete:     #8d9199;
+  --chalk:        #e8e6e1;
+
+  --ignition:     #ff6b1a;   /* the one hot colour. Used sparingly, never as fill. */
+  --ignition-dim: #ff6b1a26;
+  --instrument:   #7fd4e8;   /* cold. constellation lines, coordinates, rings. */
+  --instrument-dim: #7fd4e81f;
+
+  --bg: var(--graphite-800);
+  --fg: var(--chalk);
+  --muted: var(--concrete);
+  --rule: var(--graphite-500);
+
+  --display: 'Archivo Black', 'Arial Black', sans-serif;
+  --body: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+
+  --rail: clamp(3.5rem, 7vw, 7.5rem);
+  --step: clamp(1rem, 2.2vw, 2rem);
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--body);
+  font-size: clamp(0.95rem, 0.4vw + 0.85rem, 1.05rem);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Never a flat background: a fixed grain plate plus two off-axis fields.
+   pointer-events:none so the decoration can never eat a click. */
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+body::before {
+  background:
+    radial-gradient(60rem 40rem at 88% -10%, #ff6b1a14, transparent 60%),
+    radial-gradient(50rem 50rem at -10% 40%, #7fd4e814, transparent 60%),
+    repeating-linear-gradient(90deg, #ffffff05 0 1px, transparent 1px 4rem);
+}
+body::after {
+  opacity: .5;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.35'/%3E%3C/svg%3E");
+}
+
+a { color: var(--ignition); text-underline-offset: .25em; }
+:focus-visible { outline: 2px solid var(--instrument); outline-offset: 3px; }
+
+.mono { font-family: var(--mono); }
+.coord {
+  font-family: var(--mono);
+  font-size: .68rem;
+  letter-spacing: .16em;
+  text-transform: uppercase;
+  color: var(--muted);
+}

@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -114,6 +115,78 @@ def build(check: bool = False) -> int:
             lines.append(f"| [`{skill}`](skills/{skill}/SKILL.md) | {first} |")
         lines.append("")
     write(ROOT / "INDEX.md", "\n".join(lines))
+
+    # site/src/data/catalog.json — the storefront's data, emitted here rather
+    # than read at render time. The Cloudflare prerenderer runs in workerd,
+    # where node:fs and node:child_process do not exist; a catalogue that
+    # shells out to git cannot survive that environment. Emitting it as a plain
+    # JSON artefact keeps one source of truth, puts it under the same --check
+    # drift gate as everything else, and leaves the render path pure data.
+    import subprocess
+    from datetime import datetime, timezone
+
+    def first_seen(rel: str) -> str | None:
+        try:
+            out = subprocess.run(
+                ["git", "log", "--diff-filter=A", "--follow", "--format=%aI", "-1", "--", rel],
+                cwd=ROOT, capture_output=True, text=True, timeout=15).stdout.strip()
+            return out or None
+        except Exception:
+            return None   # shallow clone or tarball: nothing is "new", the safe direction
+
+    def description(skill: str) -> str:
+        text = (ROOT / "skills" / skill / "SKILL.md").read_text(encoding="utf-8")
+        block = text.split("---")[1]
+        out, taking = [], False
+        for line in block.splitlines():
+            if line.startswith("description:"):
+                taking, line = True, line.split(":", 1)[1]
+            elif taking and re.match(r"^[a-z-]+:", line):
+                break
+            if taking:
+                out.append(line.strip())
+        return " ".join(out).strip().strip('"')
+
+    NEW_DAYS = 30
+    now = datetime.now(timezone.utc)
+    commerce = m.get("commerce", {})
+    tiers = commerce.get("tiers", {})
+    every: list[dict] = []
+    cat_plugins = []
+
+    for name, spec in sorted(m["plugins"].items()):
+        tier = tiers.get(spec.get("tier", "free"), {"price": 0, "label": "Open"})
+        skills = []
+        for skill in sorted(spec["skills"]):
+            desc = description(skill)
+            added = first_seen(f"skills/{skill}/SKILL.md")
+            age = (now - datetime.fromisoformat(added)).days if added else None
+            entry = {
+                "name": skill, "plugin": name, "description": desc,
+                "summary": re.split(r"(?<=\.)\s", desc)[0][:200],
+                "added": added, "isNew": age is not None and age <= NEW_DAYS,
+            }
+            skills.append(entry)
+            every.append(entry)
+        cat_plugins.append({
+            "name": name, "description": spec["description"],
+            "tier": spec.get("tier", "free"), "price": tier["price"],
+            "tierLabel": tier["label"], "checkout": spec.get("checkout"),
+            "skills": skills,
+        })
+
+    recent = sorted([s for s in every if s["added"]], key=lambda s: s["added"], reverse=True)[:3]
+    catalog = {
+        "_generated": "by scripts/build_marketplace.py — do not edit",
+        "marketplaceName": m["marketplace"]["name"],
+        "currency": commerce.get("currency", "USD"),
+        "licence": commerce.get("licence", ""),
+        "plugins": cat_plugins,
+        "recent": recent,
+        "totals": {"plugins": len(cat_plugins), "skills": len(every)},
+    }
+    write(ROOT / "site" / "src" / "data" / "catalog.json",
+          json.dumps(catalog, indent=2) + "\n")
 
     if check:
         if drift:

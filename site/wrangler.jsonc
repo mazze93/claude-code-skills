@@ -1,0 +1,15 @@
+{
+  // Cloudflare Pages/Workers config for store.mazzeleczzare.com.
+  // The catalogue is read at BUILD time, so the deployed output is static and
+  // the Worker only serves it. A new skill ships by rebuilding, not by a
+  // runtime lookup — which means the store cannot disagree with the repo.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "mazze93-skill-store",
+  "compatibility_date": "2026-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  // Adapter v14 emits client assets under dist/client and the worker under
+  // dist/server. Pointing at ./dist would serve the server bundle as static
+  // files — verified by inspecting the build output, not assumed.
+  "assets": { "directory": "./dist/client" },
+  "observability": { "enabled": true }
+}
