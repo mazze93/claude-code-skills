@@ -29,6 +29,34 @@ PLUGINS = ROOT / "plugins"
 VERSION = "0.1.0"
 
 
+def frontmatter_description(path: Path) -> str:
+    """Read `description:` out of a SKILL.md's YAML frontmatter.
+
+    Handles plain scalars and folded/literal block scalars (`>`, `>-`, `|`,
+    `|-`). The indicator is not part of the value: reading it literally is what
+    put a bare `>-` in INDEX.md and `">- Establish what..."` in catalog.json.
+    """
+    if not path.is_file():
+        return ""
+    parts = path.read_text(encoding="utf-8").split("---")
+    if len(parts) < 2:
+        return ""
+    out: list[str] = []
+    taking = False
+    for line in parts[1].splitlines():
+        if line.startswith("description:"):
+            taking = True
+            head = line.split(":", 1)[1].strip()
+            if head.rstrip("0123456789") in (">", ">-", ">+", "|", "|-", "|+"):
+                continue          # a lone indicator carries no text of its own
+            out.append(head)
+        elif taking:
+            if re.match(r"^[A-Za-z_-]+:", line):      # next top-level key
+                break
+            out.append(line.strip())
+    return " ".join(w for w in out if w).strip().strip('"')
+
+
 def load() -> dict:
     return json.loads(MAP.read_text(encoding="utf-8"))
 
@@ -102,15 +130,7 @@ def build(check: bool = False) -> int:
         lines += [f"## {name}", "", spec["description"], "",
                   "| skill | description |", "|---|---|"]
         for skill in sorted(spec["skills"]):
-            sm = ROOT / "skills" / skill / "SKILL.md"
-            desc = ""
-            if sm.is_file():
-                fm = sm.read_text(encoding="utf-8").split("---")
-                if len(fm) > 1:
-                    for ln in fm[1].splitlines():
-                        if ln.startswith("description:"):
-                            desc = ln.split(":", 1)[1].strip().strip('"')
-                            break
+            desc = frontmatter_description(ROOT / "skills" / skill / "SKILL.md")
             first = desc.split(". ")[0][:150]
             lines.append(f"| [`{skill}`](skills/{skill}/SKILL.md) | {first} |")
         lines.append("")
@@ -135,17 +155,7 @@ def build(check: bool = False) -> int:
             return None   # shallow clone or tarball: nothing is "new", the safe direction
 
     def description(skill: str) -> str:
-        text = (ROOT / "skills" / skill / "SKILL.md").read_text(encoding="utf-8")
-        block = text.split("---")[1]
-        out, taking = [], False
-        for line in block.splitlines():
-            if line.startswith("description:"):
-                taking, line = True, line.split(":", 1)[1]
-            elif taking and re.match(r"^[a-z-]+:", line):
-                break
-            if taking:
-                out.append(line.strip())
-        return " ".join(out).strip().strip('"')
+        return frontmatter_description(ROOT / "skills" / skill / "SKILL.md")
 
     NEW_DAYS = 30
     now = datetime.now(timezone.utc)

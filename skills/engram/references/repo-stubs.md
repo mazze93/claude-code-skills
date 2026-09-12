@@ -5,7 +5,7 @@ The function (installed by setup-script.sh) writes a generic template.
 After the brain-dump session, enrich stubs using the domain additions below.
 
 Full project list: `~/Code/WORKSPACE.md`
-Workspace root:   `~/Code` (alias for `~/🚀 PROJECTS`)
+Workspace root:   `~/Projects` (alias `~/Code`)
 
 ---
 

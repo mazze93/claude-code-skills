@@ -35,7 +35,7 @@ These decisions are final. Do not re-litigate them.
 | D-06 | Memory decay | Soft: `[STALE]` prefix after 60 days, at consolidation time |
 
 Machine constants: MacBook Pro M5 Pro · Apple Silicon · `/opt/homebrew` · iTerm2 · zsh
-Workspace: `~/🚀 PROJECTS` (alias `~/Code`) · Map: `~/Code/WORKSPACE.md` · Repo: `mazze93/projects-workspace`
+Workspace: `~/Projects` (alias `~/Code`) · Map: `~/Code/WORKSPACE.md` · Repo: `mazze93/projects-workspace`
 
 ---
 
@@ -86,12 +86,13 @@ Run on first-time setup or reinstall on a new device.
 4. After the script completes, ask: "Run brain-dump session now to populate memory files, or continue later?"
 5. If now → go to **Brain-dump** mode.
 
-**If M3 is accessible (transfer path):**
-Run this first, before the setup script, so existing files are not overwritten:
+**Restore path (existing memory on the GitHub remote):**
+The M3 laptop this skill was written against is gone, and its unpushed state went
+with it — that loss is why memory lives on a remote now. Restore from
+`mazze93/dotfiles-claude` before running the setup script, so nothing is overwritten:
 ```bash
-rsync -av --progress ~/.claude/ mazze@m3.local:~/.claude/
-# direction: M3 → M5 Pro (you are on M5 Pro, pulling from M3)
-rsync -av --progress mazze@m3.local:~/.claude/ ~/.claude/
+git clone https://github.com/mazze93/dotfiles-claude.git ~/.claude   # fresh machine
+git -C ~/.claude pull                                                # or, if ~/.claude exists
 ```
 Then run the setup script to scaffold any missing files and install shell additions.
 
@@ -110,7 +111,7 @@ Files produced in order:
 4. `~/.claude/memory/decisions.md`
 5. `~/.claude/CLAUDE.md` — synthesized last, from the four above
 
-**Post-M3-transfer variant:** Use the interview to *update* files rather than replace. Identify stale content, add missing context, and prefix outdated entries with `[STALE]`.
+**Post-restore variant:** Use the interview to *update* files rather than replace. Identify stale content, add missing context, and prefix outdated entries with `[STALE]`.
 
 ---
 
@@ -142,16 +143,41 @@ remember "text here"
 
 Run when the user explicitly requests consolidation. Never run automatically.
 
-1. Invoke the `consolidate-memory` skill to process `inbox.md` → structured files.
-2. After consolidation, run stale decay marking:
+Consolidation is performed inline by these steps. There is no separate skill.
+
+1. Read `~/.claude/memory/inbox.md`. Each capture is one line, `YYYY-MM-DD HH:MM: text`.
+   If the only content is the header and the HTML comment, there is nothing to
+   process — say so plainly (`0 entries`) and go to step 4. Never manufacture
+   consolidation work out of an empty inbox.
+2. Route each entry to exactly one structured file, preserving its date:
+   | Entry is about | Goes to |
+   |----------------|---------|
+   | who Mazze is, machine config, tooling preference | `identity.md` |
+   | a specific project's status, open question, in-flight state | `projects.md` |
+   | a convention that recurs across projects | `patterns.md` |
+   | a dated choice with a rationale | `decisions.md` (format: `YYYY-MM-DD · scope · decision · rationale`) |
+   Append under the appropriate `##` heading — never rewrite or reorder existing
+   content. An entry that fits nowhere stays in the inbox; report it as unrouted
+   rather than forcing it into a file.
+3. Once every entry is written and the writes are verified, truncate `inbox.md`
+   back to its two header lines. Processed entries live in the structured files
+   from then on; the inbox is a buffer, not an archive.
+4. Run stale decay marking:
    ```bash
    engram-mark-stale   # installed by setup script
    ```
-3. If git remote is configured, push:
+   The function always prints "stale items marked" whether or not it changed
+   anything, so verify the real count yourself: `grep -c '\[STALE\]' ~/.claude/memory/*.md`.
+5. Commit and push. `push-memory` does `git add -A` across `~/.claude`, which
+   holds session transcripts and credentials; that directory's `.gitignore` is a
+   deny-by-default allowlist that keeps them out. Read `git status --short`
+   before pushing, and prefer staging explicit paths (`memory/ CLAUDE.md`) over
+   the blanket sweep.
    ```bash
    push-memory         # installed by setup script
    ```
-4. Report: entries processed, stale items flagged, git push status.
+6. Report: entries processed, entries unrouted, stale items flagged (counted, not
+   assumed), git push status.
 
 **Stale decay rule:** Any dated entry (line beginning `YYYY-MM-DD`) older than 60 days receives a `[STALE]` prefix. Items are never deleted automatically. The user triages `[STALE]` items manually at the next consolidation.
 
@@ -187,7 +213,7 @@ If a memory file is missing, say so explicitly: `identity.md not found — run b
 
 ## Guardrails
 
-- **Never overwrite** existing memory file content outside of Mode 2. Inbox is append-only. Structured files are updated only via the consolidate-memory skill.
+- **Never overwrite** existing memory file content outside of Mode 2. Inbox is append-only. Structured files are updated only through Mode 4's routing steps.
 - **Never fabricate** project context not present in memory files. Missing context is surfaced as a gap, not filled in.
 - **No auto-consolidation.** D-04 = manual. Consolidation requires explicit user request.
 - **precmd digest stays compact:** ≤8 lines. Verbose terminal output defeats the purpose.

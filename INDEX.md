@@ -17,7 +17,7 @@ Memory and handoff across sessions, so work survives a dropped context window.
 
 | skill | description |
 |---|---|
-| [`engram`](skills/engram/SKILL.md) | >- |
+| [`engram`](skills/engram/SKILL.md) | Memory-as-first-class system for Claude sessions across a multi-domain workspace (~15+ active projects) |
 | [`session-journal`](skills/session-journal/SKILL.md) | Checkpoint discipline for long autonomous sessions — journal plan/decisions/progress to disk and commit at phase boundaries so a dropped connection or |
 | [`stratum-project-init`](skills/stratum-project-init/SKILL.md) | Stand up a project (new or existing) with the full Stratum-backed build-journal workflow — git init, a dedicated Stratum epistemic decision log, BUILD |
 | [`transcript-handoff`](skills/transcript-handoff/SKILL.md) | Produce a structured markdown session export for a long-form creative, intellectual, or research project (essays, theses, multi-session design work, p |
@@ -41,8 +41,8 @@ Probes and research aids that do not belong to one domain.
 |---|---|
 | [`concurrency-probe`](skills/concurrency-probe/SKILL.md) | Verify a concurrency-adjacent claim (thread-safe, handles concurrent requests, session isolation, no race conditions, lock-protected) by actually runn |
 | [`local-swarm`](skills/local-swarm/SKILL.md) | Fan out parallel review/analysis/summarization passes to on-device Ollama (claude-local) instead of cloud subagents, with the cloud session acting as  |
-| [`precise-coding-assistant`](skills/precise-coding-assistant/SKILL.md) | > |
-| [`read-arxiv-paper`](skills/read-arxiv-paper/SKILL.md) | > |
+| [`precise-coding-assistant`](skills/precise-coding-assistant/SKILL.md) | Enforces a four-phase gating mechanism (Clarity → Simplicity → Scope → Verification) on every meaningful code modification, implementation, or refacto |
+| [`read-arxiv-paper`](skills/read-arxiv-paper/SKILL.md) | Use this skill when asked to read an arxiv paper given an arxiv URL |
 
 ## rigor
 
@@ -51,7 +51,7 @@ Verification discipline: establish what a change is, challenge a claim that it i
 | skill | description |
 |---|---|
 | [`corroborate`](skills/corroborate/SKILL.md) | Establish what an uncommitted or unfamiliar change actually IS before committing, discarding, pushing, or merging it — by making the artifact testify  |
-| [`decision-telemetry`](skills/decision-telemetry/SKILL.md) | > |
+| [`decision-telemetry`](skills/decision-telemetry/SKILL.md) | Build a dual-face decision transparency artifact: a visualization that shows both the clean recorded decision (Sephirothic face) and the shadow trace  |
 | [`touchstone`](skills/touchstone/SKILL.md) | Apply an adversarial verification posture to any claim of correctness, completeness, or "passing" status — tests, proofs, invariants, security reviews |
 
 ## workspace

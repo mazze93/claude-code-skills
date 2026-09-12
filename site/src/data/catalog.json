@@ -41,8 +41,8 @@
         {
           "name": "engram",
           "plugin": "continuity",
-          "description": ">- Memory-as-first-class system for Claude sessions across a multi-domain workspace (~15+ active projects). USE THIS SKILL for: (1) setting up ENGRAM on a new device (\"set up ENGRAM\", \"install memory system\", \"set up my context\", \"set up memory\"); (2) capturing thoughts in-session (\"remember X\", \"add to memory\", \"note that\", \"log that\", \"capture this\"); (3) surfacing project context (\"what's my context\", \"surface my memory\", \"what am I working on\", \"restore context\", \"what do I know about X\"); (4) inbox consolidation (\"consolidate my memory\", \"process my inbox\", \"clean up memory\"); (5) creating per-repo CLAUDE.md stubs. Trigger when any workspace project is mentioned and context appears missing. Trigger on new-device setup and memory restoration. Workspace source of truth: ~/Code/WORKSPACE.md",
-          "summary": ">- Memory-as-first-class system for Claude sessions across a multi-domain workspace (~15+ active projects).",
+          "description": "Memory-as-first-class system for Claude sessions across a multi-domain workspace (~15+ active projects). USE THIS SKILL for: (1) setting up ENGRAM on a new device (\"set up ENGRAM\", \"install memory system\", \"set up my context\", \"set up memory\"); (2) capturing thoughts in-session (\"remember X\", \"add to memory\", \"note that\", \"log that\", \"capture this\"); (3) surfacing project context (\"what's my context\", \"surface my memory\", \"what am I working on\", \"restore context\", \"what do I know about X\"); (4) inbox consolidation (\"consolidate my memory\", \"process my inbox\", \"clean up memory\"); (5) creating per-repo CLAUDE.md stubs. Trigger when any workspace project is mentioned and context appears missing. Trigger on new-device setup and memory restoration. Workspace source of truth: ~/Code/WORKSPACE.md",
+          "summary": "Memory-as-first-class system for Claude sessions across a multi-domain workspace (~15+ active projects).",
           "added": "2026-07-30T03:39:05-04:00",
           "isNew": false
         },
@@ -141,16 +141,16 @@
         {
           "name": "precise-coding-assistant",
           "plugin": "lab",
-          "description": "> Enforces a four-phase gating mechanism (Clarity \u2192 Simplicity \u2192 Scope \u2192 Verification) on every meaningful code modification, implementation, or refactoring request. Use this skill whenever a request involves a new feature, structural refactoring, multi-file changes, or logic rewriting where the solution space is open-ended. MUST activate for: \"implement X\", \"refactor Y to do Z\", \"add a new module for\", \"rewrite the logic that\", \"redesign the architecture of\", any auth/crypto/data-pipeline change, any multi-file or compliance-surfaced engineering task. Do NOT trigger for trivial micro-fixes (typos, variable renames, one-liner syntax corrections) or for requests explicitly in a narrative-first creative register where fluid iteration takes precedence over architectural isolation. The gates should feel like precision instruments, not bureaucracy.",
-          "summary": "> Enforces a four-phase gating mechanism (Clarity \u2192 Simplicity \u2192 Scope \u2192 Verification) on every meaningful code modification, implementation, or refactoring request.",
+          "description": "Enforces a four-phase gating mechanism (Clarity \u2192 Simplicity \u2192 Scope \u2192 Verification) on every meaningful code modification, implementation, or refactoring request. Use this skill whenever a request involves a new feature, structural refactoring, multi-file changes, or logic rewriting where the solution space is open-ended. MUST activate for: \"implement X\", \"refactor Y to do Z\", \"add a new module for\", \"rewrite the logic that\", \"redesign the architecture of\", any auth/crypto/data-pipeline change, any multi-file or compliance-surfaced engineering task. Do NOT trigger for trivial micro-fixes (typos, variable renames, one-liner syntax corrections) or for requests explicitly in a narrative-first creative register where fluid iteration takes precedence over architectural isolation. The gates should feel like precision instruments, not bureaucracy.",
+          "summary": "Enforces a four-phase gating mechanism (Clarity \u2192 Simplicity \u2192 Scope \u2192 Verification) on every meaningful code modification, implementation, or refactoring request.",
           "added": "2026-09-03T08:42:16-04:00",
           "isNew": true
         },
         {
           "name": "read-arxiv-paper",
           "plugin": "lab",
-          "description": "> Use this skill when asked to read an arxiv paper given an arxiv URL. Fetches the LaTeX source (not the PDF), unpacks it, locates the entrypoint, reads the full paper recursively through \\input{}/\\include{} directives, produces a project-contextualized summary at ./knowledge/summary_{tag}.md, and syncs it to Obsidian via the Local REST API plugin.",
-          "summary": "> Use this skill when asked to read an arxiv paper given an arxiv URL.",
+          "description": "Use this skill when asked to read an arxiv paper given an arxiv URL. Fetches the LaTeX source (not the PDF), unpacks it, locates the entrypoint, reads the full paper recursively through \\input{}/\\include{} directives, produces a project-contextualized summary at ./knowledge/summary_{tag}.md, and syncs it to Obsidian via the Local REST API plugin.",
+          "summary": "Use this skill when asked to read an arxiv paper given an arxiv URL.",
           "added": "2026-06-03T21:25:32-04:00",
           "isNew": false
         }
@@ -175,8 +175,8 @@
         {
           "name": "decision-telemetry",
           "plugin": "rigor",
-          "description": "> Build a dual-face decision transparency artifact: a visualization that shows both the clean recorded decision (Sephirothic face) and the shadow trace beneath it \u2014 the oscillation, discarded paths, and contradictions each clean node had to bury to stay coherent (Qliphothic face). Use when asked to make reasoning visible, build a reflection artifact about an LLM's decision process, or visualize how a system arrived at a conclusion. Anchors in the Tree of Life / Tree of Knowledge geometry; the canonical implementation is tree-of-knowledge.html in the decision-telemetry skill.",
-          "summary": "> Build a dual-face decision transparency artifact: a visualization that shows both the clean recorded decision (Sephirothic face) and the shadow trace beneath it \u2014 the oscillation, discarded paths, a",
+          "description": "Build a dual-face decision transparency artifact: a visualization that shows both the clean recorded decision (Sephirothic face) and the shadow trace beneath it \u2014 the oscillation, discarded paths, and contradictions each clean node had to bury to stay coherent (Qliphothic face). Use when asked to make reasoning visible, build a reflection artifact about an LLM's decision process, or visualize how a system arrived at a conclusion. Anchors in the Tree of Life / Tree of Knowledge geometry; the canonical implementation is tree-of-knowledge.html in the decision-telemetry skill.",
+          "summary": "Build a dual-face decision transparency artifact: a visualization that shows both the clean recorded decision (Sephirothic face) and the shadow trace beneath it \u2014 the oscillation, discarded paths, and",
           "added": "2026-05-29T16:23:22-04:00",
           "isNew": false
         },
@@ -261,8 +261,8 @@
     {
       "name": "precise-coding-assistant",
       "plugin": "lab",
-      "description": "> Enforces a four-phase gating mechanism (Clarity \u2192 Simplicity \u2192 Scope \u2192 Verification) on every meaningful code modification, implementation, or refactoring request. Use this skill whenever a request involves a new feature, structural refactoring, multi-file changes, or logic rewriting where the solution space is open-ended. MUST activate for: \"implement X\", \"refactor Y to do Z\", \"add a new module for\", \"rewrite the logic that\", \"redesign the architecture of\", any auth/crypto/data-pipeline change, any multi-file or compliance-surfaced engineering task. Do NOT trigger for trivial micro-fixes (typos, variable renames, one-liner syntax corrections) or for requests explicitly in a narrative-first creative register where fluid iteration takes precedence over architectural isolation. The gates should feel like precision instruments, not bureaucracy.",
-      "summary": "> Enforces a four-phase gating mechanism (Clarity \u2192 Simplicity \u2192 Scope \u2192 Verification) on every meaningful code modification, implementation, or refactoring request.",
+      "description": "Enforces a four-phase gating mechanism (Clarity \u2192 Simplicity \u2192 Scope \u2192 Verification) on every meaningful code modification, implementation, or refactoring request. Use this skill whenever a request involves a new feature, structural refactoring, multi-file changes, or logic rewriting where the solution space is open-ended. MUST activate for: \"implement X\", \"refactor Y to do Z\", \"add a new module for\", \"rewrite the logic that\", \"redesign the architecture of\", any auth/crypto/data-pipeline change, any multi-file or compliance-surfaced engineering task. Do NOT trigger for trivial micro-fixes (typos, variable renames, one-liner syntax corrections) or for requests explicitly in a narrative-first creative register where fluid iteration takes precedence over architectural isolation. The gates should feel like precision instruments, not bureaucracy.",
+      "summary": "Enforces a four-phase gating mechanism (Clarity \u2192 Simplicity \u2192 Scope \u2192 Verification) on every meaningful code modification, implementation, or refactoring request.",
       "added": "2026-09-03T08:42:16-04:00",
       "isNew": true
     },

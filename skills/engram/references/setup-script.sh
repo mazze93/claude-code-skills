@@ -61,12 +61,12 @@ See memory/decisions.md
 
 ## Memory System
 ENGRAM is active. inbox.md is append-only. Consolidate manually via the
-consolidate-memory skill when inbox grows unwieldy. Never auto-consolidate.'
+engram skill (Consolidate mode) when inbox grows unwieldy. Never auto-consolidate.'
 
 # ── 3. memory template files ──────────────────────────────────────────────────
 write_if_absent "$MEMORY_DIR/inbox.md" \
 '# Inbox
-<!-- append-only. never reorganize. run consolidate-memory skill to process. -->'
+<!-- append-only. never reorganize. run the engram skill (Consolidate mode) to process. -->'
 
 write_if_absent "$MEMORY_DIR/identity.md" \
 '# Identity
@@ -79,7 +79,7 @@ Mazze
 MacBook Pro M5 Pro · Apple Silicon
 Homebrew prefix: /opt/homebrew
 Shell: zsh · Terminal: iTerm2
-git memory remote: m3.local:~/engram-memory.git
+git memory remote: github.com/mazze93/dotfiles-claude
 
 ## Work Style
 [TO FILL — brain-dump session]
@@ -99,7 +99,7 @@ write_if_absent "$MEMORY_DIR/projects.md" \
      This file tracks: open questions, active work, decisions — things WORKSPACE.md does not. -->
 
 ## Source of truth
-Workspace map:  ~/Code/WORKSPACE.md  (~/🚀 PROJECTS/WORKSPACE.md)
+Workspace map:  ~/Code/WORKSPACE.md  (~/Projects/WORKSPACE.md)
 GitHub:         mazze93/projects-workspace
 Domains:        tools/ · cognitive/ · creative/ · publishing/ · blog/ · secure-pride/ · templates/
 
@@ -208,7 +208,7 @@ remember() {
   echo "  → captured"
 }
 
-# Commit and push all memory files to M3 bare remote
+# Commit and push all memory files to the dotfiles-claude remote
 push-memory() {
   git -C "$HOME/.claude" add -A \
     && git -C "$HOME/.claude" commit -m "consolidate $(date -I)" \
@@ -290,9 +290,8 @@ if [[ ! -d "$CLAUDE_HOME/.git" ]]; then
   git -C "$CLAUDE_HOME" init -q
   ok "git repo initialized: $CLAUDE_HOME"
   echo ""
-  note "Set up M3 as bare remote (run these on M3 first, then here):"
-  note "  M3:  git init --bare ~/engram-memory.git"
-  note "  M5:  git -C ~/.claude remote add origin mazze@m3.local:~/engram-memory.git"
+  note "Wire the memory remote:"
+  note "  git -C ~/.claude remote add origin https://github.com/mazze93/dotfiles-claude.git"
   note "  M5:  push-memory"
   echo ""
 else
@@ -364,5 +363,5 @@ echo ""
 echo "  Next steps:"
 echo "    1.  source ~/.zshrc"
 echo "    2.  Run brain-dump session to populate memory files"
-echo "    3.  Set up M3 git remote (instructions above)"
+echo "    3.  Wire the dotfiles-claude git remote (instructions above)"
 echo ""

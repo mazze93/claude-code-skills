@@ -17,7 +17,7 @@ Ask these as a natural conversation, not a form. Probe where answers are vague.
 6. Any preferences Claude keeps having to relearn — things you've had to correct repeatedly?
 
 **Write** `~/.claude/memory/identity.md` from answers.
-Include as established facts: M5 Pro · Apple Silicon · /opt/homebrew · iTerm2 · zsh · git remote m3.local
+Include as established facts: M5 Pro · Apple Silicon · /opt/homebrew · iTerm2 · zsh · git remote github.com/mazze93/dotfiles-claude
 
 ---
 
@@ -110,4 +110,4 @@ Requirements:
 
 **Write** `~/.claude/CLAUDE.md`. This replaces the stub written by the setup script.
 
-**Post-transfer variant:** If this is a post-M3-transfer session, compare interview answers against existing file content. Prepend `[STALE]` to any entries that are no longer accurate. Add new context at the bottom of each section. Do not delete anything — the user triages manually.
+**Post-restore variant:** If memory was just restored from the GitHub remote, compare interview answers against existing file content. Prepend `[STALE]` to any entries that are no longer accurate. Add new context at the bottom of each section. Do not delete anything — the user triages manually.
