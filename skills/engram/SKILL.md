@@ -87,8 +87,9 @@ Run on first-time setup or reinstall on a new device.
 5. If now → go to **Brain-dump** mode.
 
 **Restore path (existing memory on the GitHub remote):**
-The M3 laptop this skill was written against is gone, and its unpushed state went
-with it — that loss is why memory lives on a remote now. Restore from
+`m3.local` does not resolve from this machine (checked 2026-09-12) and
+`identity.md` only ever listed it as a *candidate* remote, never a wired one —
+so do not plan a restore around it. Memory lives on GitHub. Restore from
 `mazze93/dotfiles-claude` before running the setup script, so nothing is overwritten:
 ```bash
 git clone https://github.com/mazze93/dotfiles-claude.git ~/.claude   # fresh machine
