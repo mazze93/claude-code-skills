@@ -61,8 +61,8 @@ HINTS=(
 )
 
 # Git state (non-blocking)
-BRANCH=$(git -C "$CWD" rev-parse --abbrev-ref HEAD 2>/dev/null)
-DIRTY=$(git -C "$CWD" status --porcelain 2>/dev/null | wc -l | tr -d ' ')
+BRANCH=$(GIT_OPTIONAL_LOCKS=0 git -C "$CWD" rev-parse --abbrev-ref HEAD 2>/dev/null)
+DIRTY=$(GIT_OPTIONAL_LOCKS=0 git -C "$CWD" status --porcelain 2>/dev/null | wc -l | tr -d ' ')
 
 # Context window bar
 CTX_BAR="" CTX_LABEL=""

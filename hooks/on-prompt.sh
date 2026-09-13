@@ -146,9 +146,9 @@ echo "${HINT}"
 
 # Git context for high-stakes tasks
 if [[ "$TASK" == "implement" || "$TASK" == "refactor" || "$TASK" == "plan" ]]; then
-  BRANCH=$(git -C "$CWD" rev-parse --abbrev-ref HEAD 2>/dev/null)
+  BRANCH=$(GIT_OPTIONAL_LOCKS=0 git -C "$CWD" rev-parse --abbrev-ref HEAD 2>/dev/null)
   if [[ -n "$BRANCH" && "$BRANCH" != "HEAD" ]]; then
-    CHANGED=$(git -C "$CWD" status --porcelain 2>/dev/null | wc -l | tr -d ' ')
+    CHANGED=$(GIT_OPTIONAL_LOCKS=0 git -C "$CWD" status --porcelain 2>/dev/null | wc -l | tr -d ' ')
     (( CHANGED > 0 )) && GIT_STATE="${CHANGED} uncommitted" || GIT_STATE="clean"
     echo ""
     echo "git:${BRANCH}  ${GIT_STATE}"
