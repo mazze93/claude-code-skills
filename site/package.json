@@ -11,14 +11,9 @@
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.3.0",
-    "@astrojs/react": "^6.0.5",
-    "astro": "^7.3.1",
-    "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "astro": "^7.3.1"
   },
   "devDependencies": {
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.7",
     "typescript": "^7.0.2"
   }
 }

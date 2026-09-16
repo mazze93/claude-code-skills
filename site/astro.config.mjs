@@ -1,7 +1,6 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 import cloudflare from '@astrojs/cloudflare';
-import react from '@astrojs/react';
 
 // static-by-default. The catalogue is read at build time from skill-map.json, so
 // every route can be prerendered; a route that later needs on-demand rendering
@@ -11,6 +10,8 @@ export default defineConfig({
   site: 'https://store.mazzeleczzare.com',
   output: 'static',
   adapter: cloudflare(),
-  integrations: [react()],
+  // No UI framework: the one island was the astrolabe, and it is now a static
+  // Astro component. The site ships zero JavaScript.
+  integrations: [],
   build: { inlineStylesheets: 'always' },
 });

@@ -1,0 +1,137 @@
+---
+/**
+ * The navigator. Each plugin is a ring; each skill is a star on it. Hovering or
+ * focusing a ring traces its constellation; activating it jumps to the slab.
+ *
+ * Static by construction — this ships no JavaScript. It was previously a React
+ * island, which bought nothing: the only state was "which ring is hovered",
+ * which CSS already knows via :hover and :focus-within, and the only action was
+ * a scroll, which an anchor does natively. Being an island also made it
+ * invisible, because Astro scopes component CSS to build-time DOM and React
+ * built the SVG at runtime, so every rule missed and the SVG fell back to
+ * fill:black — one black disc, everything else black-on-black.
+ *
+ * Rendering it at build time means the scoping attribute lands on these
+ * elements, so the styles below simply apply.
+ */
+export interface AstrolabeRing {
+  name: string;
+  skills: string[];
+  paid: boolean;
+}
+interface Props {
+  rings: AstrolabeRing[];
+}
+
+const { rings } = Astro.props;
+
+const SIZE = 520;
+const C = SIZE / 2;
+
+// Pure geometry, evaluated once at build time.
+const inner = 78;
+const gap = (C - inner - 26) / Math.max(rings.length - 1, 1);
+
+const geometry = rings.map((ring, i) => {
+  const r = inner + gap * i;
+  const spin = (i % 2 === 0 ? 1 : -1) * (i * 11);
+  const stars = ring.skills.map((s, j) => {
+    const a = ((j / ring.skills.length) * 360 + spin - 90) * (Math.PI / 180);
+    return { name: s, x: C + r * Math.cos(a), y: C + r * Math.sin(a) };
+  });
+  return { ...ring, r, stars };
+});
+
+const totalStars = rings.reduce((n, r) => n + r.skills.length, 0);
+---
+
+<figure class="astrolabe">
+  <svg viewBox={`0 0 ${SIZE} ${SIZE}`} role="group" aria-label="Constellation of plugins and their skills">
+    <circle cx={C} cy={C} r={C - 8} class="plate" />
+    {[0, 45, 90, 135].map((d) => (
+      <line x1={C} y1={16} x2={C} y2={SIZE - 16}
+            class="graticule" transform={`rotate(${d} ${C} ${C})`} />
+    ))}
+    {geometry.map((ring) => (
+      <g class:list={['ring', { paid: ring.paid }]}>
+        <circle cx={C} cy={C} r={ring.r} class="orbit" />
+        <polygon points={ring.stars.map((s) => `${s.x},${s.y}`).join(' ')} class="trace" />
+        {ring.stars.map((s) => (
+          <circle cx={s.x} cy={s.y} r="2.6" class="star">
+            <title>{`${s.name} — ${ring.name}`}</title>
+          </circle>
+        ))}
+        {/*
+          A real anchor, not a scripted button: it is focusable, activates on
+          Enter, honours middle-click and "open in new tab", and needs no JS.
+          Smooth scrolling is a CSS concern (scroll-behavior on :root).
+        */}
+        <a href={`#plugin-${ring.name}`} aria-label={`${ring.name}: ${ring.skills.length} skills`}>
+          <circle cx={C} cy={C - ring.r} r="13" class="hit" />
+        </a>
+      </g>
+    ))}
+    <circle cx={C} cy={C} r="30" class="hub" />
+    <text x={C} y={C - 3} class="hub-l" text-anchor="middle">MZ</text>
+    <text x={C} y={C + 11} class="hub-s" text-anchor="middle">93</text>
+  </svg>
+  <figcaption class="coord">{rings.length} rings · {totalStars} stars</figcaption>
+</figure>
+
+<style>
+  .astrolabe {
+    margin: 0;
+    display: grid;
+    justify-items: center;
+    gap: 0.8rem;
+  }
+
+  .astrolabe svg {
+    width: min(100%, 34rem);
+    height: auto;
+    overflow: visible;
+  }
+
+  .plate     { fill: #ffffff03; stroke: var(--graphite-500); }
+  .graticule { stroke: var(--graphite-600); stroke-width: 1; }
+  .orbit     { fill: none; stroke: var(--graphite-500); stroke-width: 1; }
+  .trace     { fill: none; stroke: var(--instrument); stroke-width: 1; opacity: 0; transition: opacity .25s; }
+  .star      { fill: var(--concrete); transition: r .2s, fill .2s; }
+  .hit       { fill: var(--graphite-600); stroke: var(--instrument); stroke-width: 1.5; cursor: pointer; }
+
+  .ring.paid .hit { stroke: var(--ignition); }
+
+  /* :focus-within replaces the old `active` state — same visuals, no state. */
+  .ring:hover .trace,
+  .ring:focus-within .trace { opacity: .85; }
+
+  .ring:hover .star,
+  .ring:focus-within .star { fill: var(--instrument); r: 4.5; }
+
+  .ring.paid:hover .star,
+  .ring.paid:focus-within .star { fill: var(--ignition); }
+
+  .ring.paid:hover .trace,
+  .ring.paid:focus-within .trace { stroke: var(--ignition); }
+
+  .hub   { fill: var(--graphite-900); stroke: var(--ignition); stroke-width: 2; }
+  .hub-l { font-family: var(--display); font-size: 15px; fill: var(--chalk); }
+  .hub-s { font-family: var(--mono); font-size: 9px; fill: var(--instrument); }
+
+  /* The keyboard target must show where it is. */
+  .ring a:focus-visible .hit {
+    outline: 2px solid var(--ignition);
+    outline-offset: 2px;
+  }
+
+  @media (min-width: 62rem) {
+    .astrolabe { margin-right: calc(var(--step) * -2); }
+  }
+
+  /* Still steerable, just still: the traces stay faintly drawn, since what is
+     being suppressed is their reveal, not the information they carry. */
+  @media (prefers-reduced-motion: reduce) {
+    .trace { opacity: .35; }
+    .trace, .star { transition: none; }
+  }
+</style>

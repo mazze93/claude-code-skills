@@ -1,6 +1,6 @@
 ---
 import '../styles/tokens.css';
-import Astrolabe from '../components/Astrolabe.tsx';
+import Astrolabe from '../components/Astrolabe.astro';
 import { loadCatalog } from '../lib/catalog';
 
 export interface Props {}
@@ -86,7 +86,7 @@ const stamp = new Date().toISOString().slice(0, 10);
         </ol>
       </div>
       <!-- Below the fold on small screens and non-urgent: defer until seen. -->
-      <Astrolabe client:visible rings={rings} />
+      <Astrolabe rings={rings} />
     </section>
 
     <section class="slabs">
@@ -198,7 +198,6 @@ const stamp = new Date().toISOString().slice(0, 10);
     }
     @media (min-width: 62rem) {
       .nav-plate { grid-template-columns: 26rem minmax(0, 1fr); }
-      .astrolabe { margin-right: calc(var(--step) * -2); }
     }
     .nav-copy h2 { font-family: var(--display); font-size: clamp(1.6rem, 3.4vw, 2.6rem); text-transform: uppercase; margin: 0 0 .6rem; letter-spacing: -.01em; }
     .nav-copy p { color: var(--muted); max-width: 34ch; }
@@ -212,22 +211,9 @@ const stamp = new Date().toISOString().slice(0, 10);
     .legend-name { flex: 1; font-weight: 600; }
     .legend a:hover, .legend a:focus-visible { color: var(--ignition); background: #ffffff08; }
 
-    .astrolabe { margin: 0; display: grid; justify-items: center; gap: .8rem; }
-    .astrolabe svg { width: min(100%, 34rem); height: auto; overflow: visible; }
-    .plate { fill: #ffffff03; stroke: var(--graphite-500); }
-    .graticule { stroke: var(--graphite-600); stroke-width: 1; }
-    .orbit { fill: none; stroke: var(--graphite-500); stroke-width: 1; }
-    .trace { fill: none; stroke: var(--instrument); stroke-width: 1; opacity: 0; transition: opacity .25s; }
-    .star { fill: var(--concrete); transition: r .2s, fill .2s; }
-    .hit { fill: var(--graphite-600); stroke: var(--instrument); stroke-width: 1.5; cursor: pointer; }
-    .ring.paid .hit { stroke: var(--ignition); }
-    .ring:hover .trace, .ring.on .trace { opacity: .85; }
-    .ring:hover .star, .ring.on .star { fill: var(--instrument); }
-    .ring.paid:hover .star, .ring.paid.on .star { fill: var(--ignition); }
-    .ring.paid:hover .trace, .ring.paid.on .trace { stroke: var(--ignition); }
-    .hub { fill: var(--graphite-900); stroke: var(--ignition); stroke-width: 2; }
-    .hub-l { font-family: var(--display); font-size: 15px; fill: var(--chalk); }
-    .hub-s { font-family: var(--mono); font-size: 9px; fill: var(--instrument); }
+    /* Astrolabe styles live in the component itself — it owns its own chrome,
+       and its rules were never reachable from here anyway while it was an
+       island. See src/components/Astrolabe.astro. */
 
     /* ---- slabs ------------------------------------------------------- */
     .slabs { display: grid; gap: 1px; background: var(--rule); border-block: 1px solid var(--rule); }
@@ -274,7 +260,6 @@ const stamp = new Date().toISOString().slice(0, 10);
     /* Reduced motion: the instrument must still be steerable, just still. */
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after { animation: none !important; transition: none !important; }
-      .trace { opacity: .35; }
     }
   </style>
 </body>
