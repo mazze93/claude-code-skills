@@ -64,5 +64,6 @@ Fleet and repository operations across a multi-repo workspace: sync, audit, tria
 | [`disk-audit`](skills/disk-audit/SKILL.md) | Audit macOS disk usage end-to-end, explain what is filling the disk, and deliver an opinionated debrief with a tiered, safety-rated cut list |
 | [`git-forensics`](skills/git-forensics/SKILL.md) | Use when git repos show "fatal: unable to read <hash>", when investigating unauthorized git index modifications, when detecting staged file replacemen |
 | [`pr-triage`](skills/pr-triage/SKILL.md) | Triage open GitHub pull requests across one or all mazze93 repos by *what kind of stuck* they are (merge conflict, failing CI, changes requested, awai |
+| [`preflight`](skills/preflight/SKILL.md) | Probe session environment readiness for committing, signing, or deploying — TTY, GPG/pinentry, ssh-agent, git remote↔auth match, and MCP connectivity |
 | [`ship`](skills/ship/SKILL.md) | Ship work end-to-end — validate, prove the change behaves, commit in milestones, push, and handle protected-main/PR-only repos |
 | [`workspace-sync`](skills/workspace-sync/SKILL.md) | Reconcile the ~/Projects workspace against WORKSPACE.md and GitHub — clone missing repos into their domains, report drift, add/move projects with map- |

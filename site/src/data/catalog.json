@@ -231,6 +231,14 @@
           "isNew": true
         },
         {
+          "name": "preflight",
+          "plugin": "workspace",
+          "description": "Probe session environment readiness for committing, signing, or deploying \u2014 TTY, GPG/pinentry, ssh-agent, git remote\u2194auth match, and MCP connectivity. Reports an applied fix or an exact paste-into-your-own-terminal command for every failure. Use at the start of any session that will commit, sign, tag, push, or deploy, or when a commit/push fails for environment reasons.",
+          "summary": "Probe session environment readiness for committing, signing, or deploying \u2014 TTY, GPG/pinentry, ssh-agent, git remote\u2194auth match, and MCP connectivity.",
+          "added": "2026-09-16T17:04:09-04:00",
+          "isNew": true
+        },
+        {
           "name": "ship",
           "plugin": "workspace",
           "description": "Ship work end-to-end \u2014 validate, prove the change behaves, commit in milestones, push, and handle protected-main/PR-only repos. Use when asked to \"ship\", \"ship it\", \"release\", \"commit and push\", \"open a PR\", or \"get this live\". Commits after each milestone so session-limit cutoffs never lose progress.",
@@ -251,6 +259,14 @@
   ],
   "recent": [
     {
+      "name": "preflight",
+      "plugin": "workspace",
+      "description": "Probe session environment readiness for committing, signing, or deploying \u2014 TTY, GPG/pinentry, ssh-agent, git remote\u2194auth match, and MCP connectivity. Reports an applied fix or an exact paste-into-your-own-terminal command for every failure. Use at the start of any session that will commit, sign, tag, push, or deploy, or when a commit/push fails for environment reasons.",
+      "summary": "Probe session environment readiness for committing, signing, or deploying \u2014 TTY, GPG/pinentry, ssh-agent, git remote\u2194auth match, and MCP connectivity.",
+      "added": "2026-09-16T17:04:09-04:00",
+      "isNew": true
+    },
+    {
       "name": "corroborate",
       "plugin": "rigor",
       "description": "Establish what an uncommitted or unfamiliar change actually IS before committing, discarding, pushing, or merging it \u2014 by making the artifact testify rather than reading the diff and inferring. Use when handling work you did not author: a dirty working tree, staged changes of unknown provenance, a stale-looking file, an unexplained deletion, an untracked directory, someone else's WIP, or any sweep that ends in \"commit what's finished.\" Also trigger before discarding anything, before committing a whole dirty tree, when a diff looks like a revert, when a deletion has no explanation, or when the user says \"clean this up,\" \"commit what's done,\" \"sync the fleet,\" or \"is this safe to commit.\" Complements touchstone: touchstone challenges a claim of correctness; corroborate establishes what a change is in the first place.",
@@ -265,18 +281,10 @@
       "summary": "Enforces a four-phase gating mechanism (Clarity \u2192 Simplicity \u2192 Scope \u2192 Verification) on every meaningful code modification, implementation, or refactoring request.",
       "added": "2026-09-03T08:42:16-04:00",
       "isNew": true
-    },
-    {
-      "name": "pr-triage",
-      "plugin": "workspace",
-      "description": "Triage open GitHub pull requests across one or all mazze93 repos by *what kind of stuck* they are (merge conflict, failing CI, changes requested, awaiting review, abandoned, ready-to-merge, healthy) rather than just sorting by age. Use when asked to \"triage PRs\", \"what PRs need attention\", \"find stuck/stale/abandoned PRs\", \"which PRs are ready to merge\", or to generate a PR status report for terminal, Slack, or a GitHub comment/markdown file.",
-      "summary": "Triage open GitHub pull requests across one or all mazze93 repos by *what kind of stuck* they are (merge conflict, failing CI, changes requested, awaiting review, abandoned, ready-to-merge, healthy) r",
-      "added": "2026-09-03T08:42:16-04:00",
-      "isNew": true
     }
   ],
   "totals": {
     "plugins": 6,
-    "skills": 23
+    "skills": 24
   }
 }

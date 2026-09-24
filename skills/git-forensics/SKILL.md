@@ -7,10 +7,11 @@ description: Use when git repos show "fatal: unable to read <hash>", when invest
 
 ## Overview
 
-Git index corruption from adversarial sources leaves specific artifacts. The index file can be
-replaced or modified without touching committed history — making it invisible to `git log` while
-still poisoning what would be committed next. This skill covers reading those artifacts without
-destroying them, identifying attack patterns, and safe repair after forensics are complete.
+Git index corruption from adversarial sources leaves specific artifacts. The
+index file can be replaced or modified without touching committed history —
+making it invisible to `git log` while still poisoning what would be committed
+next. This skill covers reading those artifacts without destroying them,
+identifying attack patterns, and safe repair after forensics are complete.
 
 **Core principle:** The index is evidence. Read it before repairing it.
 
@@ -62,6 +63,7 @@ different project's file tree. From git's perspective, every file in the repo ap
 and every file from the injected project appears added.
 
 **Detection:**
+
 ```bash
 git ls-files --stage 2>/dev/null | head -20
 # If filenames don't match this repo's structure → replacement attack
@@ -77,7 +79,8 @@ access can replace it. The replacement doesn't appear in `git log`. It only fire
 ## Cross-Repo Correlation
 
 When multiple repos share the **same missing blob hash**, the writes were coordinated:
-```
+
+```text
 praxis-aegis:  fatal: unable to read b6651396...  ← same
 context-synapse: fatal: unable to read b6651396...  ← same
 secure-pride:  fatal: unable to read b6651396...  ← same
@@ -93,6 +96,7 @@ some repos than others, revealing write ordering and priority.
 ## CLAUDE.md Semantic Attack Vector
 
 If the staged index contains a CLAUDE.md blob, read it:
+
 ```bash
 # Get the staged CLAUDE.md hash
 CLAUDE_BLOB=$(git ls-files --stage 2>/dev/null | grep "CLAUDE.md" | awk '{print $2}')
@@ -110,6 +114,7 @@ CLAUDE.md? Does the content differ from what you expect?
 ## Evidence Preservation
 
 Before repairing any index:
+
 1. Record the missing blob hash(es) — they are the evidence
 2. Run `git ls-files --stage 2>/dev/null > /tmp/forensic-index-$(basename $PWD).txt` for each repo
 3. Run `git fsck --no-dangling 2>&1 >> /tmp/forensic-index-$(basename $PWD).txt`

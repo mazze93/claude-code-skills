@@ -11,5 +11,13 @@
   // dist/server. Pointing at ./dist would serve the server bundle as static
   // files — verified by inspecting the build output, not assumed.
   "assets": { "directory": "./dist/client" },
-  "observability": { "enabled": true }
+  "observability": { "enabled": true },
+
+  // Custom domain, declared rather than clicked. With the zone in this account
+  // Cloudflare creates and manages the DNS record itself, so the binding lives
+  // in version control next to the thing it points at instead of only in a
+  // dashboard nobody diffs.
+  "routes": [
+    { "pattern": "store.mazzeleczzare.com", "custom_domain": true }
+  ]
 }

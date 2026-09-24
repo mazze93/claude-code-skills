@@ -69,7 +69,8 @@
         "disk-audit",
         "ship",
         "pr-triage",
-        "git-forensics"
+        "git-forensics",
+        "preflight"
       ],
       "tier": "pro",
       "checkout": null

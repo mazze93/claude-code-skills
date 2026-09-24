@@ -1,6 +1,7 @@
 ---
 name: corroborate
-description: Establish what an uncommitted or unfamiliar change actually IS before committing, discarding, pushing, or merging it — by making the artifact testify rather than reading the diff and inferring. Use when handling work you did not author: a dirty working tree, staged changes of unknown provenance, a stale-looking file, an unexplained deletion, an untracked directory, someone else's WIP, or any sweep that ends in "commit what's finished." Also trigger before discarding anything, before committing a whole dirty tree, when a diff looks like a revert, when a deletion has no explanation, or when the user says "clean this up," "commit what's done," "sync the fleet," or "is this safe to commit." Complements touchstone: touchstone challenges a claim of correctness; corroborate establishes what a change is in the first place.
+description: >-
+  Establish what an uncommitted or unfamiliar change actually IS before committing, discarding, pushing, or merging it — by making the artifact testify rather than reading the diff and inferring. Use when handling work you did not author: a dirty working tree, staged changes of unknown provenance, a stale-looking file, an unexplained deletion, an untracked directory, someone else's WIP, or any sweep that ends in "commit what's finished." Also trigger before discarding anything, before committing a whole dirty tree, when a diff looks like a revert, when a deletion has no explanation, or when the user says "clean this up," "commit what's done," "sync the fleet," or "is this safe to commit." Complements touchstone: touchstone challenges a claim of correctness; corroborate establishes what a change is in the first place.
 ---
 
 # corroborate
