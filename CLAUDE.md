@@ -57,7 +57,11 @@ These directories stay under Apache-2.0 — the repo's MIT license does not cove
 ### Symlink model
 
 Everything is symlinked — nothing is copied:
-- `skills/<name>/` → `~/.claude/skills/<name>` (install-skills.sh)
+- `skills/<name>/` → `~/.claude/skills/<name>` (install-skills.sh) — **only for skills
+  not already listed under a plugin in `.claude-plugin/skill-map.json`.** A skill
+  bundled into a marketplace plugin loads through the mazze93 marketplace instead;
+  flat-symlinking it too double-registers it (Claude Code lists it both unscoped and
+  as `<plugin>:<skill>`). install-skills.sh reads skill-map.json and skips those names.
 - `hooks/*.sh` → `~/.claude/scripts/*.sh` (install-hooks.sh)
 - `config/cc-statusline.sh` → `~/.config/iterm2/cc-statusline.sh` (install-skills.sh)
 

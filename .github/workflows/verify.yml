@@ -124,3 +124,16 @@ jobs:
       - name: Build
         run: npm run build
         working-directory: site
+
+      # main only: a PR builds and typechecks above but never deploys, so a
+      # branch can't push to the live domain before review. Requires
+      # CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID as repo secrets — set
+      # via `gh secret set` or GitHub → Settings → Secrets → Actions.
+      - name: Deploy store.mazzeleczzare.com
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: site
+          command: deploy

@@ -1,6 +1,12 @@
 #!/usr/bin/env bash
 # install-skills.sh — Idempotent skill symlink setup
-# Symlinks each skill dir from the repo into ~/.claude/skills/
+# Symlinks each skill dir from the repo into ~/.claude/skills/, EXCEPT skills
+# already bundled into a marketplace plugin (.claude-plugin/skill-map.json) —
+# those load through the mazze93 marketplace instead. Flat-symlinking a skill
+# from both places double-registers it: Claude Code then lists it twice
+# (once unscoped from ~/.claude/skills, once as `<plugin>:<skill>`), which is
+# exactly the duplication found and removed by hand on 2026-09-25. Reading
+# skill-map.json here makes that fix durable instead of one-time.
 # Safe to run multiple times.
 
 set -euo pipefail
@@ -8,6 +14,7 @@ set -euo pipefail
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 SKILLS_SRC="$REPO_DIR/skills"
 SKILLS_DST="$HOME/.claude/skills"
+SKILL_MAP="$REPO_DIR/.claude-plugin/skill-map.json"
 DRY_RUN="${1:-}"
 
 _ok()   { echo "  [skills] ✓ $*"; }
@@ -19,12 +26,27 @@ echo "── Install skills ─────────────────�
 
 mkdir -p "$SKILLS_DST"
 
-# Symlink each skill directory
+PACKAGED_SKILLS=""
+if [[ -f "$SKILL_MAP" ]] && command -v jq >/dev/null 2>&1; then
+  PACKAGED_SKILLS="$(jq -r '.plugins[].skills[]' "$SKILL_MAP" | sort -u)"
+fi
+
+# Symlink each skill directory not already covered by a marketplace plugin.
 for skill_dir in "$SKILLS_SRC"/*/; do
   [[ -d "$skill_dir" ]] || continue
   name="$(basename "$skill_dir")"
   src="${skill_dir%/}"
   dst="$SKILLS_DST/$name"
+
+  if grep -qxF "$name" <<< "$PACKAGED_SKILLS"; then
+    if [[ -L "$dst" ]]; then
+      _run "rm -f '$dst'"
+      _ok "unlinked $name (now served via marketplace plugin, not flat install)"
+    else
+      echo "  [skills] · $name (marketplace plugin covers this, no flat symlink needed)"
+    fi
+    continue
+  fi
 
   if [[ -L "$dst" && "$(readlink "$dst")" == "$src" ]]; then
     _skip "$name"
