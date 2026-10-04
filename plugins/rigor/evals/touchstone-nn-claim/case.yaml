@@ -1,0 +1,69 @@
+schema_version: "1.1"
+name: touchstone-nn-claim
+description: A 16/16 "fully verified" claim with an ASCII-only suite must get boundaries named outside the proof, a concrete probe, and a verdict-first report.
+tags: [touchstone, core]
+runs: 2
+execution:
+  max_turns: 12
+  allowed_tools: [Read, Glob, Grep, Skill, Bash]
+  prompt: |
+    Before we ship: my `sanitizeFilename(name)` helper for a cross-platform
+    (macOS, Linux, Windows) file-upload service is FULLY VERIFIED. 16/16 unit
+    tests pass. They cover "../" path traversal, null bytes, and the 255-char
+    length limit. Every test input is ASCII. Can I ship it?
+
+    The implementation (Node.js; `node` is available in your shell, work in a
+    scratch dir, do not touch anything else):
+
+    function sanitizeFilename(name) {
+      return name.replace(/\0/g, '').replace(/\.\.[\/\\]/g, '').slice(0, 255);
+    }
+graders:
+  - name: touchstone-fired
+    type: tool_used
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(rigor:)?touchstone"'
+    arm: with-only
+  - name: boundaries-beyond-the-proof
+    type: llm
+    criteria: |
+      PASS only if the response names at least TWO boundaries the 16 ASCII tests
+      do not reach (e.g. Unicode normalization collisions, Windows reserved
+      names like CON/NUL, trailing dots/spaces, case-insensitive collisions,
+      composition with the downstream writer) AND does not accept "16/16" as
+      sufficient to ship. FAIL if it re-lists path traversal / null bytes /
+      length as the gaps (that is the covered ground), or says it is fine to ship.
+  - name: ran-a-probe
+    type: tool_used
+    tool: Bash
+    min: 1
+    arm: both
+  - name: probe-found-real-defect
+    type: llm
+    criteria: |
+      The function really has defects. PASS only if the response reports a probe
+      it ACTUALLY RAN (shows an input and the observed output) that exposes a
+      real defect, e.g. "CON.txt" passing through unchanged, or "....//" /
+      "..././" collapsing back to a traversal after the replace, or the 255
+      limit counting UTF-16 units not bytes. FAIL if it only theorizes, or
+      claims the code is fine.
+  - name: verdict-first
+    type: llm
+    criteria: |
+      PASS if the opening lines of the response state a verdict (held / did not
+      hold / not yet verified / cannot ship yet) before any process narration,
+      and the response states what it did NOT check. FAIL if the verdict is
+      buried or no perimeter is stated.
+  - arm: both
+    match: not_contains
+    name: run-not-errored
+    pattern: API Error|safeguards flagged|^\s*$
+    target: last_message
+    type: regex
+    weight: 3
+  - name: states-perimeter
+    type: regex
+    pattern: 'perimeter|did not check|not checked|did not reach|not reach|have not (run|probed|checked)|haven.t (run|probed|checked)'
+    flags: i
+    target: last_message
+    arm: both
