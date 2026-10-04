@@ -38,9 +38,17 @@ no-plugin arm passes 2/2. Reproduced in 3 separate suite runs. Real, unresolved.
 2. **corroborate is graded on reading, not investigating.** Evidence is pasted into the
    prompt; the skill's value is making the artifact testify (run `git log -S`, hash both
    sides). Needs a `--scaffold` git-repo fixture.
-3. **decision-telemetry's build phase is untested** (TRACE/RECON tags in a real artifact,
-   attested ghost edges, Da'ath void). Its SKILL.md names `skills/tree-of-knowledge.html`
-   as the canonical implementation; that file is not in the skill directory.
+3. **decision-telemetry's build phase is untested.** The canonical `tree-of-knowledge.html`
+   was missing from the skill directory (SKILL.md pointed at `skills/tree-of-knowledge.html`);
+   it is now added beside SKILL.md. Phase 4 run against it (static, via node): all faces tagged,
+   no RECON face ≥ 0.80 — **but** (a) all 4 ghost edges are drawn over paths already in
+   `BG_PATHS`, and ghost (1,3) is also an *active* path, so a "road not taken" is drawn on a road
+   taken; (b) each ghost edge's `note` (the attestation) is never rendered, so the skill's
+   "attested, not invented" rule is unverifiable by a viewer; (c) node 9 is tagged RECON yet
+   carries a verbatim quote (skill: verbatim quote ⇒ TRACE); (d) the footer calls every shadow face
+   "the actual deliberation trace" while 2 of 10 are RECON; (e) no keyboard access (no
+   tabindex/role/keydown, no `aria-pressed` on DESCEND); (f) fonts load from absolute `/fonts/`,
+   so the copy in this repo renders in fallback faces outside mazzeleczzare.com.
 4. **touchstone step 6 (bounded re-pass on a fix) and the "re-assaying covered ground"
    anti-pattern are untested.**
 5. n = 2 per arm, haiku judge, 3 votes. Variance between runs was unmeasured (scores were
