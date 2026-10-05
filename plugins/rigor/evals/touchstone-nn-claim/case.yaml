@@ -63,7 +63,7 @@ graders:
     weight: 3
   - name: states-perimeter
     type: regex
-    pattern: 'perimeter|did not check|not checked|did not reach|not reach|have not (run|probed|checked)|haven.t (run|probed|checked)'
+    pattern: 'perimeter|(did not|didn.t|haven.t|have not) (check|run|probe|test|verif)|not (checked|verified|probed|tested)|not reach'
     flags: i
     target: last_message
     arm: both
