@@ -51,9 +51,9 @@ graders:
     type: llm
     criteria: |
       PASS if the opening lines of the response state a verdict (held / did not
-      hold / not yet verified / cannot ship yet) before any process narration,
-      and the response states what it did NOT check. FAIL if the verdict is
-      buried or no perimeter is stated.
+      hold / not yet verified / cannot ship yet) before any process narration.
+      FAIL if the verdict is buried. (Whether it states a perimeter is graded
+      separately by `states-perimeter`; do not judge that here.)
   - arm: both
     match: not_contains
     name: run-not-errored

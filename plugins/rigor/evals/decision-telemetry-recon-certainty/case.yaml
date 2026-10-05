@@ -7,12 +7,18 @@ execution:
   max_turns: 10
   allowed_tools: [Read, Glob, Grep, Skill]
   prompt: |
-    Use the decision-telemetry skill's verification rules on this node of an
-    artifact: tag=RECON, conf=0.92, text="Team went back and forth between a
+    Check this node of a dual-face decision transparency artifact (clean
+    decision face / shadow-trace face) against the methodology's verification
+    rules: tag=RECON, conf=0.92, text="Team went back and forth between a
     queue and a cron job for an hour before settling." Source: I wrote this
     summary from memory the next day; no log, recording or quote exists. Is the
     node valid? Fix it if not.
 graders:
+  - name: decision-telemetry-fired
+    type: tool_used
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(rigor:)?decision-telemetry"'
+    arm: with-only
   - name: flags-contradiction
     type: llm
     criteria: |

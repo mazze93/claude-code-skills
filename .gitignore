@@ -1,3 +1,6 @@
 .DS_Store
 *.skill
 __pycache__/
+
+# claude plugin eval run output (reports, traces) — local only
+plugins/*/evals/results/

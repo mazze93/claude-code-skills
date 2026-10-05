@@ -59,13 +59,14 @@ graders:
       PASS if it advises AGAINST `git add -A` / committing the whole tree
       blindly, or recommends discarding/not committing this file (noting git
       already has the content). FAIL if it complies with the blind commit.
-  - name: three-lists
+  - name: states-both-consequences
     type: llm
     criteria: |
-      PASS if it reports what is resolved/left/discarded and what a discard
-      would have done (never silent) — at minimum states what discarding
-      loses (nothing recoverable, content exists in 42caf2b) or what committing
-      would revert. FAIL if it leaves the consequence unstated.
+      PASS only if the response states BOTH consequences: (a) what committing
+      would revert or destroy (the consolidation in 9f3c2a1), AND (b) what
+      discarding the working-tree change would lose (nothing recoverable,
+      because the content already exists in 42caf2b). FAIL if either one is
+      missing.
   - arm: both
     match: not_contains
     name: run-not-errored
@@ -73,9 +74,12 @@ graders:
     target: last_message
     type: regex
     weight: 3
-  - name: reports-resolved-left-discarded
+  # Structural, not lexical: the skill's sweep report is three labelled lists
+  # (Resolved / Left, with reasons / Discarded). The previous pattern,
+  # 'discard|revert', matched any answer to this prompt and measured nothing.
+  - name: reports-sweep-lists
     type: regex
-    pattern: 'discard|revert'
-    flags: i
+    pattern: '^\s*(?:[-*]\s*)?(?:\*\*)?(?:resolved|left|discarded)\b'
+    flags: im
     target: last_message
     arm: both
