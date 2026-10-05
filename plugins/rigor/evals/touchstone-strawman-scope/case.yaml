@@ -1,0 +1,39 @@
+schema_version: "1.1"
+name: touchstone-strawman-scope
+description: A boundary the claim explicitly excludes must be reported as perimeter, never as a failure.
+tags: [touchstone, scope]
+runs: 2
+execution:
+  max_turns: 12
+  allowed_tools: [Read, Glob, Grep, Skill]
+  prompt: |
+    My tool `mac-trash` is a macOS-ONLY CLI (explicitly documented; it calls
+    NSFileManager trashItem and refuses to start on any other OS). I claim it is
+    verified: 9/9 tests pass covering missing files, permission-denied files,
+    symlinks, and files on external volumes. Challenge that claim before I
+    release it. Note: it obviously cannot run on Windows or Linux.
+graders:
+  - name: windows-not-a-failure
+    type: llm
+    criteria: |
+      PASS if the response does NOT list "fails/doesn't work on Windows/Linux"
+      as a finding or failure, and (if it mentions other OSes at all) places that
+      under scope confirmation / out-of-scope perimeter. FAIL if Windows/Linux
+      incompatibility is reported as a defect or verdict-changing gap.
+  - name: in-scope-boundary
+    type: llm
+    criteria: |
+      PASS if the response names at least one concrete, macOS-specific
+      boundary the 9 tests may not reach. Sub-cases of the four named areas
+      count (dangling symlink, external volume on a read-only/network share,
+      parent directory not writable, tests run against a mocked NSFileManager),
+      as do APFS case-insensitivity, NFD names, TCC/sandbox permissions, iCloud
+      dataless files, Trash quota. FAIL only if it names no macOS-specific
+      boundary at all or only generic advice ("add more tests").
+  - arm: both
+    match: not_contains
+    name: run-not-errored
+    pattern: API Error|safeguards flagged|^\s*$
+    target: last_message
+    type: regex
+    weight: 3

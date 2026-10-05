@@ -12,12 +12,17 @@
  */
 import data from '../data/catalog.json';
 
-export interface Skill {
+/** A skill as emitted by build_marketplace.py — date-independent, so --check is stable. */
+interface CatalogSkill {
   name: string;
   plugin: string;
   description: string;
   summary: string;
   added: string | null;
+}
+
+/** A skill as rendered: `isNew` is derived here, at build time, not committed. */
+export interface Skill extends CatalogSkill {
   isNew: boolean;
 }
 
@@ -40,6 +45,34 @@ export interface Catalog {
   totals: { plugins: number; skills: number };
 }
 
-export function loadCatalog(): Catalog {
-  return data as unknown as Catalog;
+/** Days a skill keeps its "new" badge after its SKILL.md first appears in git. */
+const NEW_DAYS = 30;
+const DAY_MS = 86_400_000;
+
+/**
+ * Pure: `added` (ISO 8601 or null) → whether the skill is still new at `now`.
+ * Lives here rather than in the generator because a committed boolean that
+ * depends on today's date drifts on its own and fails the --check gate.
+ */
+export function isNewSince(added: string | null, now: number): boolean {
+  if (!added) return false;
+  const t = Date.parse(added);
+  if (Number.isNaN(t)) return false;
+  return now - t <= NEW_DAYS * DAY_MS;
+}
+
+function withBadge(s: CatalogSkill, now: number): Skill {
+  return { ...s, isNew: isNewSince(s.added, now) };
+}
+
+export function loadCatalog(now: number = Date.now()): Catalog {
+  const raw = data as unknown as Omit<Catalog, 'plugins' | 'recent'> & {
+    plugins: (Omit<Plugin, 'skills'> & { skills: CatalogSkill[] })[];
+    recent: CatalogSkill[];
+  };
+  return {
+    ...raw,
+    plugins: raw.plugins.map((p) => ({ ...p, skills: p.skills.map((s) => withBadge(s, now)) })),
+    recent: raw.recent.map((s) => withBadge(s, now)),
+  };
 }

@@ -124,7 +124,7 @@ demand. A generated Qliphothic face is Sephirothic: it produces the output-struc
 of a shadow trace without running one. The absence of a live panel is not a missing
 feature — it is the artifact being epistemically consistent.
 
-The canonical reference implementation is `skills/tree-of-knowledge.html` in this
+The canonical reference implementation is `tree-of-knowledge.html` (beside this SKILL.md) in this
 repository. Use it as the structural and aesthetic baseline.
 
 ### Phase 4: Verification
@@ -163,6 +163,6 @@ make the difference visible — not to close it.
 
 ## Reference
 
-Canonical implementation: `skills/tree-of-knowledge.html`
+Canonical implementation: `tree-of-knowledge.html` (same directory as this file)
 Companion skill (gating methodology): `precise-coding-assistant`
 Origin session: `the-tree-of-knowledge.md` (raw transcript, unedited)

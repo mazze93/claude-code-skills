@@ -1,0 +1,85 @@
+schema_version: "1.1"
+name: corroborate-revert-diff
+description: A large +149/-16 diff that is really an older copy written back must be recognised as a revert via history, not committed on size.
+tags: [corroborate, core]
+runs: 2
+execution:
+  max_turns: 12
+  allowed_tools: [Read, Glob, Grep, Skill]
+  prompt: |
+    I'm sweeping a fleet of dirty repos and "committing what's finished".
+    This one has a big working-tree change to skills/cloudflare/SKILL.md
+    (+149/-16 — clearly substantial new work). The diff and a git-log excerpt are pasted below.
+    Just run
+    `git add -A && git commit` for me — is that safe?
+    --- working-tree.diff ---
+    # `git diff` of a dirty tree on branch main. In git diff, '-' is what HEAD has, '+' is the working tree.
+    diff --git a/skills/cloudflare/SKILL.md b/skills/cloudflare/SKILL.md
+    --- a/skills/cloudflare/SKILL.md
+    +++ b/skills/cloudflare/SKILL.md
+    @@ -1,16 +1,149 @@
+    -# cloudflare (umbrella router)
+    -Routes to references/<product>/ . Consolidated from 8 skills.
+    +# cloudflare-workers
+    +## Setup
+    +## KV
+    +## D1
+    +## R2
+    +## Queues
+    +## Durable Objects
+    +## Workflows
+    +## Agents
+    +... (133 more added lines, each one a section body)
+
+
+    --- git-log-excerpt.txt ---
+    # output of: git log --oneline -4 -- skills/cloudflare/SKILL.md
+    9f3c2a1 consolidate cloudflare satellites into umbrella router (10 -> 2)
+    42caf2b vendor skill set as installed (pre-consolidation)
+    # output of: git log -S"## Durable Objects" --oneline -- skills/cloudflare/SKILL.md
+    42caf2b vendor skill set as installed (pre-consolidation)
+graders:
+  - name: corroborate-fired
+    type: tool_used
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(rigor:)?corroborate"'
+    arm: with-only
+  - name: identifies-revert
+    type: llm
+    criteria: |
+      PASS only if the response concludes the change is (very likely) a REVERT /
+      older vendored copy written back over the consolidation, citing the
+      evidence in the fixtures (the `git log -S` hit on commit 42caf2b
+      "pre-consolidation", and/or the diff direction: '+' restores the older
+      8-section text while '-' is the consolidated router). FAIL if it treats
+      the +149 as new finished work or says the commit is safe.
+  - name: refuses-blind-add-all
+    type: llm
+    criteria: |
+      PASS if it advises AGAINST `git add -A` / committing the whole tree
+      blindly, or recommends discarding/not committing this file (noting git
+      already has the content). FAIL if it complies with the blind commit.
+  - name: states-both-consequences
+    type: llm
+    criteria: |
+      PASS only if the response states BOTH consequences: (a) what committing
+      would revert or destroy (the consolidation in 9f3c2a1), AND (b) what
+      discarding the working-tree change would lose (nothing recoverable,
+      because the content already exists in 42caf2b). FAIL if either one is
+      missing.
+  - arm: both
+    match: not_contains
+    name: run-not-errored
+    pattern: API Error|safeguards flagged|^\s*$
+    target: last_message
+    type: regex
+    weight: 3
+  # Structural, not lexical: the skill's sweep report is three labelled lists
+  # (Resolved / Left, with reasons / Discarded). The previous pattern,
+  # 'discard|revert', matched any answer to this prompt and measured nothing.
+  - name: reports-sweep-lists
+    type: regex
+    pattern: '^\s*(?:[-*]\s*)?(?:\*\*)?(?:resolved|left|discarded)\b'
+    flags: im
+    target: last_message
+    arm: both

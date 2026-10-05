@@ -3,11 +3,15 @@
 ## [Unreleased]
 
 ### Added
+- `plugins/rigor/evals/` — `claude plugin eval` suite for the `rigor` plugin (7 cases, with-plugin vs baseline). Final run: +8.3 pts over baseline on Opus 5.5 (6/7), +4.2 on Sonnet 5.5 (5/7). README records results, what the suite does not establish (mutation test, timeout blind spot), the Sonnet 5.5 `reasoning_extraction` safeguard on `decision-telemetry`, and harness bugs found.
+- `skills/decision-telemetry/tree-of-knowledge.html` — the canonical implementation `SKILL.md` already referenced but the repo never contained; path in `SKILL.md` corrected.
 - `LICENSE` — MIT, covering this repo's own work.
 - `NOTICE` — index of vendored third-party content and its terms.
 - `skills/cloudflare/`, `skills/cloudflare-one/`, `skills/web-perf/` — vendored from [`cloudflare/skills`](https://github.com/cloudflare/skills) (Apache-2.0, retrieved 2026-07-23). Each carries its own `LICENSE` and `NOTICE` with an Apache-2.0 §4b statement of changes; they are **not** covered by the repo's MIT license.
 
 ### Changed
+- `site/src/data/catalog.json` no longer stores `isNew`; `site/src/lib/catalog.ts` derives it from `added` at build time. A committed date-relative boolean made `build_marketplace.py --check` fail on an untouched tree once any skill turned 30 days old (main went red 2026-10-03).
+- `.gitignore`: `plugins/*/evals/results/` (eval run output is local only).
 - Consolidated the Cloudflare skill set 10 → 2. `agents-sdk`, `cloudflare-email-service`, `durable-objects`, `sandbox-sdk`, `turnstile-spin`, `wrangler`, `workers-best-practices` folded into `cloudflare/references/` (each former `SKILL.md` preserved as `<product>/guide.md`, Turnstile as `turnstile/spin.md` with its `scripts/` and `tests/`); `cloudflare-one-migrations` folded into `cloudflare-one/references/migrations.md`. `cloudflare-one/SKILL.md` split 22KB → 3KB router + `references/{assessment,guardrails,validation,migrations}.md`.
 - Skill listing cost: ~2,525 → ~1,671 est. resident tokens per session, back under the ~1% context budget where entries start being truncated.
 

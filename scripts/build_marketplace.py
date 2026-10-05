@@ -143,7 +143,6 @@ def build(check: bool = False) -> int:
     # JSON artefact keeps one source of truth, puts it under the same --check
     # drift gate as everything else, and leaves the render path pure data.
     import subprocess
-    from datetime import datetime, timezone
 
     def first_seen(rel: str) -> str | None:
         try:
@@ -157,8 +156,9 @@ def build(check: bool = False) -> int:
     def description(skill: str) -> str:
         return frontmatter_description(ROOT / "skills" / skill / "SKILL.md")
 
-    NEW_DAYS = 30
-    now = datetime.now(timezone.utc)
+    # No "isNew" here: it is a function of today's date, so any committed value
+    # goes stale and --check fails on an untouched tree once a skill turns 30
+    # days old. The site derives it from `added` at build time (src/lib/catalog.ts).
     commerce = m.get("commerce", {})
     tiers = commerce.get("tiers", {})
     every: list[dict] = []
@@ -170,11 +170,10 @@ def build(check: bool = False) -> int:
         for skill in sorted(spec["skills"]):
             desc = description(skill)
             added = first_seen(f"skills/{skill}/SKILL.md")
-            age = (now - datetime.fromisoformat(added)).days if added else None
             entry = {
                 "name": skill, "plugin": name, "description": desc,
                 "summary": re.split(r"(?<=\.)\s", desc)[0][:200],
-                "added": added, "isNew": age is not None and age <= NEW_DAYS,
+                "added": added,
             }
             skills.append(entry)
             every.append(entry)

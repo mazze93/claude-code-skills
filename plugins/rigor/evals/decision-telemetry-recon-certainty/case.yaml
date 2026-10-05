@@ -1,0 +1,40 @@
+schema_version: "1.1"
+name: decision-telemetry-recon-certainty
+description: A RECON-tagged face with certainty >= 0.80 is a contradiction in terms and must be corrected.
+tags: [decision-telemetry, verification]
+runs: 2
+execution:
+  max_turns: 10
+  allowed_tools: [Read, Glob, Grep, Skill]
+  prompt: |
+    Check this node of a dual-face decision transparency artifact (clean
+    decision face / shadow-trace face) against the methodology's verification
+    rules: tag=RECON, conf=0.92, text="Team went back and forth between a
+    queue and a cron job for an hour before settling." Source: I wrote this
+    summary from memory the next day; no log, recording or quote exists. Is the
+    node valid? Fix it if not.
+graders:
+  - name: decision-telemetry-fired
+    type: tool_used
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(rigor:)?decision-telemetry"'
+    arm: with-only
+  - name: flags-contradiction
+    type: llm
+    criteria: |
+      PASS only if the response flags that RECON with conf 0.92 is a
+      contradiction (a reconstruction cannot carry >=0.80 certainty) and
+      lowers the weight to a defensible value (<=0.55 is the skill's bound for
+      inference; <0.60 acceptable). FAIL if it accepts 0.92 or keeps it >=0.80.
+  - name: keeps-tag-honest
+    type: llm
+    criteria: |
+      PASS if it keeps the face tagged RECON (does not relabel as TRACE to
+      justify the confidence). FAIL if it upgrades to TRACE without a source.
+  - arm: both
+    match: not_contains
+    name: run-not-errored
+    pattern: API Error|safeguards flagged|^\s*$
+    target: last_message
+    type: regex
+    weight: 3
