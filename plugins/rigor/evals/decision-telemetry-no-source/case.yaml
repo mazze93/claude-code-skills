@@ -5,6 +5,9 @@ tags: [decision-telemetry, core]
 runs: 2
 execution:
   max_turns: 10
+  # Building the artifact takes several tool turns; the 300s default timed out
+  # one Opus run, and a timed-out run is still graded on its partial last message.
+  timeout_seconds: 600
   allowed_tools: [Read, Glob, Grep, Skill]
   prompt: |
     Build a dual-face decision transparency artifact (clean recorded decision
