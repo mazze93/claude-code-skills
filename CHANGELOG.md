@@ -9,6 +9,9 @@
 - `NOTICE` — index of vendored third-party content and its terms.
 - `skills/cloudflare/`, `skills/cloudflare-one/`, `skills/web-perf/` — vendored from [`cloudflare/skills`](https://github.com/cloudflare/skills) (Apache-2.0, retrieved 2026-07-23). Each carries its own `LICENSE` and `NOTICE` with an Apache-2.0 §4b statement of changes; they are **not** covered by the repo's MIT license.
 
+### Security
+- `site/`: `overrides.sharp ^0.35.5` clears GHSA-wq5f-xc86-pv6w (librsvg); `npm update` can't, because miniflare pins sharp exactly. `allowScripts` aligned to the lockfile (`f380a38`). **Correction to that commit message:** it says the stale pins would have *blocked* the workerd/esbuild install scripts. npm 11.19.1 does not — it warns ("not yet covered by allowScripts") and runs them anyway (verified: native bins in place under the stale pins). The alignment silences the warning and holds up if npm starts enforcing; nothing was broken before it.
+
 ### Changed
 - `site/src/data/catalog.json` no longer stores `isNew`; `site/src/lib/catalog.ts` derives it from `added` at build time. A committed date-relative boolean made `build_marketplace.py --check` fail on an untouched tree once any skill turned 30 days old (main went red 2026-10-03).
 - `.gitignore`: `plugins/*/evals/results/` (eval run output is local only).
