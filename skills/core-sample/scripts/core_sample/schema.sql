@@ -25,6 +25,8 @@ CREATE TABLE IF NOT EXISTS tool_calls (
   outcome_source TEXT,   -- tool-flag | output-scan | <failure link basis> | none
   error_signature TEXT, error_excerpt TEXT,
   record_source TEXT,    -- export | manual | transcript | hook
+  tool_use_id TEXT,     -- stable native Claude tool-use ID where available
+  evidence_sources TEXT, -- transcript+hook when both independently witnessed
   failure_id TEXT,       -- set when a failure in the ledger points at this call
   PRIMARY KEY (session_id, call_id)
 );
