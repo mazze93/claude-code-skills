@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 from core_sample import taxonomy as T
-from core_sample.ledger import link_failures, number_calls, validate, reconcile_observations
+from core_sample.ledger import link_failures, number_calls, validate, reconcile_observations, reconcile_unkeyed_mentions, build_ledger
 from core_sample.parse_transcript import parse_transcript
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -221,6 +221,66 @@ class EvidenceReconciliation(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "duplicate hook"):
             reconcile_observations([], [self.row("same", source="hook"),
                                         self.row("same", source="hook")])
+
+
+
+class CrossSourceProvenance(unittest.TestCase):
+    def row(self, tool_use_id, source="transcript"):
+        return {"tool_use_id": tool_use_id, "tool": "Bash", "input": "echo ok",
+                "exchange": "E01", "record_source": source, "evidence_sources": source,
+                "outcome": "ok", "outcome_source": "tool-flag"}
+
+    def test_unique_export_corroborates_without_extra_execution(self):
+        observed = [self.row("tool1")]
+        manual = [self.row("", "export")]
+        extra, mentions = reconcile_unkeyed_mentions(manual, observed)
+        self.assertEqual(len(extra), 0)
+        self.assertEqual(mentions[0]["match_status"], "corroborated")
+        self.assertEqual(observed[0]["evidence_sources"], "transcript+export")
+
+    def test_ambiguous_repeated_calls_preserved_but_not_double_counted(self):
+        observed = [self.row("tool1"), self.row("tool2")]
+        extra, mentions = reconcile_unkeyed_mentions([self.row("", "export")], observed)
+        self.assertFalse(extra)
+        self.assertEqual(mentions[0]["match_status"], "ambiguous_overlap")
+        self.assertEqual(len(observed), 2)
+
+    def test_full_ledger_reconciles_hook_transcript_and_export(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = Path(d)
+            (p / "raw" / "export").mkdir(parents=True)
+            (p / "session.json").write_text(json.dumps({
+                "session_id": "test-sid", "timezone": "UTC",
+                "transcript_first_exchange": "E01", "transcript_exchange_offset": 1
+            }))
+            (p / "exchanges.json").write_text(json.dumps([{
+                "exchange": "E01", "initiator": "Person", "prompt": "do it"
+            }]))
+            transcript = [
+                {"type": "user", "timestamp": "2026-10-09T10:00:00Z",
+                 "origin": {"kind": "human"}, "message": {"content": "do it"}},
+                {"type": "assistant", "timestamp": "2026-10-09T10:00:01Z",
+                 "message": {"content": [{"type": "tool_use", "id": "tool1",
+                  "name": "Bash", "input": {"command": "echo ok"}}]}},
+                {"type": "user", "timestamp": "2026-10-09T10:00:02Z",
+                 "message": {"content": [{"type": "tool_result", "tool_use_id": "tool1",
+                  "content": "ok"}]}}
+            ]
+            (p / "raw" / "transcript.jsonl").write_text(
+                "\n".join(json.dumps(x) for x in transcript))
+            hook = {"event": "PostToolUse", "received_at": "2026-10-09T10:00:02Z",
+                    "payload": {"tool_name": "Bash", "tool_use_id": "tool1",
+                                "tool_input": {"command": "echo ok"}, "tool_response": "ok"}}
+            (p / "raw" / "hook-ledger.jsonl").write_text(json.dumps(hook) + "\n")
+            (p / "raw" / "export" / "page.txt").write_text(
+                '<turn n="1">Assistant: <tool name="Bash">'
+                '<parameter name="command">echo ok</parameter></tool></turn>')
+            tables = build_ledger(p)
+            self.assertEqual(len(tables["tool_calls"]), 1)
+            self.assertEqual(tables["tool_calls"][0]["tool_use_id"], "tool1")
+            self.assertEqual(tables["tool_calls"][0]["evidence_sources"],
+                             "transcript+hook+export")
+            self.assertEqual(tables["source_mentions"][0]["match_status"], "corroborated")
 
 
 if __name__ == "__main__":
