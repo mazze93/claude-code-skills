@@ -56,6 +56,17 @@ Copy saved pages into `raw/export/`. Pages that come back inline can't be
 saved by a tool. Transcribe their calls into `calls_manual.json` (tool,
 description, abridged input) and say in the notes that you did.
 
+## Where the session folder lives
+
+In a git repository the person owns, committed as you go: never a scratchpad,
+`/tmp` or another temporary directory. The ledger is evidence. A record that
+dies with the container is the failure this skill exists to prevent, and the
+person has had to ask for this more than once. Put the derived record (annotations,
+CSV, SQLite, workbook) in the repo the work belongs to, outside any deployed
+folder. Keep `raw/` (transcripts, export pages) out of public repos: it holds
+everything the session touched, memory contents included. Add a `.gitignore` for `raw/` and
+deliver it to the person privately. Commit after each build.
+
 ## Step 2 — Scaffold and capture
 
 ```bash
@@ -165,18 +176,20 @@ SessionEnd, so results survive compaction. Install on the person's machine
 ```json
 {
   "hooks": {
-    "PostToolUse":        [{"matcher": ".*", "hooks": [{"type": "command", "command": "python3 \"$HOME/.claude/core-sample/toolkit/hooks/ledger_hook.py\""}]}],
-    "PostToolUseFailure": [{"matcher": ".*", "hooks": [{"type": "command", "command": "python3 \"$HOME/.claude/core-sample/toolkit/hooks/ledger_hook.py\""}]}],
+    "PostToolUse":        [{"matcher": "*", "hooks": [{"type": "command", "command": "python3 \"$HOME/.claude/core-sample/toolkit/hooks/ledger_hook.py\""}]}],
+    "PostToolUseFailure": [{"matcher": "*", "hooks": [{"type": "command", "command": "python3 \"$HOME/.claude/core-sample/toolkit/hooks/ledger_hook.py\""}]}],
     "PreCompact":         [{"hooks": [{"type": "command", "command": "python3 \"$HOME/.claude/core-sample/toolkit/hooks/ledger_hook.py\""}]}],
-    "SessionEnd":         [{"hooks": [{"type": "command", "command": "python3 \"$HOME/.claude/core-sample/toolkit/hooks/ledger_hook.py\""}]}]
+    "SessionEnd":         [{"hooks": [{"type": "command", "command": "python3 \"$HOME/.claude/core-sample/toolkit/hooks/ledger_hook.py\"", "timeout": 10}]}]
   }
 }
 ```
 
-The event names and `transcript_path` come from the Claude Code hooks docs.
-The docs don't fully specify the stdin fields for shell hooks, or whether
-`".*"` is the right catch-all matcher. So before trusting the ledger, run one
-short session with the hook installed and read the ledger file. The parser
+Merge these into any existing `hooks` block; never replace hooks the person
+already has. Event names, `transcript_path`, `"*"` as the match-all matcher
+and the SessionEnd time budget come from the Claude Code hooks docs. The
+per-event stdin fields for shell hooks weren't fully readable there, so
+before trusting the ledger, run one short session with the hook installed
+and read the ledger file. The parser
 reads fields defensively, but check that `tool_name`, `tool_input` and
 `tool_response` / `error` are actually there. SessionEnd hooks share a short
 time budget, so the hook only copies a file and exits.
@@ -187,7 +200,9 @@ The ledger is **confidential-local**: tool inputs and outputs can hold
 anything the session touched. The hook writes files mode 0600 and folders
 0700. It redacts bearer tokens, `ghp_`/`sk-` keys and `key=value` secrets
 (the redaction is not exhaustive), truncates long fields, never sends data
-anywhere, and always exits 0 so it can't block a session. Before publishing a
+anywhere, and always exits 0 so it can't block a session. `session_id` is
+sanitised before it becomes a file name, and values under secret-named keys
+(`api_key`, `password`, `token`, …) are masked as well as `key=value` text. Before publishing a
 workbook or putting it in a repo, scan the Tool Calls tab's input and
 error columns for anything private. The same goes for verbatim prompts on the
 Exchanges tab.

@@ -1,0 +1,18 @@
+{
+  "permissions": {"allow": ["Bash(git status:*)"]},
+  "hooks": {
+    "Stop": [{"hooks": [{"type": "command", "command": "~/.claude/stop-hook-git-check.sh"}]}],
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/hooks/tool-ledger.py capture", "timeout": 10}]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "compact",
+        "hooks": [{"type": "command", "command": "python3 ~/.claude/hooks/tool-ledger.py restore", "timeout": 10}]
+      }
+    ]
+  }
+}

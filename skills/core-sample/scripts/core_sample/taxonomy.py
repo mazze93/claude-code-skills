@@ -114,7 +114,9 @@ DETECTIONS = [
     ("linter", "📐", "A purpose-built linter."),
     ("person", "🧑", "The person you were working with, or another human."),
 ]
-DETECTED_BY = ["self", "tool", "harness", "person"]
+# self-on-request: Claude caught it while running a check the person asked for (e.g. a
+# touchstone pass) — not unprompted. agent: a subagent or reviewer run caught it.
+DETECTED_BY = ["self", "self-on-request", "agent", "tool", "harness", "person"]
 CAUGHT = [("before-delivery", "🛡️"), ("after-delivery", "🚨")]
 SEVERITY = {1: "Low — noise or cosmetic", 2: "Medium — wrong output, caught", 3: "High — would ship, or shipped, a false claim or broken page"}
 STATUSES = ["fixed", "open", "accepted", "false-alarm"]

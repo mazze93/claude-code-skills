@@ -50,6 +50,7 @@ Order matters: rows are numbered in file order within their exchange.
 - `class` is free text, but reuse classes across sessions (`missing-dependency`, `wrong-api`,
   `self-matching-kill`, `silent-omission`, `stale-claim`, `overstatement`, `false-memory`,
   `stale-artifact`, `misleading-capture`, `unasked-decision`…) so they can be counted.
+- `detected_by`: self · self-on-request (caught while running a check the person asked for) · agent (a subagent/reviewer) · tool · harness · person. Don't record a requested check as `self`.
 - Severity: 1 noise or cosmetic · 2 wrong output, caught · 3 would ship (or shipped) a false claim or broken page.
 
 ## findings.json — defects in the work itself, grouped by set
