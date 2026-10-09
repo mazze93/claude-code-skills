@@ -99,20 +99,29 @@ def _scans(tool: str) -> bool:
     return any(tool == t or (t.endswith("__") and tool.startswith(t)) for t in SCANNED_TOOLS)
 
 
+def classify_result(tool: str, output: str, flagged_error: bool) -> dict:
+    """One outcome policy for transcript and hook evidence.
+
+    Scan execution output only: a successful Read of source containing "Error:"
+    is not itself a tool failure. Flagged errors always outrank text heuristics.
+    """
+    sig, line = scan_errors(output) if _scans(tool) else ("", "")
+    if not sig and _scans(tool) and output.lstrip().startswith(("Error:", "<tool_use_error>")):
+        sig, line = "tool-error", output.strip().splitlines()[0][:300]
+    if flagged_error:
+        return dict(outcome="error", outcome_source="tool-flag",
+                    error_signature=sig or "tool-error",
+                    error_excerpt=(line or output.strip())[:300])
+    if sig:
+        return dict(outcome="error_unflagged", outcome_source="output-scan",
+                    error_signature=sig, error_excerpt=line)
+    return dict(outcome="ok", outcome_source="tool-flag",
+                error_signature="", error_excerpt="")
+
+
 def _attach_result(call: dict, block: dict, entry: dict) -> None:
-    """Set ended_at, duration, outcome and error fields on a call (mutates it)."""
+    """Set observed outcome, time and duration on the matching tool use."""
     out = _result_text(block, entry.get("toolUseResult"))
-    sig, line = scan_errors(out) if _scans(call["tool"]) else ("", "")
-    if not sig and out.lstrip().startswith(("Error:", "<tool_use_error>")):
-        # MCP convention: a result that opens with "Error:" is an error, whatever the flag says.
-        sig, line = "tool-error", out.strip().splitlines()[0][:300]
     call["ended_at"] = entry["timestamp"]
     call["duration_s"] = round((_ts(entry["timestamp"]) - _ts(call["started_at"])).total_seconds(), 2)
-    if block.get("is_error"):
-        call.update(outcome="error", outcome_source="tool-flag",
-                    error_signature=sig or "tool-error", error_excerpt=(line or out.strip())[:300])
-    elif sig:
-        call.update(outcome="error_unflagged", outcome_source="output-scan",
-                    error_signature=sig, error_excerpt=line)
-    else:
-        call.update(outcome="ok", outcome_source="tool-flag")
+    call.update(classify_result(call["tool"], out, bool(block.get("is_error"))))
