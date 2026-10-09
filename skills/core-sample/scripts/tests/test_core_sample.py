@@ -6,7 +6,7 @@ import unittest
 from pathlib import Path
 
 from core_sample import taxonomy as T
-from core_sample.ledger import link_failures, number_calls, validate
+from core_sample.ledger import link_failures, number_calls, validate, reconcile_observations
 from core_sample.parse_transcript import parse_transcript
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -67,7 +67,11 @@ class HookHardening(unittest.TestCase):
         import stat
         with tempfile.TemporaryDirectory() as d:
             home = Path(d) / "cs"
-            self.run_hook(home, {"hook_event_name": "PostToolUse", "session_id": "s1", "tool_name": "Bash"})
+            self.run_hook(home, {"hook_event_name": "PostToolUse", "session_id": "s1",
+                                 "tool_name": "Bash", "tool_input": {"command": load_hook().ARM_COMMAND}})
+            self.run_hook(home, {"hook_event_name": "PostToolUse", "session_id": "s1",
+                                 "tool_name": "Bash", "tool_input": {"command": "echo ok"},
+                                 "tool_use_id": "t1", "tool_response": "ok"})
             for folder in (home, home / "ledger"):
                 self.assertEqual(stat.S_IMODE(folder.stat().st_mode), 0o700, folder)
 
@@ -128,6 +132,95 @@ class Ledger(unittest.TestCase):
                              "caught": "before-delivery", "status": "fixed", "link_basis": "log", "severity": 1}]}
         with self.assertRaisesRegex(ValueError, "vibes"):
             validate(bad)
+
+
+
+class CaptureLifecycle(unittest.TestCase):
+    """A tool-result hook must stay dormant until the exact opt-in command."""
+
+    def fire(self, home, sid, event="PostToolUse", command="echo test", response="ok"):
+        import os, subprocess, sys
+        p = {"session_id": sid, "hook_event_name": event, "tool_name": "Bash",
+             "tool_input": {"command": command}, "tool_use_id": "tool-" + command,
+             "tool_response": response}
+        return subprocess.run(
+            [sys.executable, str(ROOT / "hooks" / "ledger_hook.py")],
+            input=json.dumps(p), text=True, capture_output=True,
+            env=dict(os.environ, CORE_SAMPLE_HOME=str(home))
+        )
+
+    def test_explicit_arm_and_disarm_scope(self):
+        h = load_hook()
+        with tempfile.TemporaryDirectory() as d:
+            home = Path(d) / "cs"
+            self.fire(home, "session-one")
+            self.assertFalse((home / "ledger").exists(), "capture is off by default")
+            self.fire(home, "session-one", command=h.ARM_COMMAND)
+            self.fire(home, "session-one", command="echo during", response="result1")
+            self.fire(home, "session-two", command="echo independent", response="result2")
+            self.fire(home, "session-one", command=h.DISARM_COMMAND)
+            self.fire(home, "session-one", command="echo after", response="result3")
+            rows = [json.loads(x) for x in (home / "ledger" / "session-one.jsonl").read_text().splitlines()]
+            self.assertEqual([x["event"] for x in rows],
+                             ["CaptureStarted", "PostToolUse", "CaptureStopped"])
+            self.assertNotIn("result3", json.dumps(rows))
+            self.assertNotIn("result2", json.dumps(rows))
+            self.assertFalse((home / "ledger" / "session-two.jsonl").exists())
+            self.assertEqual((home / "state" / "session-one.state").read_text().strip(), "off")
+
+    def test_arming_is_successful_event_not_arbitrary_text(self):
+        h = load_hook()
+        with tempfile.TemporaryDirectory() as d:
+            home = Path(d) / "cs"
+            self.fire(home, "s1", event="PostToolUseFailure", command=h.ARM_COMMAND)
+            self.fire(home, "s1", command="echo " + h.ARM_COMMAND)
+            self.assertFalse((home / "ledger").exists())
+
+    def test_session_end_disarms_and_raw_archive_is_opt_in(self):
+        h = load_hook()
+        with tempfile.TemporaryDirectory() as d:
+            home = Path(d) / "cs"
+            self.fire(home, "s1", command=h.ARM_COMMAND)
+            self.fire(home, "s1", event="SessionEnd")
+            self.assertEqual((home / "state" / "s1.state").read_text().strip(), "off")
+            self.assertFalse((home / "archive").exists())
+
+    def test_nested_secret_values_masked(self):
+        h = load_hook()
+        self.assertEqual(h.scrub({"token": {"private": "value"}})["token"], "[REDACTED]")
+
+
+class EvidenceReconciliation(unittest.TestCase):
+    def row(self, uid, outcome="ok", source="transcript"):
+        return {"tool_use_id": uid, "tool": "Bash", "input": "echo ok", "exchange": "E01",
+                "record_source": source, "evidence_sources": source,
+                "outcome": outcome, "outcome_source": "tool-flag",
+                "error_signature": "", "error_excerpt": "", "ended_at": "now"}
+
+    def test_reconciles_single_observation(self):
+        t = self.row("t1")
+        h = self.row("t1", source="hook")
+        rows = reconcile_observations([t], [h])
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["evidence_sources"], "transcript+hook")
+
+    def test_restores_missing_result(self):
+        t = self.row("t1", outcome="unrecorded")
+        h = self.row("t1", outcome="error", source="hook")
+        rows = reconcile_observations([t], [h])
+        self.assertEqual(rows[0]["outcome"], "error")
+        self.assertEqual(rows[0]["evidence_sources"], "transcript+hook")
+
+    def test_rejects_conflicting_results(self):
+        with self.assertRaisesRegex(ValueError, "conflicting observed"):
+            reconcile_observations([self.row("t1")], [self.row("t1", "error", "hook")])
+
+    def test_rejects_missing_identifier_and_collisions(self):
+        with self.assertRaisesRegex(ValueError, "no tool_use_id"):
+            reconcile_observations([self.row("t1")], [self.row("", source="hook")])
+        with self.assertRaisesRegex(ValueError, "duplicate hook"):
+            reconcile_observations([], [self.row("same", source="hook"),
+                                        self.row("same", source="hook")])
 
 
 if __name__ == "__main__":
