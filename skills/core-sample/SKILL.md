@@ -1,6 +1,6 @@
 ---
 name: core-sample
-description: Explicitly start a session-evidence capture, stop it before compilation, and generate a provenance-aware SQLite/CSV/Excel ledger. Use for session audits, tool-result preservation, failure analysis and post-mortems.
+description: Capture a Claude session as an analysis-ready ledger — every tool call with its outcome (including failures the tool never flagged), a typed failure log, prompts, findings, sources, deliverables and open items — then build SQLite + CSV and a navigable Excel workbook with charts. Use whenever the user asks to record, log, audit, export or "make a spreadsheet of" a session or conversation, wants tool use or failures treated as data, asks what went wrong or what caught it, wants to compare sessions, or wants hooks so tool results survive compaction. Also use near the end of a long build session when a post-mortem, field note or essay needs evidence.
 hooks:
   PostToolUse:
     - matcher: "*"
