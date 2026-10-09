@@ -283,5 +283,35 @@ class CrossSourceProvenance(unittest.TestCase):
             self.assertEqual(tables["source_mentions"][0]["match_status"], "corroborated")
 
 
+
+class ProvenanceIntegrity(unittest.TestCase):
+    def test_manifest_verifies_and_detects_changed_inputs(self):
+        from core_sample.provenance import fingerprint, write_manifest, verify_manifest
+        with tempfile.TemporaryDirectory() as d:
+            folder = Path(d)
+            (folder / "raw").mkdir()
+            (folder / "session.json").write_text('{"session_id":"s1"}\n')
+            (folder / "raw" / "evidence.jsonl").write_text('{"result":"ok"}\n')
+            before = fingerprint(folder)
+            manifest = folder / "ledger" / "evidence-manifest.json"
+            write_manifest(folder, manifest, "1.0.0", before)
+            verified = verify_manifest(folder, manifest)
+            self.assertEqual(len(verified["inputs"]), 2)
+            (folder / "raw" / "evidence.jsonl").write_text('{"result":"tampered"}\n')
+            with self.assertRaisesRegex(ValueError, "integrity mismatch"):
+                verify_manifest(folder, manifest)
+
+    def test_rejects_symlinked_evidence(self):
+        from core_sample.provenance import fingerprint
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d)
+            folder = root / "project"
+            folder.mkdir()
+            (root / "private.txt").write_text("private")
+            (folder / "raw").symlink_to(root, target_is_directory=True)
+            with self.assertRaisesRegex(ValueError, "raw evidence root"):
+                fingerprint(folder)
+
+
 if __name__ == "__main__":
     unittest.main()
