@@ -40,6 +40,45 @@ class Redaction(unittest.TestCase):
         self.assertEqual(load_hook().redact("Explain token usage"), "Explain token usage")
 
 
+class HookHardening(unittest.TestCase):
+    """The three defects an eval run found in v0.1 of the hook."""
+
+    def run_hook(self, home, payload):
+        import os, subprocess, sys
+        env = dict(os.environ, CORE_SAMPLE_HOME=str(home))
+        return subprocess.run([sys.executable, str(ROOT / "hooks" / "ledger_hook.py")], input=json.dumps(payload),
+                              text=True, env=env, capture_output=True)
+
+    def test_session_id_cannot_escape_home(self):
+        with tempfile.TemporaryDirectory() as d:
+            home = Path(d) / "cs"
+            self.run_hook(home, {"hook_event_name": "PostToolUse", "session_id": "../../escape", "tool_name": "Bash"})
+            self.assertFalse((Path(d) / "escape.jsonl").exists())
+            self.assertTrue(all(home in p.parents for p in Path(d).rglob("*.jsonl")))
+
+    def test_secret_named_dict_values_are_masked(self):
+        h = load_hook()
+        out = h.scrub({"tool_input": {"api_key": "plainsecret123", "password": "hunter2", "query": "ok"}})
+        self.assertNotIn("plainsecret123", json.dumps(out))
+        self.assertNotIn("hunter2", json.dumps(out))
+        self.assertEqual(out["tool_input"]["query"], "ok")
+
+    def test_folders_are_private(self):
+        import stat
+        with tempfile.TemporaryDirectory() as d:
+            home = Path(d) / "cs"
+            self.run_hook(home, {"hook_event_name": "PostToolUse", "session_id": "s1", "tool_name": "Bash"})
+            for folder in (home, home / "ledger"):
+                self.assertEqual(stat.S_IMODE(folder.stat().st_mode), 0o700, folder)
+
+    def test_never_blocks_on_bad_input(self):
+        with tempfile.TemporaryDirectory() as d:
+            import os, subprocess, sys
+            r = subprocess.run([sys.executable, str(ROOT / "hooks" / "ledger_hook.py")], input="not json", text=True,
+                               env=dict(os.environ, CORE_SAMPLE_HOME=d), capture_output=True)
+            self.assertEqual(r.returncode, 0)
+
+
 class Transcript(unittest.TestCase):
     def test_outcomes_and_exchanges(self):
         lines = [
