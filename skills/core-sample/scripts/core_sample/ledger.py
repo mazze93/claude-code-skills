@@ -36,7 +36,9 @@ def _call(exchange, tool, description, inp, source, extra: dict | None = None) -
     row = {"exchange": exchange, "tool": tool, "tool_short": T.short_tool(tool), "family": T.family_of(tool),
            "description": description, "input": inp[:2000], "started_at": "", "ended_at": "", "duration_s": None,
            "outcome": "unrecorded", "outcome_source": "none", "error_signature": "", "error_excerpt": "",
-           "record_source": source, "failure_id": ""}
+           "record_source": source, "failure_id": "",
+           "tool_use_id": (extra or {}).get("tool_use_id") or (extra or {}).get("use_id") or "",
+           "evidence_sources": source}
     row.update({k: v for k, v in (extra or {}).items() if k in row and k not in ("exchange", "tool", "input")})
     return row
 
@@ -82,6 +84,46 @@ def _local(iso: str, tz: ZoneInfo) -> str:
 
 
 # ── Assembly ─────────────────────────────────────────────────────────────
+def reconcile_observations(transcript: list[dict], hook: list[dict]) -> list[dict]:
+    """Reconcile two witnessed records by tool_use_id, never by a guessed ordinal.
+
+    Fail loudly on incompatible recorded outcomes. A hook can recover an outcome
+    missing from a compacted transcript. Unpaired IDs remain separate evidence.
+    """
+    indexed = {}
+    for call in transcript:
+        uid = call.get("tool_use_id")
+        if uid:
+            if uid in indexed:
+                raise ValueError(f"duplicate transcript tool_use_id: {uid}")
+            indexed[uid] = call
+    seen_hook = set()
+    unpaired = []
+    for h in hook:
+        uid = h.get("tool_use_id")
+        if not uid and transcript:
+            raise ValueError("hook record has no tool_use_id; cannot safely reconcile transcript")
+        if uid:
+            if uid in seen_hook:
+                raise ValueError(f"duplicate hook tool_use_id: {uid}")
+            seen_hook.add(uid)
+        t = indexed.get(uid) if uid else None
+        if t is None:
+            unpaired.append(h)
+            continue
+        if t["tool"] != h["tool"] or t["input"] != h["input"]:
+            raise ValueError(f"tool identity mismatch for {uid}")
+        if t["outcome"] != "unrecorded" and t["outcome"] != h["outcome"]:
+            raise ValueError(f"conflicting observed outcomes for {uid}: "
+                             f"{t['outcome']} (transcript), {h['outcome']} (hook)")
+        if t["outcome"] == "unrecorded":
+            for key in ("outcome", "outcome_source", "error_signature",
+                        "error_excerpt", "ended_at"):
+                t[key] = h[key]
+        t["evidence_sources"] = "transcript+hook"
+    return transcript + unpaired
+
+
 def number_calls(calls: list[dict]) -> list[dict]:
     """Stable order (exchange, then source order) and per-exchange seq + call_id."""
     order = {"export": 0, "manual": 0, "transcript": 1, "hook": 1}
@@ -173,13 +215,17 @@ def build_ledger(folder: Path) -> dict:
     tz = ZoneInfo(session.get("timezone", "UTC"))
     t_calls, prompts, events = transcript_calls(folder, session, tz)
     hook_calls = [_call(c["exchange"], c["tool"], c["description"], c["input"], "hook", c)
-                  for c in parse_hook_ledger(folder / "raw" / "hook-ledger.jsonl", session)] if not t_calls else []
-    calls = number_calls(export_calls(folder, session) + manual_calls(folder) + t_calls + hook_calls)
+                  for c in parse_hook_ledger(folder / "raw" / "hook-ledger.jsonl", session)]
+    observed = reconcile_observations(t_calls, hook_calls)
+    exported = export_calls(folder, session) + manual_calls(folder)
+    calls = number_calls(exported + observed)
     tables = {
         "sessions": [dict(session_id=session["session_id"], title=session.get("title"), chat_title=session.get("chat_title"),
                           chat_url=session.get("chat_url"), project=session.get("project"), date=session.get("date"),
                           timezone=session.get("timezone"), how_found_sets=session.get("how_found_sets", []), as_of=datetime.now(tz).strftime("%Y-%m-%d %H:%M %Z"),
-                          notes=" ".join(session.get("notes", [])))],
+                          notes=" ".join(session.get("notes", [])) +
+                          (" [Unkeyed export/manual calls and transcript calls can overlap; do not interpret their sum as distinct executions.]"
+                           if exported and observed else ""))],
         "exchanges": merge_prompts(_load(folder, "exchanges.json", []), prompts),
         "events": events,
         "tool_calls": calls,
