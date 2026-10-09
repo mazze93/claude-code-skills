@@ -124,6 +124,43 @@ def reconcile_observations(transcript: list[dict], hook: list[dict]) -> list[dic
     return transcript + unpaired
 
 
+def reconcile_unkeyed_mentions(unkeyed: list[dict], observed: list[dict]) -> tuple[list[dict], list[dict]]:
+    """Keep export mentions without counting identifiable repeated executions.
+
+    Unlike transcript/hook tool IDs, unkeyed exports only carry an approximate
+    identity. Exact one-to-one keys corroborate; multiple candidates are
+    explicitly ambiguous and excluded from execution counts, not guessed.
+    """
+    from collections import Counter
+
+    def key(c):
+        return c["exchange"], c["tool"], c["input"]
+
+    observed_by_key: dict[tuple, list[dict]] = {}
+    for call in observed:
+        observed_by_key.setdefault(key(call), []).append(call)
+    unkeyed_counts = Counter(map(key, unkeyed))
+    distinct_calls, mentions = [], []
+    for i, u in enumerate(unkeyed, 1):
+        matches = observed_by_key.get(key(u), [])
+        unique = len(matches) == 1 and unkeyed_counts[key(u)] == 1
+        if unique:
+            matches[0]["evidence_sources"] += "+" + u["record_source"]
+            status, linked = "corroborated", matches[0].get("tool_use_id", "")
+        elif matches:
+            status, linked = "ambiguous_overlap", ""
+        else:
+            status, linked = "unmatched", ""
+            distinct_calls.append(u)
+        mentions.append({
+            "mention_id": f"M{i:05d}", "exchange": u["exchange"],
+            "tool": u["tool"], "input": u["input"],
+            "record_source": u["record_source"], "match_status": status,
+            "matched_tool_use_id": linked,
+        })
+    return distinct_calls, mentions
+
+
 def number_calls(calls: list[dict]) -> list[dict]:
     """Stable order (exchange, then source order) and per-exchange seq + call_id."""
     order = {"export": 0, "manual": 0, "transcript": 1, "hook": 1}
@@ -218,17 +255,21 @@ def build_ledger(folder: Path) -> dict:
                   for c in parse_hook_ledger(folder / "raw" / "hook-ledger.jsonl", session)]
     observed = reconcile_observations(t_calls, hook_calls)
     exported = export_calls(folder, session) + manual_calls(folder)
-    calls = number_calls(exported + observed)
+    unmatched, mentions = reconcile_unkeyed_mentions(exported, observed)
+    calls = number_calls(unmatched + observed)
     tables = {
         "sessions": [dict(session_id=session["session_id"], title=session.get("title"), chat_title=session.get("chat_title"),
                           chat_url=session.get("chat_url"), project=session.get("project"), date=session.get("date"),
                           timezone=session.get("timezone"), how_found_sets=session.get("how_found_sets", []), as_of=datetime.now(tz).strftime("%Y-%m-%d %H:%M %Z"),
                           notes=" ".join(session.get("notes", [])) +
-                          (" [Unkeyed export/manual calls and transcript calls can overlap; do not interpret their sum as distinct executions.]"
+                          (f" [Export/manual mentions: {sum(m['match_status'] == 'corroborated' for m in mentions)} uniquely corroborated, "
+                           f"{sum(m['match_status'] == 'ambiguous_overlap' for m in mentions)} ambiguous overlaps excluded from execution counts, "
+                           f"{sum(m['match_status'] == 'unmatched' for m in mentions)} unmatched counted as unrecorded.]"
                            if exported and observed else ""))],
         "exchanges": merge_prompts(_load(folder, "exchanges.json", []), prompts),
         "events": events,
         "tool_calls": calls,
+        "source_mentions": mentions,
         "failures": link_failures(_load(folder, "failures.json", []), calls),
         "findings": _load(folder, "findings.json", []),
         "sources": _load(folder, "sources.json", []),
