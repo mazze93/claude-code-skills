@@ -23,7 +23,7 @@ never filled in from memory.
   session.json  exchanges.json  failures.json  findings.json
   sources.json  deliverables.json  open_items.json  calls_manual.json   ← you write these
   raw/transcript.jsonl  raw/hook-ledger.jsonl  raw/export/*.txt         ← captured sources
-  out/core-sample.sqlite  out/csv/*.csv  out/<id>_session-record_vX.Y.Z.xlsx
+  ledger/core-sample.sqlite  ledger/csv/*.csv  ledger/<id>_session-record_vX.Y.Z.xlsx
 ```
 
 The toolkit lives in `scripts/` beside this file (`scripts/core_sample`, a
@@ -65,7 +65,11 @@ person has had to ask for this more than once. Put the derived record (annotatio
 CSV, SQLite, workbook) in the repo the work belongs to, outside any deployed
 folder. Keep `raw/` (transcripts, export pages) out of public repos: it holds
 everything the session touched, memory contents included. Add a `.gitignore` for `raw/` and
-deliver it to the person privately. Commit after each build.
+deliver it to the person privately. Commit after each build, and run
+`git check-ignore -v` on the outputs first: repos often ignore generic folder names (`out/`, `logs/`), and an
+ignored record commits nothing without any error. Before a public commit, grep the built CSVs for private topics. Your
+own scan commands become recorded tool calls, so list any such words, one per line, in `raw/redact_terms.txt`
+(private by construction, since `raw/` is never committed). Don't put them in `session.json`: that file is committed.
 
 ## Step 2 — Scaffold and capture
 

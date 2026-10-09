@@ -56,7 +56,8 @@ def cmd_capture(a) -> int:
 def cmd_build(a) -> int:
     tables = build_ledger(Path(a.session))
     sid = tables["sessions"][0]["session_id"]
-    out = Path(a.out or Path(a.session) / "out")
+    # "ledger", not "out": many repos .gitignore out/ and the record silently never commits.
+    out = Path(a.out or Path(a.session) / "ledger")
     write_sqlite(tables, Path(a.db or out / "core-sample.sqlite"))
     write_csvs(tables, out / "csv")
     xlsx = render_workbook(tables, out / f"{sid}_session-record_v{a.version}.xlsx")

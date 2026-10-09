@@ -79,6 +79,14 @@ class HookHardening(unittest.TestCase):
             self.assertEqual(r.returncode, 0)
 
 
+class Redaction2(unittest.TestCase):
+    def test_redact_terms_reach_every_table(self):
+        from core_sample.ledger import redact_terms
+        t = {"tool_calls": [{"input": "grep -E 'privatetopic|other' x", "n": 1}], "events": [{"text": "PrivateTopic here"}]}
+        redact_terms(t, ["privatetopic"])
+        self.assertNotIn("privatetopic", json.dumps(t).lower())
+
+
 class Transcript(unittest.TestCase):
     def test_outcomes_and_exchanges(self):
         lines = [

@@ -17,6 +17,8 @@ build rejects anything else.
 - `transcript_exchange_offset`: exchange number of the transcript's first prompt.
 - `export_turn_map` (optional): `{"21": "E11"}` when export turns don't alternate.
 - `how_found_sets` (optional): finding sets to chart by how each defect was found.
+- Redaction: put private words in `raw/redact_terms.txt`, one per line. They're replaced with [REDACTED] in every
+  built table. Keep them out of `session.json`, which is committed.
 - `notes`: shown on the index under "About this record". Put every known gap here.
 
 ## exchanges.json

@@ -192,5 +192,27 @@ def build_ledger(folder: Path) -> dict:
     for rows in tables.values():
         for r in rows:
             r["session_id"] = session["session_id"]
+    # Terms live in raw/redact_terms.txt (gitignored with raw/): listing them in a
+    # committed file would publish the very words being hidden.
+    private = folder / "raw" / "redact_terms.txt"
+    terms = [t.strip() for t in private.read_text(encoding="utf-8").splitlines() if t.strip()] if private.exists() else []
+    redact_terms(tables, terms + session.get("redact_terms", []))
     validate(tables)
     return tables
+
+
+def redact_terms(tables: dict, terms: list[str]) -> None:
+    """Replace each term (case-insensitive) in every string field with [REDACTED] (mutates).
+
+    For things that must not reach a published ledger but sit inside recorded
+    tool inputs, e.g. a private topic named in a search pattern. Annotation
+    files are untouched; only the built tables are redacted.
+    """
+    if not terms:
+        return
+    rx = re.compile("|".join(re.escape(t) for t in terms), re.I)
+    for rows in tables.values():
+        for r in rows:
+            for k, v in r.items():
+                if isinstance(v, str) and rx.search(v):
+                    r[k] = rx.sub("[REDACTED]", v)
