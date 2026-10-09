@@ -1,5 +1,12 @@
 # Iteration 1 — ungraded
 
+> **Historical evaluation artifact — not installation instructions.**
+> The saved hook scripts and settings below predate the opt-in capture lifecycle
+> adopted for PR #6. Do **not** install their global `settings.json` hooks.
+> The canonical `skills/core-sample/SKILL.md` now defines skill-scoped
+> registration, explicit arm/disarm and capture-off-by-default semantics.
+> These snapshots remain unchanged as evaluation evidence.
+
 | Eval | with_skill | without_skill |
 |---|---|---|
 | query-existing-ledger | complete | complete |
