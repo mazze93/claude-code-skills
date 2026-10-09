@@ -247,6 +247,25 @@ like `| tail` makes a failed command report success. Those calls become
 `error_unflagged`. If the scan misfires on a call, record the correction as a
 failure note rather than editing the parsed data.
 
+## Evidence integrity and reproducibility
+
+A successful `core_sample build` writes
+`ledger/evidence-manifest.json` containing SHA-256 digests and byte lengths
+of every present raw/annotation input, plus a digest of the toolkit source.
+The build fails if any input changes during compilation. To re-check later:
+
+```bash
+python3 -m core_sample verify <session-folder>
+```
+
+The manifest is an **integrity reference, not a signature**. A person who can
+replace both evidence and manifest can rewrite the record. Preserve the manifest
+in a signed Git commit or an independent transparency store if chain-of-custody
+requires protection against intentional tampering. Avoid public commits of
+raw transcripts, secrets, or confidential prompts even when hashes are available.
+Unkeyed export overlap and truncated, redacted hook outputs remain stated
+limitations; no manifest upgrades those sources to direct observation.
+
 ## Step 5 — Verify before you deliver
 
 1. Recalculate (the xlsx skill's `recalc.py`) and require zero formula errors.
