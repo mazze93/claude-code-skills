@@ -36,6 +36,14 @@ it points at.** Tool calls and their failures are first-class rows. Where the
 record has a gap (a call whose result was never kept), the gap is a row too,
 never filled in from memory.
 
+**Evidence identity:** transcript and hook records are reconciled using Claude's
+`tool_use_id`, with contradictions rejecting the build. Unkeyed export/manual
+mentions live in `source_mentions` (SQLite + CSV); uniquely matching mentions
+corroborate one execution, and ambiguous overlaps are excluded from distinct
+execution counts rather than being assigned an invented identity. The count
+of ambiguous mentions is preserved in the session notes. If exchange numbering
+cannot be established from the available record, annotate it explicitly.
+
 ## What you produce
 
 ```
