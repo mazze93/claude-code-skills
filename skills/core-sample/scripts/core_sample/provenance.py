@@ -28,6 +28,8 @@ def fingerprint(folder: Path) -> dict:
     folder = Path(folder).resolve()
     candidates = [folder / name for name in ANNOTATIONS]
     raw = folder / "raw"
+    if raw.is_symlink() or (raw.exists() and not raw.is_dir()):
+        raise ValueError("raw evidence root must be a real directory")
     if raw.exists():
         candidates += [p for p in raw.rglob("*") if p.is_file() or p.is_symlink()]
     evidence = {}
