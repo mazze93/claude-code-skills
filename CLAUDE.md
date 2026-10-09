@@ -40,6 +40,7 @@ Skills can also be packaged as `.skill` files — ZIP archives containing `SKILL
 | `git-forensics` | directory | Adversarial git index corruption and staged replacement detection |
 | `precise-coding-assistant` | `.skill` package | Four-phase gating workflow (Clarity → Simplicity → Scope → Verification) for engineering requests |
 | `decision-telemetry` | directory | Dual-face transparency artifacts: Sephirothic (clean decision) + Qliphothic (shadow trace) with certainty weights and Da'ath void node |
+| `core-sample` | directory (+ `scripts/` Python toolkit, `hooks/ledger_hook.py`) | Capture a session as an analysis-ready ledger: every tool call with its outcome (incl. failures the tool never flagged), a typed failure log → SQLite, CSV and a charted Excel workbook. Bundled in the `rigor` plugin |
 | `cloudflare` | directory | Cloudflare development umbrella — router over `references/<product>/`; consolidated from 8 formerly separate skills (see "Vendored skills") |
 | `cloudflare-one` | directory | Cloudflare One Zero Trust / SASE; consolidated from 2 formerly separate skills |
 | `web-perf` | directory | Core Web Vitals auditing via Chrome DevTools MCP (vendored, unmodified) |

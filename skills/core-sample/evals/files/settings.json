@@ -1,0 +1,6 @@
+{
+  "permissions": {"allow": ["Bash(git status:*)"]},
+  "hooks": {
+    "Stop": [{"hooks": [{"type": "command", "command": "~/.claude/stop-hook-git-check.sh"}]}]
+  }
+}

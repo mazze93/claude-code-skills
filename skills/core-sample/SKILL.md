@@ -1,0 +1,193 @@
+---
+name: core-sample
+description: Capture a Claude session as an analysis-ready ledger — every tool call with its outcome (including failures the tool never flagged), a typed failure log, prompts, findings, sources, deliverables and open items — then build SQLite + CSV and a navigable Excel workbook with charts. Use whenever the user asks to record, log, audit, export or "make a spreadsheet of" a session or conversation, wants tool use or failures treated as data, asks what went wrong or what caught it, wants to compare sessions, or wants hooks so tool results survive compaction. Also use near the end of a long build session when a post-mortem, field note or essay needs evidence.
+---
+
+# core-sample
+
+A core sample is a cylinder drilled out of the ground: every layer in order,
+nothing smoothed over. This skill drills one out of a working session. The
+output is a **ledger** (SQLite + CSV) you can query across sessions, and a
+**workbook** a person can read: index, KPI tiles, charts that each answer one
+question, and cross-linked tables.
+
+The governing idea: **a claim about the session is only as good as the record
+it points at.** Tool calls and their failures are first-class rows. Where the
+record has a gap (a call whose result was never kept), the gap is a row too,
+never filled in from memory.
+
+## What you produce
+
+```
+<session-folder>/
+  session.json  exchanges.json  failures.json  findings.json
+  sources.json  deliverables.json  open_items.json  calls_manual.json   ← you write these
+  raw/transcript.jsonl  raw/hook-ledger.jsonl  raw/export/*.txt         ← captured sources
+  out/core-sample.sqlite  out/csv/*.csv  out/<id>_session-record_vX.Y.Z.xlsx
+```
+
+The toolkit lives in `scripts/` beside this file (`scripts/core_sample`, a
+stdlib + openpyxl Python package). Run it from `scripts/`:
+`python3 -m core_sample <init|capture|build|query> …`. If this skill's
+`scripts/` isn't on disk (some surfaces sync only SKILL.md), look for
+`$HOME/.claude/core-sample/toolkit/` next; if neither exists, say so and ask
+the person for the toolkit zip rather than rewriting it from this page.
+
+## Step 1 — Find out what record exists (do this first, it decides everything)
+
+Tool **results** survive in only some places. Check, in this order:
+
+| Source | Has results? | Where |
+|---|---|---|
+| Hook ledger | ✅ live, per call | `$CORE_SAMPLE_HOME/ledger/<session_id>.jsonl` (default `~/.claude/core-sample`) |
+| Transcript | ✅ for what it still holds | `~/.claude/projects/<cwd-slug>/<session_id>.jsonl`; archived copies in `$CORE_SAMPLE_HOME/archive/` |
+| Conversation export | ❌ calls only | `read_conversation` (claude.ai) — page by page |
+
+Compaction matters: in at least one environment, the transcript file kept
+only post-compaction entries, so every earlier result was gone. If the session
+was compacted and there's no hook ledger or archive, the pre-compaction calls
+can only be recovered from the export, and they enter the ledger as
+`unrecorded`. Say that plainly in `session.json` notes; it shows up on the
+index and in the "how much can anyone check?" chart. Don't guess outcomes.
+
+Reading the export: each `read_conversation` page is capped by size, not turn
+count, so a large turn comes back alone and is saved to a tool-results file.
+Copy saved pages into `raw/export/`. Pages that come back inline can't be
+saved by a tool. Transcribe their calls into `calls_manual.json` (tool,
+description, abridged input) and say in the notes that you did.
+
+## Step 2 — Scaffold and capture
+
+```bash
+cd <skill>/scripts
+python3 -m core_sample init  <session-folder> --title "<what the person calls this work>"
+python3 -m core_sample capture <session-folder> --transcript <path.jsonl> [--hook-ledger <path>] [--export <pages…>]
+```
+
+Then set `session.json`: `transcript_first_exchange` (the exchange the
+transcript file starts in; mid-exchange after compaction) and
+`transcript_exchange_offset` (the exchange number of the transcript's first
+prompt). Exchanges from the export map as `turn // 2 + 1`; override with
+`export_turn_map` if turns don't alternate.
+
+## Step 3 — Write the annotations
+
+Read `references/annotations.md` for every file's shape. What matters most:
+
+**Exchanges** — one per prompt that started work (the person's, or a hook
+like a stop-hook that made you act). The prompt is verbatim. The response is
+your one-paragraph summary, marked as yours. Transcript prompts overwrite your
+text at build time, because they're verbatim.
+
+**Failures** — the heart of it. Log everything that went wrong at any layer,
+not only tool errors: `environment`, `tool-use`, `artifact`, `claim`,
+`perception`, `process`, `record`. For each, say what caught it (`detection`),
+who (`detected_by`), where it happened and where it was caught (the build
+computes the lag), whether it reached the person (`caught`), and `severity`
+1–3. Tie it to a call when you can:
+
+- `{"exchange": "E04", "seq": 18}` or `{"exchange": "E12", "tool": "Bash", "contains": "git push"}`
+- `link_basis` must be honest: `observed` (the call's own result) > `log` >
+  `description-chain` (the next call says "retry"/"see why") > `reply` >
+  `summary` (the post-compaction summary only, which is the weakest basis).
+
+An `unrecorded` call that a failure points at becomes `attested_fail`, with
+the basis as its source. That is the only way a call without a result gets an
+outcome.
+
+Why the rigour: a session summary is a reconstruction. In the session that
+produced this skill, a "correction" told the person a commit hash had been
+shown to them earlier. It hadn't. The hash came from the compaction summary,
+was presented as memory, and was copied into two spreadsheets. **Any claim
+about what you said, saw or did earlier needs a source in the record. Grep the
+transcript or export before writing it.**
+
+**Findings / sources / deliverables / open items** — straightforward; keep
+provenance on each, and keep "not read" sources as rows so nothing looks more
+checked than it was.
+
+## Step 4 — Build
+
+```bash
+python3 -m core_sample build <session-folder> --version X.Y.Z [--db <shared.sqlite>]
+```
+
+The build validates every coded value against `core_sample/taxonomy.py` and
+fails loudly on anything unknown (an unmatched call reference, a layer that
+doesn't exist). Fix the annotation; don't loosen the vocabulary to make the
+build pass. Point `--db` at one shared database (e.g.
+`$CORE_SAMPLE_HOME/core-sample.sqlite`) so sessions accumulate.
+
+Output scanning: Bash and remote-shell results are scanned for error
+signatures (`fatal:`, tracebacks, `returned error: 403`, …), because a pipe
+like `| tail` makes a failed command report success. Those calls become
+`error_unflagged`. If the scan misfires on a call, record the correction as a
+failure note rather than editing the parsed data.
+
+## Step 5 — Verify before you deliver
+
+1. Recalculate (the xlsx skill's `recalc.py`) and require zero formula errors.
+2. Read back the six KPI tiles and the Chart Data blocks with
+   `load_workbook(data_only=True)`, and check them against a direct count from
+   the ledger. A clean recalc proves formulas evaluate, not that they're right:
+   a SUM that also caught its own total row once doubled a KPI.
+3. Read every generated takeaway on the Charts tab against its chart.
+   Takeaways are generated from data. If you add one by hand, it must be true
+   of this session alone.
+4. Render to PDF (`soffice --headless --convert-to pdf`) and look at the index
+   and charts pages once.
+5. Run `python3 -m unittest discover -s tests` after changing the toolkit.
+
+Deliver the recalculated workbook (it carries cached values, so previews show
+numbers), the CSV folder and the SQLite file, named by taxonomy with a
+semantic version. Lead the hand-over with what the data says, not what you
+built: the share of calls with no recorded result, the failures that reached
+the person, and what caught them.
+
+## Analysis across sessions
+
+```bash
+python3 -m core_sample query <db> "SELECT * FROM v_tool_reliability ORDER BY failed DESC LIMIT 10"
+```
+
+Useful views: `v_outcome_coverage` (how much of the record is checkable, per
+source), `v_failures_by_layer_detection` (what catches what, and what
+escapes), `v_tool_reliability` (calls, failures, unflagged failures per tool).
+See `references/analysis.md` for questions worth asking, with their SQL.
+
+## Make the next session cheaper: install the capture hook
+
+`scripts/hooks/ledger_hook.py` appends every PostToolUse / PostToolUseFailure
+firing to the hook ledger and copies the transcript on PreCompact and
+SessionEnd, so results survive compaction. Install on the person's machine
+(not the cloud container):
+
+```json
+{
+  "hooks": {
+    "PostToolUse":        [{"matcher": ".*", "hooks": [{"type": "command", "command": "python3 \"$HOME/.claude/core-sample/toolkit/hooks/ledger_hook.py\""}]}],
+    "PostToolUseFailure": [{"matcher": ".*", "hooks": [{"type": "command", "command": "python3 \"$HOME/.claude/core-sample/toolkit/hooks/ledger_hook.py\""}]}],
+    "PreCompact":         [{"hooks": [{"type": "command", "command": "python3 \"$HOME/.claude/core-sample/toolkit/hooks/ledger_hook.py\""}]}],
+    "SessionEnd":         [{"hooks": [{"type": "command", "command": "python3 \"$HOME/.claude/core-sample/toolkit/hooks/ledger_hook.py\""}]}]
+  }
+}
+```
+
+The event names and `transcript_path` come from the Claude Code hooks docs.
+The docs don't fully specify the stdin fields for shell hooks, or whether
+`".*"` is the right catch-all matcher. So before trusting the ledger, run one
+short session with the hook installed and read the ledger file. The parser
+reads fields defensively, but check that `tool_name`, `tool_input` and
+`tool_response` / `error` are actually there. SessionEnd hooks share a short
+time budget, so the hook only copies a file and exits.
+
+## Data classification
+
+The ledger is **confidential-local**: tool inputs and outputs can hold
+anything the session touched. The hook writes files mode 0600 and folders
+0700. It redacts bearer tokens, `ghp_`/`sk-` keys and `key=value` secrets
+(the redaction is not exhaustive), truncates long fields, never sends data
+anywhere, and always exits 0 so it can't block a session. Before publishing a
+workbook or putting it in a repo, scan the Tool Calls tab's input and
+error columns for anything private. The same goes for verbatim prompts on the
+Exchanges tab.
