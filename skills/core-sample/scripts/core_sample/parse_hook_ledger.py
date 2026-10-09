@@ -28,6 +28,7 @@ def parse_hook_ledger(path: Path, session: dict) -> list[dict]:
     if not Path(path).exists():
         return []
     calls = []
+    seen = {}
     for lineno, line in enumerate(Path(path).read_text(encoding="utf-8").splitlines(), 1):
         if not line.strip():
             continue
@@ -53,5 +54,14 @@ def parse_hook_ledger(path: Path, session: dict) -> list[dict]:
         )
         result_text = str(p.get("error", "")) if event == "PostToolUseFailure" else _text(response)
         call.update(classify_result(call["tool"], result_text, flagged))
+        uid = call["tool_use_id"]
+        if uid and uid in seen:
+            previous = seen[uid]
+            check = ("tool", "input", "outcome", "error_signature", "error_excerpt")
+            if any(previous[k] != call[k] for k in check):
+                raise ValueError(f"conflicting duplicate hook evidence for {uid} at line {lineno}")
+            continue  # repeated skill registration may emit the same hook twice
+        if uid:
+            seen[uid] = call
         calls.append(call)
     return calls
