@@ -21,6 +21,12 @@ def write_sqlite(tables: dict, db_path: Path) -> None:
     session_id = tables["sessions"][0]["session_id"]
     with sqlite3.connect(db_path) as conn:
         conn.executescript(SCHEMA.read_text())
+        # Existing cross-session ledgers predate tool-use provenance fields.
+        # Migrate in place rather than silently dropping evidence on INSERT.
+        columns = _columns(conn, "tool_calls")
+        for column in ("tool_use_id", "evidence_sources"):
+            if column not in columns:
+                conn.execute(f'ALTER TABLE tool_calls ADD COLUMN "{column}" TEXT')
         for table, rows in tables.items():
             cols = _columns(conn, table)
             conn.execute(f'DELETE FROM "{table}" WHERE session_id = ?', (session_id,))
