@@ -4,6 +4,7 @@
   capture  copy raw sources (transcript, hook ledger, export pages) into the session
   build    validate → SQLite + CSVs + workbook
   query    run SQL against the ledger database (read-only)
+  verify   check input evidence and toolkit digests against the build manifest
 
 Side effects are limited to the paths named on the command line.
 """
@@ -15,6 +16,7 @@ import sys
 from pathlib import Path
 
 from .ledger import build_ledger
+from .provenance import fingerprint, write_manifest, verify_manifest
 from .render import render_workbook
 from .store import write_csvs, write_sqlite
 
@@ -54,6 +56,7 @@ def cmd_capture(a) -> int:
 
 
 def cmd_build(a) -> int:
+    original = fingerprint(Path(a.session))
     tables = build_ledger(Path(a.session))
     sid = tables["sessions"][0]["session_id"]
     # "ledger", not "out": many repos .gitignore out/ and the record silently never commits.
@@ -61,8 +64,18 @@ def cmd_build(a) -> int:
     write_sqlite(tables, Path(a.db or out / "core-sample.sqlite"))
     write_csvs(tables, out / "csv")
     xlsx = render_workbook(tables, out / f"{sid}_session-record_v{a.version}.xlsx")
+    manifest = out / "evidence-manifest.json"
+    write_manifest(Path(a.session), manifest, a.version, original)
+    print(f"input manifest: {manifest}")
     print(json.dumps({k: len(v) for k, v in tables.items()}))
     print(f"workbook: {xlsx}")
+    return 0
+
+
+def cmd_verify(a) -> int:
+    path = Path(a.manifest or Path(a.session) / "ledger" / "evidence-manifest.json")
+    record = verify_manifest(Path(a.session), path)
+    print(f"verified {len(record['inputs'])} source inputs and toolkit digest: {path}")
     return 0
 
 
@@ -84,9 +97,10 @@ def main(argv=None) -> int:
     s = sub.add_parser("build"); s.add_argument("session"); s.add_argument("--out"); s.add_argument("--db")
     s.add_argument("--version", default="1.0.0")
     s = sub.add_parser("query"); s.add_argument("db"); s.add_argument("sql")
+    s = sub.add_parser("verify"); s.add_argument("session"); s.add_argument("--manifest")
     a = p.parse_args(argv)
     try:
-        return {"init": cmd_init, "capture": cmd_capture, "build": cmd_build, "query": cmd_query}[a.cmd](a)
+        return {"init": cmd_init, "capture": cmd_capture, "build": cmd_build, "query": cmd_query, "verify": cmd_verify}[a.cmd](a)
     except ValueError as exc:        # validation failures: loud, specific, non-zero
         print(f"core-sample: {exc}", file=sys.stderr)
         return 2
