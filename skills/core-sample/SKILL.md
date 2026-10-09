@@ -1,5 +1,6 @@
 ---
 name: core-sample
+disable-model-invocation: true
 description: Capture a Claude session as an analysis-ready ledger — every tool call with its outcome (including failures the tool never flagged), a typed failure log, prompts, findings, sources, deliverables and open items — then build SQLite + CSV and a navigable Excel workbook with charts. Use whenever the user asks to record, log, audit, export or "make a spreadsheet of" a session or conversation, wants tool use or failures treated as data, asks what went wrong or what caught it, wants to compare sessions, or wants hooks so tool results survive compaction. Also use near the end of a long build session when a post-mortem, field note or essay needs evidence.
 hooks:
   PostToolUse:
@@ -63,7 +64,11 @@ the person for the toolkit zip rather than rewriting it from this page.
 
 ## Explicit capture lifecycle — required
 
-**No background/global capture.** The four hooks above are skill-local:
+**No background/global capture.** This skill is user-invoked only
+(`disable-model-invocation: true`), so Claude cannot select it automatically.
+In the `rigor` plugin, invoke `/rigor:core-sample start` at the beginning and
+`/rigor:core-sample compile` when ready to close the capture.
+The four hooks above are skill-local:
 Claude Code registers them only when you invoke core-sample, for the rest of
 that Claude session. Their handler is **fail-closed**; even once registered it
 writes no tool payloads until explicitly armed for that exact `session_id`.
