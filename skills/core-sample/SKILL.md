@@ -1,6 +1,26 @@
 ---
 name: core-sample
-description: Capture a Claude session as an analysis-ready ledger — every tool call with its outcome (including failures the tool never flagged), a typed failure log, prompts, findings, sources, deliverables and open items — then build SQLite + CSV and a navigable Excel workbook with charts. Use whenever the user asks to record, log, audit, export or "make a spreadsheet of" a session or conversation, wants tool use or failures treated as data, asks what went wrong or what caught it, wants to compare sessions, or wants hooks so tool results survive compaction. Also use near the end of a long build session when a post-mortem, field note or essay needs evidence.
+description: Explicitly start a session-evidence capture, stop it before compilation, and generate a provenance-aware SQLite/CSV/Excel ledger. Use for session audits, tool-result preservation, failure analysis and post-mortems.
+hooks:
+  PostToolUse:
+    - matcher: "*"
+      hooks:
+        - type: command
+          command: python3 "$HOME/.claude/core-sample/toolkit/hooks/ledger_hook.py"
+  PostToolUseFailure:
+    - matcher: "*"
+      hooks:
+        - type: command
+          command: python3 "$HOME/.claude/core-sample/toolkit/hooks/ledger_hook.py"
+  PreCompact:
+    - hooks:
+        - type: command
+          command: python3 "$HOME/.claude/core-sample/toolkit/hooks/ledger_hook.py"
+  SessionEnd:
+    - hooks:
+        - type: command
+          command: python3 "$HOME/.claude/core-sample/toolkit/hooks/ledger_hook.py"
+          timeout: 10
 ---
 
 # core-sample
@@ -32,6 +52,81 @@ stdlib + openpyxl Python package). Run it from `scripts/`:
 `scripts/` isn't on disk (some surfaces sync only SKILL.md), look for
 `$HOME/.claude/core-sample/toolkit/` next; if neither exists, say so and ask
 the person for the toolkit zip rather than rewriting it from this page.
+
+## Explicit capture lifecycle — required
+
+**No background/global capture.** The four hooks above are skill-local:
+Claude Code registers them only when you invoke core-sample, for the rest of
+that Claude session. Their handler is **fail-closed**; even once registered it
+writes no tool payloads until explicitly armed for that exact \`session_id\`.
+
+Install the reviewed toolkit once on the machine running Claude Code, **not**
+in a cloud container you cannot access:
+
+\`\`\`bash
+mkdir -p "$HOME/.claude/core-sample/toolkit"
+cp -R <repo>/skills/core-sample/scripts/core_sample "$HOME/.claude/core-sample/toolkit/"
+mkdir -p "$HOME/.claude/core-sample/toolkit/hooks"
+cp <repo>/skills/core-sample/scripts/hooks/ledger_hook.py "$HOME/.claude/core-sample/toolkit/hooks/"
+\`\`\`
+
+Do **not** register these hooks in global \`~/.claude/settings.json\` or the
+plugin-wide \`hooks.json\`. Remove any earlier always-on core-sample hook entries,
+without modifying unrelated hooks.
+
+1. **Begin at the start of the session:** invoke **core-sample** with **start**.
+   The skill must use Claude Code's **Bash tool** to execute **exactly** this command:
+
+   \`\`\`bash
+   python3 "$HOME/.claude/core-sample/toolkit/hooks/ledger_hook.py" arm
+   \`\`\`
+
+   A successful \`PostToolUse\` event for this exact command is the authorization
+   to start recording. The command prints an arm-request marker; it does not
+   create a global state file. The event supplies the authoritative session ID.
+   A direct terminal invocation outside Claude Code **does not arm anything**.
+   Check for \`CaptureStarted\` in
+   \`$HOME/.claude/core-sample/ledger/<session_id>.jsonl\`; do not assert capture
+   is enabled merely because the Bash command printed success.
+
+2. **Capture continues** only within the armed session. Separate Claude sessions
+   require their own explicit arm. Hook payloads are redacted and limited to
+   20,000 characters per string; they are not a byte-complete transcript.
+
+3. **Compile at the end:** invoke **core-sample** with **compile**. **Before**
+   running any export, analysis or build, execute this exact command via Bash:
+
+   \`\`\`bash
+   python3 "$HOME/.claude/core-sample/toolkit/hooks/ledger_hook.py" disarm
+   \`\`\`
+
+   The successful matching hook event records \`CaptureStopped\` and disables
+   storage for this session. Compilation calls and subsequent tool results
+   remain out of the capture. Confirm the stop event before building.
+
+4. With capture stopped, copy the session's private hook ledger into the
+   selected session folder via \`core_sample capture --hook-ledger ...\`, add
+   available transcript/export evidence, annotate and \`core_sample build\`.
+   The \`session.json\` session ID must match the captured hook filename.
+   Never delete raw evidence after building. **If compilation fails, capture
+   stays off** until another explicit arm request.
+
+5. **SessionEnd** independently disables capture; it never silently arms a
+   subsequent session. Skill-local hooks remain *registered* until the Claude
+   session ends (Claude Code cannot remove an individual registered hook
+   mid-session); after disarm their processes are inert and store no payload.
+   This distinction is important: **capture off**, not "hook unregistered."
+
+Raw transcript archives are **OFF by default**. \`PreCompact\`/ \`SessionEnd\`
+events still enter the hook ledger while armed. Set
+\`CORE_SAMPLE_ARCHIVE_RAW=1\` deliberately in the Claude Code environment to
+enable transcript snapshot copies into \`$CORE_SAMPLE_HOME/archive/\`. These
+copies are **UNREDACTED**, confidential and excluded from public repositories,
+irrespective of ledger redaction. Prefer a private encrypted location with a
+retention policy. Hook failure logs and derived records also require review.
+
+Official Claude Code hooks reference:
+https://code.claude.com/docs/en/hooks
 
 ## Step 1 — Find out what record exists (do this first, it decides everything)
 
@@ -170,33 +265,19 @@ source), `v_failures_by_layer_detection` (what catches what, and what
 escapes), `v_tool_reliability` (calls, failures, unflagged failures per tool).
 See `references/analysis.md` for questions worth asking, with their SQL.
 
-## Make the next session cheaper: install the capture hook
+## Verification of the lifecycle
 
-`scripts/hooks/ledger_hook.py` appends every PostToolUse / PostToolUseFailure
-firing to the hook ledger and copies the transcript on PreCompact and
-SessionEnd, so results survive compaction. Install on the person's machine
-(not the cloud container):
+Run one short session: invoke **core-sample start**, execute successful and
+failing Bash calls, compact, then invoke **core-sample compile**. Check:
 
-```json
-{
-  "hooks": {
-    "PostToolUse":        [{"matcher": "*", "hooks": [{"type": "command", "command": "python3 \"$HOME/.claude/core-sample/toolkit/hooks/ledger_hook.py\""}]}],
-    "PostToolUseFailure": [{"matcher": "*", "hooks": [{"type": "command", "command": "python3 \"$HOME/.claude/core-sample/toolkit/hooks/ledger_hook.py\""}]}],
-    "PreCompact":         [{"hooks": [{"type": "command", "command": "python3 \"$HOME/.claude/core-sample/toolkit/hooks/ledger_hook.py\""}]}],
-    "SessionEnd":         [{"hooks": [{"type": "command", "command": "python3 \"$HOME/.claude/core-sample/toolkit/hooks/ledger_hook.py\"", "timeout": 10}]}]
-  }
-}
-```
-
-Merge these into any existing `hooks` block; never replace hooks the person
-already has. Event names, `transcript_path`, `"*"` as the match-all matcher
-and the SessionEnd time budget come from the Claude Code hooks docs. The
-per-event stdin fields for shell hooks weren't fully readable there, so
-before trusting the ledger, run one short session with the hook installed
-and read the ledger file. The parser
-reads fields defensively, but check that `tool_name`, `tool_input` and
-`tool_response` / `error` are actually there. SessionEnd hooks share a short
-time budget, so the hook only copies a file and exits.
+- No ledger file appeared **before** \`CaptureStarted\`.
+- Events for the correct session appear strictly between \`CaptureStarted\`
+  and \`CaptureStopped\`; post-stop calls are not appended.
+- A second, unarmed session has no recorded tool events.
+- No raw archive is created without deliberate \`CORE_SAMPLE_ARCHIVE_RAW=1\`.
+- \`tool_use_id\` links hook and transcript evidence without duplicates; a
+  contradictory result **fails validation** rather than being overwritten.
+- Verify real Claude Code hook stdin once before asserting end-to-end coverage.
 
 ## Data classification
 
