@@ -31,6 +31,14 @@ CREATE TABLE IF NOT EXISTS tool_calls (
   PRIMARY KEY (session_id, call_id)
 );
 
+-- Unkeyed export/manual references are evidence mentions, not necessarily
+-- additional executions. Preserve ambiguous matches without inflating KPIs.
+CREATE TABLE IF NOT EXISTS source_mentions (
+  session_id TEXT, mention_id TEXT, exchange TEXT, tool TEXT, input TEXT,
+  record_source TEXT, match_status TEXT, matched_tool_use_id TEXT,
+  PRIMARY KEY (session_id, mention_id)
+);
+
 CREATE TABLE IF NOT EXISTS failures (
   session_id TEXT, failure_id TEXT, exchange TEXT, call_id TEXT, link_basis TEXT,
   layer TEXT, class TEXT, summary TEXT, detection TEXT, detected_by TEXT, detected_in TEXT,
