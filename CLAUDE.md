@@ -2,6 +2,21 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+**This repo is two things:** the canonical skill/hook/bootstrap home, *and* the
+source of the public storefront **store.mazzeleczzare.com** (`site/`). Treat
+`site/` as a deployed public surface (HIGH posture): CI on `main` deploys it.
+
+## Storefront (`site/` → store.mazzeleczzare.com)
+
+- Astro (static output) on Cloudflare Workers, worker `mazze93-skill-store`;
+  custom domain declared in `site/wrangler.jsonc`, assets served from `dist/client`.
+- The catalogue is read **at build time** from `.claude-plugin/skill-map.json` —
+  the single source of truth for plugin bundling *and* the store. Edit that file,
+  never the generated artefacts; `scripts/validate_marketplace.py` fails CI on drift.
+- `cd site && npm run check` = typecheck + build. Deploy is `.github/workflows/verify.yml`
+  on `main` only — PRs build and typecheck but never deploy.
+- Priced plugins need a `checkout` URL in skill-map.json; nothing here processes payment.
+
 ## Bootstrap (cold-start / new machine)
 
 ```zsh
