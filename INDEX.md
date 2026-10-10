@@ -50,6 +50,7 @@ Verification discipline: establish what a change is, challenge a claim that it i
 
 | skill | description |
 |---|---|
+| [`core-sample`](skills/core-sample/SKILL.md) | Capture a Claude session as an analysis-ready ledger — every tool call with its outcome (including failures the tool never flagged), a typed failure l |
 | [`corroborate`](skills/corroborate/SKILL.md) | Establish what an uncommitted or unfamiliar change actually IS before committing, discarding, pushing, or merging it — by making the artifact testify  |
 | [`decision-telemetry`](skills/decision-telemetry/SKILL.md) | Build a dual-face decision transparency artifact: a visualization that shows both the clean recorded decision (Sephirothic face) and the shadow trace  |
 | [`touchstone`](skills/touchstone/SKILL.md) | Apply an adversarial verification posture to any claim of correctness, completeness, or "passing" status — tests, proofs, invariants, security reviews |
