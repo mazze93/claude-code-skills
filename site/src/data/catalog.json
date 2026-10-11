@@ -151,6 +151,13 @@
       "checkout": null,
       "skills": [
         {
+          "name": "core-sample",
+          "plugin": "rigor",
+          "description": "Capture a Claude session as an analysis-ready ledger \u2014 every tool call with its outcome (including failures the tool never flagged), a typed failure log, prompts, findings, sources, deliverables and open items \u2014 then build SQLite + CSV and a navigable Excel workbook with charts. Use whenever the user asks to record, log, audit, export or \"make a spreadsheet of\" a session or conversation, wants tool use or failures treated as data, asks what went wrong or what caught it, wants to compare sessions, or wants hooks so tool results survive compaction. Also use near the end of a long build session when a post-mortem, field note or essay needs evidence.",
+          "summary": "Capture a Claude session as an analysis-ready ledger \u2014 every tool call with its outcome (including failures the tool never flagged), a typed failure log, prompts, findings, sources, deliverables and o",
+          "added": "2026-10-08T23:35:27-04:00"
+        },
+        {
           "name": "corroborate",
           "plugin": "rigor",
           "description": "Establish what an uncommitted or unfamiliar change actually IS before committing, discarding, pushing, or merging it \u2014 by making the artifact testify rather than reading the diff and inferring. Use when handling work you did not author: a dirty working tree, staged changes of unknown provenance, a stale-looking file, an unexplained deletion, an untracked directory, someone else's WIP, or any sweep that ends in \"commit what's finished.\" Also trigger before discarding anything, before committing a whole dirty tree, when a diff looks like a revert, when a deletion has no explanation, or when the user says \"clean this up,\" \"commit what's done,\" \"sync the fleet,\" or \"is this safe to commit.\" Complements touchstone: touchstone challenges a claim of correctness; corroborate establishes what a change is in the first place.",
@@ -235,6 +242,13 @@
   ],
   "recent": [
     {
+      "name": "core-sample",
+      "plugin": "rigor",
+      "description": "Capture a Claude session as an analysis-ready ledger \u2014 every tool call with its outcome (including failures the tool never flagged), a typed failure log, prompts, findings, sources, deliverables and open items \u2014 then build SQLite + CSV and a navigable Excel workbook with charts. Use whenever the user asks to record, log, audit, export or \"make a spreadsheet of\" a session or conversation, wants tool use or failures treated as data, asks what went wrong or what caught it, wants to compare sessions, or wants hooks so tool results survive compaction. Also use near the end of a long build session when a post-mortem, field note or essay needs evidence.",
+      "summary": "Capture a Claude session as an analysis-ready ledger \u2014 every tool call with its outcome (including failures the tool never flagged), a typed failure log, prompts, findings, sources, deliverables and o",
+      "added": "2026-10-08T23:35:27-04:00"
+    },
+    {
       "name": "preflight",
       "plugin": "workspace",
       "description": "Probe session environment readiness for committing, signing, or deploying \u2014 TTY, GPG/pinentry, ssh-agent, git remote\u2194auth match, and MCP connectivity. Reports an applied fix or an exact paste-into-your-own-terminal command for every failure. Use at the start of any session that will commit, sign, tag, push, or deploy, or when a commit/push fails for environment reasons.",
@@ -247,17 +261,10 @@
       "description": "Establish what an uncommitted or unfamiliar change actually IS before committing, discarding, pushing, or merging it \u2014 by making the artifact testify rather than reading the diff and inferring. Use when handling work you did not author: a dirty working tree, staged changes of unknown provenance, a stale-looking file, an unexplained deletion, an untracked directory, someone else's WIP, or any sweep that ends in \"commit what's finished.\" Also trigger before discarding anything, before committing a whole dirty tree, when a diff looks like a revert, when a deletion has no explanation, or when the user says \"clean this up,\" \"commit what's done,\" \"sync the fleet,\" or \"is this safe to commit.\" Complements touchstone: touchstone challenges a claim of correctness; corroborate establishes what a change is in the first place.",
       "summary": "Establish what an uncommitted or unfamiliar change actually IS before committing, discarding, pushing, or merging it \u2014 by making the artifact testify rather than reading the diff and inferring.",
       "added": "2026-09-06T07:30:40-04:00"
-    },
-    {
-      "name": "precise-coding-assistant",
-      "plugin": "lab",
-      "description": "Enforces a four-phase gating mechanism (Clarity \u2192 Simplicity \u2192 Scope \u2192 Verification) on every meaningful code modification, implementation, or refactoring request. Use this skill whenever a request involves a new feature, structural refactoring, multi-file changes, or logic rewriting where the solution space is open-ended. MUST activate for: \"implement X\", \"refactor Y to do Z\", \"add a new module for\", \"rewrite the logic that\", \"redesign the architecture of\", any auth/crypto/data-pipeline change, any multi-file or compliance-surfaced engineering task. Do NOT trigger for trivial micro-fixes (typos, variable renames, one-liner syntax corrections) or for requests explicitly in a narrative-first creative register where fluid iteration takes precedence over architectural isolation. The gates should feel like precision instruments, not bureaucracy.",
-      "summary": "Enforces a four-phase gating mechanism (Clarity \u2192 Simplicity \u2192 Scope \u2192 Verification) on every meaningful code modification, implementation, or refactoring request.",
-      "added": "2026-09-03T08:42:16-04:00"
     }
   ],
   "totals": {
     "plugins": 6,
-    "skills": 24
+    "skills": 25
   }
 }

@@ -1,0 +1,17 @@
+{
+  "skill_name": "core-sample",
+  "evals": [
+    {"id": 1, "name": "record-a-compacted-session",
+     "prompt": "here's the claude code transcript from my session yesterday (evals/files/session-transcript.jsonl) - it got compacted partway through so the start is probably missing. can you turn it into a record i can actually analyze? i want every tool call, which ones failed and what caught the failure, and a spreadsheet i can poke at",
+     "expected_output": "A ledger (SQLite/CSV) and an xlsx with per-call outcomes, the 403 git push detected as a failure despite no error flag, the compaction gap stated, a failure log with detection.",
+     "files": ["evals/files/session-transcript.jsonl"]},
+    {"id": 2, "name": "query-existing-ledger",
+     "prompt": "i've got my session ledger at evals/files/core-sample.sqlite. two questions: which tool calls actually failed without the tool flagging an error, and which kind of failure most often made it to me before anyone caught it? give me real numbers from the db, not vibes",
+     "expected_output": "Lists the 4 unflagged calls (git push 403, two read_conversation size errors, fitz import) and says claim-layer failures escaped most (3 of 6), with the caveat about unrecorded calls.",
+     "files": ["evals/files/core-sample.sqlite"]},
+    {"id": 3, "name": "install-capture-hook",
+     "prompt": "next time i want tool results to survive compaction. my ~/.claude/settings.json is at evals/files/settings.json (already has a stop hook i need to keep). set up whatever hook + script is needed, write the updated settings and the script into the outputs folder, and tell me how to check it works",
+     "expected_output": "Updated settings.json keeping the Stop hook and adding PostToolUse, PostToolUseFailure and PreCompact (and/or SessionEnd); a capture script that never blocks, redacts secrets, writes private files; verification steps that don't claim the payload schema is confirmed.",
+     "files": ["evals/files/settings.json"]}
+  ]
+}
