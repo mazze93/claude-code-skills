@@ -155,7 +155,7 @@
           "plugin": "rigor",
           "description": "Capture a Claude session as an analysis-ready ledger \u2014 every tool call with its outcome (including failures the tool never flagged), a typed failure log, prompts, findings, sources, deliverables and open items \u2014 then build SQLite + CSV and a navigable Excel workbook with charts. Use whenever the user asks to record, log, audit, export or \"make a spreadsheet of\" a session or conversation, wants tool use or failures treated as data, asks what went wrong or what caught it, wants to compare sessions, or wants hooks so tool results survive compaction. Also use near the end of a long build session when a post-mortem, field note or essay needs evidence.",
           "summary": "Capture a Claude session as an analysis-ready ledger \u2014 every tool call with its outcome (including failures the tool never flagged), a typed failure log, prompts, findings, sources, deliverables and o",
-          "added": "2026-10-08T23:35:27-04:00"
+          "added": "2026-10-11T16:29:45-04:00"
         },
         {
           "name": "corroborate",
@@ -246,7 +246,7 @@
       "plugin": "rigor",
       "description": "Capture a Claude session as an analysis-ready ledger \u2014 every tool call with its outcome (including failures the tool never flagged), a typed failure log, prompts, findings, sources, deliverables and open items \u2014 then build SQLite + CSV and a navigable Excel workbook with charts. Use whenever the user asks to record, log, audit, export or \"make a spreadsheet of\" a session or conversation, wants tool use or failures treated as data, asks what went wrong or what caught it, wants to compare sessions, or wants hooks so tool results survive compaction. Also use near the end of a long build session when a post-mortem, field note or essay needs evidence.",
       "summary": "Capture a Claude session as an analysis-ready ledger \u2014 every tool call with its outcome (including failures the tool never flagged), a typed failure log, prompts, findings, sources, deliverables and o",
-      "added": "2026-10-08T23:35:27-04:00"
+      "added": "2026-10-11T16:29:45-04:00"
     },
     {
       "name": "preflight",
