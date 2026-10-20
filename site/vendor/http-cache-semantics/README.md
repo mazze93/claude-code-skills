@@ -78,13 +78,17 @@ hash offline; `build.sh` rebuilds from scratch).
 
 1. Edit `index.js` in a checkout of upstream at `upstreamCommit`, run its
    mocha suite (128 passing at 4.3.0), then `git diff > guard-stale-reuse.patch`.
-2. `bash build.sh --write` rewrites the tarball and the hashes in `provenance.json`.
-3. Bump `patchedVersion`/`tarball` (`-mazze93.N`) and the two paths in
-   `site/package.json`, then `npm install` (npm ≥ 11, matching the lockfile).
-   If you keep the version unchanged, npm reuses the old lock entry and its
-   stale sha512. Delete `node_modules/http-cache-semantics` from both the
-   lockfile and disk first; `test:vendor` fails if you skip this.
-4. `npm run check`.
+2. Bump `patchedVersion` and `tarball` (`-mazze93.N`) in `provenance.json`
+   **first**: `build.sh` reads both before building, so it stamps and names
+   the tarball from them.
+3. `bash build.sh --write` writes the new tarball and the hashes in
+   `provenance.json`. Delete the old `.tgz`.
+4. Point the dependency path in `site/package.json` at the new tarball, then
+   `npm install` (npm ≥ 11, matching the lockfile). If you keep the version
+   unchanged, npm reuses the old lock entry and its stale sha512. Delete
+   `node_modules/http-cache-semantics` from both the lockfile and disk first;
+   `test:vendor` fails if you skip this.
+5. `npm run check`.
 
 ## Replace when
 
