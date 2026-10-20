@@ -1,0 +1,94 @@
+diff --git a/index.js b/index.js
+index 56c2602..9371689 100644
+--- a/index.js
++++ b/index.js
+@@ -426,7 +426,10 @@ module.exports = class CachePolicy {
+         if (this.stale()) {
+             // If a value is present, then the client is willing to accept a response that has
+             // exceeded its freshness lifetime by no more than the specified number of seconds
++            // max-stale relaxes freshness only; it never overrides a response that forbids
++            // reuse without revalidation (no-store, no-cache, must-revalidate, etc.)
+             const allowsStaleWithoutRevalidation = 'max-stale' in requestCC &&
++                !this._forbidsStaleReuse() &&
+                 (true === requestCC['max-stale'] || requestCC['max-stale'] > this.age() - this.maxAge());
+ 
+             if (allowsStaleWithoutRevalidation) {
+@@ -693,6 +696,55 @@ module.exports = class CachePolicy {
+         return Math.round(Math.max(0, age, staleIfErrorAge, staleWhileRevalidateAge) * 1000);
+     }
+ 
++    /**
++     * Response properties under which a stored response must never be reused without
++     * successful validation, regardless of age or client tolerance for staleness.
++     * Mirrors the conditions that make `maxAge()` collapse to zero, but kept separate
++     * so that ordinary zero-lifetime responses (`max-age=0`, expired `Expires`,
++     * heuristic zero) remain eligible for client-requested stale reuse.
++     * Reads only fields that `toObject()` serializes.
++     * @returns {boolean} `true` if reuse without revalidation is prohibited.
++     */
++    _prohibitsReuseWithoutRevalidation() {
++        if (!this.storable() || this._rescc['no-cache']) {
++            return true;
++        }
++        if (
++            this._isShared &&
++            this._resHeaders['set-cookie'] &&
++            !this._rescc.public &&
++            !this._rescc.immutable
++        ) {
++            return true;
++        }
++        if (this._isShared && this._rescc['proxy-revalidate']) {
++            return true;
++        }
++        // Any "*" member of Vary (not only a bare "*") fails to match every request.
++        if (
++            this._resHeaders.vary &&
++            this._resHeaders.vary
++                .trim()
++                .split(/\s*,\s*/)
++                .includes('*')
++        ) {
++            return true;
++        }
++        return false;
++    }
++
++    /**
++     * @returns {boolean} `true` if a stale response must not be served (max-stale,
++     * stale-while-revalidate, stale-if-error). A fresh response may still be served
++     * when only `must-revalidate` applies.
++     */
++    _forbidsStaleReuse() {
++        return (
++            this._prohibitsReuseWithoutRevalidation() ||
++            !!this._rescc['must-revalidate']
++        );
++    }
++
+     /**
+      * If true, this cache entry is past its expiration date.
+      * Note that stale cache may be useful sometimes, see `evaluateRequest()`.
+@@ -706,6 +758,12 @@ module.exports = class CachePolicy {
+      * @returns {boolean} `true` if `stale-if-error` condition allows use of a stale response.
+      */
+     _useStaleIfError() {
++        if (this._prohibitsReuseWithoutRevalidation()) {
++            return false;
++        }
++        if (this._forbidsStaleReuse()) {
++            return !this.stale();
++        }
+         return this.maxAge() + toNumberOrZero(this._rescc['stale-if-error']) > this.age();
+     }
+ 
+@@ -713,6 +771,9 @@ module.exports = class CachePolicy {
+      * @returns {boolean} `true` if `stale-while-revalidate` is currently allowed.
+      */
+     useStaleWhileRevalidate() {
++        if (this._forbidsStaleReuse()) {
++            return false;
++        }
+         const swr = toNumberOrZero(this._rescc['stale-while-revalidate']);
+         return swr > 0 && this.maxAge() + swr > this.age();
+     }

@@ -33,5 +33,20 @@ Modifications made to the original work (Apache-2.0 section 4b):
   byte-for-byte as retrieved from upstream, and the commit following it
   performs the consolidation.
 
-Everything else in this repository — skills/ (other than the two directories
+================================================================================
+Third-party content: http-cache-semantics (BSD-2-Clause)
+================================================================================
+
+    site/vendor/http-cache-semantics/
+
+    Source:    https://github.com/kornelski/http-cache-semantics (npm 4.3.0)
+    Copyright: Kornel Lesiński
+    License:   BSD 2-Clause, full text in that directory's LICENSE
+    Retrieved: 2026-10-20
+
+  Patched locally (guard-stale-reuse.patch) and installed into site/ in place
+  of the registry release. Provenance, hashes and the replacement condition
+  are in that directory's README.md and provenance.json.
+
+Everything else in this repository — skills/ (other than the directories
 named above), hooks/, bootstrap/, config/ — is original work under MIT.
