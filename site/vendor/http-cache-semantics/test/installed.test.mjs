@@ -183,6 +183,19 @@ describe('direct stale helpers honour prohibitions', () => {
         });
     }
 
+    test('array-valued Vary does not throw in the stale helpers', () => {
+        const p = policy({ 'cache-control': `max-age=1, ${SWR_SIE}`, vary: ['accept', '*'] }, { elapsed: 10 });
+        assert.equal(p.useStaleWhileRevalidate(), false);
+        assert.notEqual(p.revalidatedPolicy(req(), { status: 503, headers: {} }).policy, p);
+        const q = policy({ 'cache-control': `max-age=1, ${SWR_SIE}`, vary: ['accept'] }, { elapsed: 10 });
+        assert.equal(q.useStaleWhileRevalidate(), true);
+    });
+
+    test('network failure on a prohibited entry takes the existing no-stale path (throws, as upstream does without SIE)', () => {
+        const p = policy({ 'cache-control': `no-cache, ${SWR_SIE}` }, { elapsed: 10 });
+        assert.throws(() => p.revalidatedPolicy(req(), undefined), /Response headers missing/);
+    });
+
     test('ordinary SWR and SIE still work', () => {
         const p = policy({ 'cache-control': `max-age=1, ${SWR_SIE}` }, { elapsed: 10 });
         assert.equal(p.useStaleWhileRevalidate(), true);

@@ -5,9 +5,9 @@
   "upstreamIntegrity": "sha512-M5t5LlJpS1UHMjvwRQVdFHvPISGeLAxNcrWuJkeGh0KxsqCHZ1O3NXZU/8x7cD0BDcGW8kapxMKTvwlqrNkHkA==",
   "upstreamCommit": "b1d4bd682fbab0252985de45219f4e7497c0067c",
   "patch": "guard-stale-reuse.patch",
-  "patchSha256": "a06c5b0c2b648b64ca79baf07ac2b814bc360ba18bffe5ccc6a9ec3c203068f1",
+  "patchSha256": "2abf16043079ec9a91d9ff5731d553bdb87bad94e00e08e2514f062b57b25cd2",
   "patchedVersion": "4.3.0-mazze93.1",
   "tarball": "http-cache-semantics-4.3.0-mazze93.1.tgz",
-  "tarballIntegrity": "sha512-OOokBLXkL0ROBEtAs7J8NuOCCQTDZU7/1NOITSuwVP7Pa+yN41U3sC6xRzcr90RM5DlSiK+FYe+C/GcqEq5OVw==",
-  "indexJsSha256": "bc162fe019dea1b493d950b9bbfb673a430252c2409a010c30d97dc81f57dddc"
+  "tarballIntegrity": "sha512-LtFKZu2P+yAgvvpWPBeZIiYLqQ3Xgo/vTA41pxOR4sXej7pafkzbNNC/VPJYPiAwzURuPNa+yBAE5Z/UDD5kVA==",
+  "indexJsSha256": "8e8dbf9a8f03f27134eaeec2d7afe4548de7dc9207acfe57052995322099a13a"
 }

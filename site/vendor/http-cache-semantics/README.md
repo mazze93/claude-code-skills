@@ -9,7 +9,7 @@ in place of the registry release, for every consumer in the tree
 |---|---|
 | Upstream | `http-cache-semantics@4.3.0`, commit `b1d4bd6`, sha512 pinned in `provenance.json` |
 | Installed | `4.3.0-mazze93.1` — `http-cache-semantics-4.3.0-mazze93.1.tgz` (this directory) |
-| Change | `guard-stale-reuse.patch`: 61 lines added to `index.js`, nothing removed |
+| Change | `guard-stale-reuse.patch`: 62 lines added to `index.js`, nothing removed |
 | License | BSD-2-Clause (`LICENSE`), Kornel Lesiński. **Not** covered by the repo's MIT license |
 
 ## What the patch fixes
@@ -21,7 +21,7 @@ so a request with `Cache-Control: max-stale` got a cached response back even
 when that response was marked `no-store`, `no-cache` / `Pragma: no-cache`,
 shared `private`, shared + `Authorization`, shared `Set-Cookie` (without
 `public`/`immutable`), or shared `proxy-revalidate`. Verified on stock 4.3.0:
-the regression gate fails 21 of its 44 cases there; the rest are controls
+the regression gate fails 23 of its 46 cases there; the rest are controls
 that must pass on both builds.
 
 `useStaleWhileRevalidate()` and `_useStaleIfError()` also ignored
@@ -39,6 +39,13 @@ unchanged:
 `max-stale`, stale-while-revalidate and stale-if-error check them first.
 Under `must-revalidate` alone, a **fresh** entry can still be used on an
 origin error; a stale one cannot.
+
+**Caller-visible change:** when the origin is unreachable,
+`revalidatedPolicy(req, undefined)` on a prohibited entry now throws
+`Response headers missing`. Upstream already throws this for any stale entry
+without `stale-if-error`, so callers have to handle it either way. The patch
+just routes prohibited entries down that same no-stale path instead of
+returning the old body.
 
 **Behaviour kept on purpose:** `public, max-age=0`, an expired `Expires` and a
 heuristic zero still allow client-requested stale reuse (upstream README
