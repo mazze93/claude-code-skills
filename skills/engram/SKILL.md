@@ -160,6 +160,27 @@ Consolidation is performed inline by these steps. There is no separate skill.
    Append under the appropriate `##` heading — never rewrite or reorder existing
    content. An entry that fits nowhere stays in the inbox; report it as unrouted
    rather than forcing it into a file.
+
+   Entries starting `[promote]` come from session-journal's close-out. Route them
+   by gist like any other entry, and carry the `-> <pointer>` across as a source
+   suffix — for decisions: `YYYY-MM-DD · scope · decision · rationale · src: <pointer>`.
+   ENGRAM holds the pointer, never a copy of the journal text.
+
+   **Pointer liveness** (the rot rule, applied to memory) — before writing a
+   `[promote]` entry, check its pointer:
+   - `<repo>/docs/journal/<file> § <title>` — the file exists **and**
+     `grep -F '<title>' <file>` finds the title.
+   - `stratum:<log>/<dec>` — resolve with `stratum status <dec> --log <log>`. If
+     Stratum is unreachable, mark it `src: [UNVERIFIED-SRC] <pointer>`.
+   - Dead pointer — mark it `src: [DEAD-SRC] <pointer>` and list it in the report
+     as outstanding. Never drop the entry.
+
+   Markers go **inside the `src:` suffix, never at the start of the line**: the line
+   must still begin with its date or `engram-mark-stale` (which matches `^YYYY-MM-DD`)
+   stops ageing it. `[DEAD-SRC]` is not `[STALE]`: stale means old per D-06;
+   dead-src means the citation no longer resolves.
+
+   Liveness only reports; it never blocks consolidation or `push-memory`.
 3. Once every entry is written and the writes are verified, truncate `inbox.md`
    back to its two header lines. Processed entries live in the structured files
    from then on; the inbox is a buffer, not an archive.
@@ -178,7 +199,7 @@ Consolidation is performed inline by these steps. There is no separate skill.
    push-memory         # installed by setup script
    ```
 6. Report: entries processed, entries unrouted, stale items flagged (counted, not
-   assumed), git push status.
+   assumed), `[DEAD-SRC]` / `[UNVERIFIED-SRC]` pointers written, git push status.
 
 **Stale decay rule:** Any dated entry (line beginning `YYYY-MM-DD`) older than 60 days receives a `[STALE]` prefix. Items are never deleted automatically. The user triages `[STALE]` items manually at the next consolidation.
 

@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+- Journal → ENGRAM **promote** flow: `session-journal` close-out appends `[promote]` pointer lines to ENGRAM's inbox; `engram` Consolidate routes them with a `src:` pointer and checks pointer liveness (`[DEAD-SRC]` / `[UNVERIFIED-SRC]`, report-only, never blocks); `stratum-project-init` notes ENGRAM as a third, citing view. Pointers, never copies.
 - `plugins/rigor/evals/` — `claude plugin eval` suite for the `rigor` plugin (7 cases, with-plugin vs baseline). Final run: +8.3 pts over baseline on Opus 5.5 (6/7), +4.2 on Sonnet 5.5 (5/7). README records results, what the suite does not establish (mutation test, timeout blind spot), the Sonnet 5.5 `reasoning_extraction` safeguard on `decision-telemetry`, and harness bugs found.
 - `skills/decision-telemetry/tree-of-knowledge.html` — the canonical implementation `SKILL.md` already referenced but the repo never contained; path in `SKILL.md` corrected.
 - `LICENSE` — MIT, covering this repo's own work.

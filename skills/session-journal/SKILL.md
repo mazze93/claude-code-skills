@@ -87,6 +87,32 @@ A row left `—` means the session dropped before it could close itself out —
 which is itself the record. Do not backfill someone else's `—` row with a
 guess; leave it, and let `ws abandoned` surface it.
 
+### Promote (durable items only)
+
+After setting `outcome`, append one line per durable item to
+`~/.claude/memory/inbox.md` (ENGRAM's capture buffer). Pointers, not copies — the
+journal and Stratum stay the source; ENGRAM only cites them, so nothing can drift.
+
+    YYYY-MM-DD HH:MM: [promote] <project> · <one-line gist> -> <pointer>
+
+`<pointer>` is one of `<repo>/docs/journal/DECISIONS.md § <exact bold title of
+the decision>` (titles, not dates — one date holds many decisions),
+`<repo>/docs/journal/CHECKPOINT.md § <burst heading>`, or `stratum:<log-id>/<dec-id>`.
+
+Only if `~/.claude/memory/inbox.md` exists. If it doesn't, ENGRAM isn't set up on
+this machine: skip promote, say so in the close-out, and don't create the file —
+ENGRAM's Setup mode owns it.
+
+Promote only: (a) a decision that outlives this project or reverses an ENGRAM
+entry, (b) a convention that has now shown up in a second project, (c) a change
+in a project's status that ENGRAM's `projects.md` would otherwise misstate. Never
+promote mechanical edits, scan results, or anything regenerable. Never touch any
+ENGRAM file except `inbox.md` — routing happens later, in ENGRAM's Consolidate
+mode, on request. `INTENTS.md` rows are never promoted.
+
+No hook does this. A dropped session simply promotes nothing, and its `—`
+outcome row is already the signal.
+
 ## Resuming after a drop
 
 Read CHECKPOINT.md → PLAN.md → DECISIONS.md, in that order, then continue at
