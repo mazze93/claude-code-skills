@@ -120,6 +120,13 @@
           "added": "2026-09-03T08:17:21-04:00"
         },
         {
+          "name": "high-signal-engine",
+          "plugin": "lab",
+          "description": "Operate as a high-signal research and execution engine for substantive work: research and synthesis across sources, technical and architecture decisions, tooling/CI/CD choices, security review and hardening, threat modeling, content strategy and SEO outlines, and any \"should I / which X / what's the best approach\" question. Enforces a Summary / Insights / Sources / Action answer shape, primary-source bias with cross-checking, an always-on security lens, a single committed recommendation instead of \"it depends\", and conversion of every answer into a reusable artifact (commands, configs, checklists, templates, scripts). Default stack when unstated: Astro + Cloudflare, local-first, security-aware. Use it whenever a question deserves a researched, opinionated, actionable answer \u2014 even if the user doesn't ask for structure. Do NOT use for casual chat, greetings, \"what can you do\", trivial one-fact lookups, or onboarding.",
+          "summary": "Operate as a high-signal research and execution engine for substantive work: research and synthesis across sources, technical and architecture decisions, tooling/CI/CD choices, security review and har",
+          "added": null
+        },
+        {
           "name": "local-swarm",
           "plugin": "lab",
           "description": "Fan out parallel review/analysis/summarization passes to on-device Ollama (claude-local) instead of cloud subagents, with the cloud session acting as orchestrator and verifier. Use when the user asks to \"use local inference\", \"leverage claude-local / on-device Ollama\", \"run parallel agents locally\", or when cloud session limits make spawning cloud subagents wasteful \u2014 especially for review passes, bulk classification, per-file summaries, and second-opinion scans.",
@@ -265,6 +272,6 @@
   ],
   "totals": {
     "plugins": 6,
-    "skills": 25
+    "skills": 26
   }
 }

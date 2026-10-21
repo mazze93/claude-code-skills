@@ -40,6 +40,7 @@ Probes and research aids that do not belong to one domain.
 | skill | description |
 |---|---|
 | [`concurrency-probe`](skills/concurrency-probe/SKILL.md) | Verify a concurrency-adjacent claim (thread-safe, handles concurrent requests, session isolation, no race conditions, lock-protected) by actually runn |
+| [`high-signal-engine`](skills/high-signal-engine/SKILL.md) | Operate as a high-signal research and execution engine for substantive work: research and synthesis across sources, technical and architecture decisio |
 | [`local-swarm`](skills/local-swarm/SKILL.md) | Fan out parallel review/analysis/summarization passes to on-device Ollama (claude-local) instead of cloud subagents, with the cloud session acting as  |
 | [`precise-coding-assistant`](skills/precise-coding-assistant/SKILL.md) | Enforces a four-phase gating mechanism (Clarity → Simplicity → Scope → Verification) on every meaningful code modification, implementation, or refacto |
 | [`read-arxiv-paper`](skills/read-arxiv-paper/SKILL.md) | Use this skill when asked to read an arxiv paper given an arxiv URL |

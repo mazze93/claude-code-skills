@@ -46,7 +46,8 @@
         "concurrency-probe",
         "precise-coding-assistant",
         "local-swarm",
-        "read-arxiv-paper"
+        "read-arxiv-paper",
+        "high-signal-engine"
       ],
       "tier": "free",
       "checkout": null
