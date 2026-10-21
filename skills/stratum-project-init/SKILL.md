@@ -35,6 +35,10 @@ the failure mode the hook is built to avoid — and would flood the ledger with 
 destroying the signal that makes it worth reading later. The correlation scripts below
 solve this properly: on-demand, explicit, never hook-triggered.
 
+ENGRAM (`~/.claude/memory/`) is a third, consolidated view. It cites this ledger by
+`stratum:<log-id>/<dec-id>` pointer (via session-journal's promote step) and never
+copies decisions out of it.
+
 ## Setup steps
 
 Work through these in order. At each step, check state before acting.
