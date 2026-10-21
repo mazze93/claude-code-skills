@@ -16,6 +16,10 @@ source of the public storefront **store.mazzeleczzare.com** (`site/`). Treat
 - `cd site && npm run check` = typecheck + build. Deploy is `.github/workflows/verify.yml`
   on `main` only — PRs build and typecheck but never deploy.
 - Priced plugins need a `checkout` URL in skill-map.json; nothing here processes payment.
+- `http-cache-semantics` is a **locally patched build** (`site/vendor/http-cache-semantics/`,
+  wired via a `file:` dependency + `$http-cache-semantics` override). Don't
+  "fix" the prerelease version or the override; read that directory's README first.
+  `npm run test:vendor` fails if the installed package isn't the patched build.
 
 ## Bootstrap (cold-start / new machine)
 

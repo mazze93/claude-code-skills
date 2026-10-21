@@ -121,6 +121,17 @@ jobs:
       - name: Typecheck
         run: npm run typecheck
         working-directory: site
+      # The patched http-cache-semantics (site/vendor/http-cache-semantics/).
+      # First step: the INSTALLED package is the patched build and still blocks
+      # stale reuse — catches a dropped override or a regenerated lockfile.
+      # Second: the committed tarball rebuilds byte-for-byte from the pinned
+      # upstream + patch, so the binary in git can't drift from the reviewed diff.
+      - name: Vendored http-cache-semantics gate
+        run: npm run test:vendor
+        working-directory: site
+      - name: Vendored http-cache-semantics reproduces
+        run: bash vendor/http-cache-semantics/build.sh
+        working-directory: site
       - name: Build
         run: npm run build
         working-directory: site

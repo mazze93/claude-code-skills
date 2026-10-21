@@ -1,0 +1,13 @@
+{
+  "package": "http-cache-semantics",
+  "upstreamVersion": "4.3.0",
+  "upstreamTarball": "https://registry.npmjs.org/http-cache-semantics/-/http-cache-semantics-4.3.0.tgz",
+  "upstreamIntegrity": "sha512-M5t5LlJpS1UHMjvwRQVdFHvPISGeLAxNcrWuJkeGh0KxsqCHZ1O3NXZU/8x7cD0BDcGW8kapxMKTvwlqrNkHkA==",
+  "upstreamCommit": "b1d4bd682fbab0252985de45219f4e7497c0067c",
+  "patch": "guard-stale-reuse.patch",
+  "patchSha256": "2abf16043079ec9a91d9ff5731d553bdb87bad94e00e08e2514f062b57b25cd2",
+  "patchedVersion": "4.3.0-mazze93.1",
+  "tarball": "http-cache-semantics-4.3.0-mazze93.1.tgz",
+  "tarballIntegrity": "sha512-LtFKZu2P+yAgvvpWPBeZIiYLqQ3Xgo/vTA41pxOR4sXej7pafkzbNNC/VPJYPiAwzURuPNa+yBAE5Z/UDD5kVA==",
+  "indexJsSha256": "8e8dbf9a8f03f27134eaeec2d7afe4548de7dc9207acfe57052995322099a13a"
+}

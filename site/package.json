@@ -6,12 +6,14 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "check": "npm run typecheck && npm run build",
-    "typecheck": "tsc --noEmit"
+    "check": "npm run typecheck && npm run test:vendor && npm run build",
+    "typecheck": "tsc --noEmit",
+    "test:vendor": "node --test vendor/http-cache-semantics/test/*.test.mjs"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.3.0",
-    "astro": "^7.3.1"
+    "astro": "^7.3.1",
+    "http-cache-semantics": "file:vendor/http-cache-semantics/http-cache-semantics-4.3.0-mazze93.1.tgz"
   },
   "devDependencies": {
     "typescript": "^7.0.2"
@@ -23,6 +25,7 @@
     "esbuild@0.28.1": true
   },
   "overrides": {
-    "sharp": "^0.35.5"
+    "sharp": "^0.35.5",
+    "http-cache-semantics": "$http-cache-semantics"
   }
 }
