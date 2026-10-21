@@ -161,6 +161,9 @@ decisive where the sources agree and explicit where they don't.
 > // src/pages/api/verify.ts — adjust env access to your Astro adapter version
 > import type { APIRoute } from 'astro';
 >
+> // Under `output: 'static'` an endpoint is prerendered and POST never reaches it.
+> export const prerender = false;
+>
 > export const POST: APIRoute = async ({ request, locals }) => {
 >   const token = (await request.formData()).get('cf-turnstile-response');
 >   if (typeof token !== 'string' || !token) return new Response(null, { status: 400 });
