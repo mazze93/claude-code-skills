@@ -120,6 +120,13 @@
           "added": "2026-09-03T08:17:21-04:00"
         },
         {
+          "name": "high-signal-engine",
+          "plugin": "lab",
+          "description": "Operate as a high-signal research and execution engine for substantive work: research and synthesis across sources, technical and architecture decisions, tooling/CI/CD choices, security review and hardening, threat modeling, content strategy and SEO outlines, and any \"should I / which X / what's the best approach\" question. Enforces a Summary / Insights / Sources / Action answer shape, primary-source bias with cross-checking, an always-on security lens, a single committed recommendation instead of \"it depends\", and conversion of every answer into a reusable artifact (commands, configs, checklists, templates, scripts). Default stack when unstated: Astro + Cloudflare, local-first, security-aware. Use it whenever a question deserves a researched, opinionated, actionable answer \u2014 even if the user doesn't ask for structure. Do NOT use for casual chat, greetings, \"what can you do\", trivial one-fact lookups, or onboarding.",
+          "summary": "Operate as a high-signal research and execution engine for substantive work: research and synthesis across sources, technical and architecture decisions, tooling/CI/CD choices, security review and har",
+          "added": "2026-10-21T02:59:32-04:00"
+        },
+        {
           "name": "local-swarm",
           "plugin": "lab",
           "description": "Fan out parallel review/analysis/summarization passes to on-device Ollama (claude-local) instead of cloud subagents, with the cloud session acting as orchestrator and verifier. Use when the user asks to \"use local inference\", \"leverage claude-local / on-device Ollama\", \"run parallel agents locally\", or when cloud session limits make spawning cloud subagents wasteful \u2014 especially for review passes, bulk classification, per-file summaries, and second-opinion scans.",
@@ -242,6 +249,13 @@
   ],
   "recent": [
     {
+      "name": "high-signal-engine",
+      "plugin": "lab",
+      "description": "Operate as a high-signal research and execution engine for substantive work: research and synthesis across sources, technical and architecture decisions, tooling/CI/CD choices, security review and hardening, threat modeling, content strategy and SEO outlines, and any \"should I / which X / what's the best approach\" question. Enforces a Summary / Insights / Sources / Action answer shape, primary-source bias with cross-checking, an always-on security lens, a single committed recommendation instead of \"it depends\", and conversion of every answer into a reusable artifact (commands, configs, checklists, templates, scripts). Default stack when unstated: Astro + Cloudflare, local-first, security-aware. Use it whenever a question deserves a researched, opinionated, actionable answer \u2014 even if the user doesn't ask for structure. Do NOT use for casual chat, greetings, \"what can you do\", trivial one-fact lookups, or onboarding.",
+      "summary": "Operate as a high-signal research and execution engine for substantive work: research and synthesis across sources, technical and architecture decisions, tooling/CI/CD choices, security review and har",
+      "added": "2026-10-21T02:59:32-04:00"
+    },
+    {
       "name": "core-sample",
       "plugin": "rigor",
       "description": "Capture a Claude session as an analysis-ready ledger \u2014 every tool call with its outcome (including failures the tool never flagged), a typed failure log, prompts, findings, sources, deliverables and open items \u2014 then build SQLite + CSV and a navigable Excel workbook with charts. Use whenever the user asks to record, log, audit, export or \"make a spreadsheet of\" a session or conversation, wants tool use or failures treated as data, asks what went wrong or what caught it, wants to compare sessions, or wants hooks so tool results survive compaction. Also use near the end of a long build session when a post-mortem, field note or essay needs evidence.",
@@ -254,17 +268,10 @@
       "description": "Probe session environment readiness for committing, signing, or deploying \u2014 TTY, GPG/pinentry, ssh-agent, git remote\u2194auth match, and MCP connectivity. Reports an applied fix or an exact paste-into-your-own-terminal command for every failure. Use at the start of any session that will commit, sign, tag, push, or deploy, or when a commit/push fails for environment reasons.",
       "summary": "Probe session environment readiness for committing, signing, or deploying \u2014 TTY, GPG/pinentry, ssh-agent, git remote\u2194auth match, and MCP connectivity.",
       "added": "2026-09-16T17:04:09-04:00"
-    },
-    {
-      "name": "corroborate",
-      "plugin": "rigor",
-      "description": "Establish what an uncommitted or unfamiliar change actually IS before committing, discarding, pushing, or merging it \u2014 by making the artifact testify rather than reading the diff and inferring. Use when handling work you did not author: a dirty working tree, staged changes of unknown provenance, a stale-looking file, an unexplained deletion, an untracked directory, someone else's WIP, or any sweep that ends in \"commit what's finished.\" Also trigger before discarding anything, before committing a whole dirty tree, when a diff looks like a revert, when a deletion has no explanation, or when the user says \"clean this up,\" \"commit what's done,\" \"sync the fleet,\" or \"is this safe to commit.\" Complements touchstone: touchstone challenges a claim of correctness; corroborate establishes what a change is in the first place.",
-      "summary": "Establish what an uncommitted or unfamiliar change actually IS before committing, discarding, pushing, or merging it \u2014 by making the artifact testify rather than reading the diff and inferring.",
-      "added": "2026-09-06T07:30:40-04:00"
     }
   ],
   "totals": {
     "plugins": 6,
-    "skills": 25
+    "skills": 26
   }
 }
