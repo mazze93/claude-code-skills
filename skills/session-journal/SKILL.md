@@ -95,8 +95,13 @@ journal and Stratum stay the source; ENGRAM only cites them, so nothing can drif
 
     YYYY-MM-DD HH:MM: [promote] <project> · <one-line gist> -> <pointer>
 
-`<pointer>` is one of `<repo>/docs/journal/DECISIONS.md#<date>`,
-`<repo>/docs/journal/CHECKPOINT.md`, or `stratum:<log-id>/<dec-id>`.
+`<pointer>` is one of `<repo>/docs/journal/DECISIONS.md § <exact bold title of
+the decision>` (titles, not dates — one date holds many decisions),
+`<repo>/docs/journal/CHECKPOINT.md § <burst heading>`, or `stratum:<log-id>/<dec-id>`.
+
+Only if `~/.claude/memory/inbox.md` exists. If it doesn't, ENGRAM isn't set up on
+this machine: skip promote, say so in the close-out, and don't create the file —
+ENGRAM's Setup mode owns it.
 
 Promote only: (a) a decision that outlives this project or reverses an ENGRAM
 entry, (b) a convention that has now shown up in a second project, (c) a change
