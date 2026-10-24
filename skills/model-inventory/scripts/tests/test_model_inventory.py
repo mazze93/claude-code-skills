@@ -383,6 +383,20 @@ class ModelInventoryTest(unittest.TestCase):
         weights.unlink()
         self.assertEqual(archived.read_bytes(), data)
 
+    def test_space_check_counts_linked_targets(self):
+        big = Path(self.tmp.name) / "linked-huge.safetensors"
+        with open(big, "wb") as f:
+            f.truncate(1 << 50)  # 1 PiB logical: must trip the free-space check if counted
+        (self.home / "work" / "run1" / "w.safetensors").symlink_to(big)
+        _, out = self.scan()
+        run1 = next(i for i in json.loads(out.read_text())["items"] if i["name"] == "run1")
+        dest = Path(self.tmp.name) / "a-space"
+        dest.mkdir()
+        r = self.run_cli("archive", "--dest", str(dest), "--from-json", str(out), "--item", run1["id"],
+                         "--allow-same-disk")
+        self.assertEqual(r.returncode, 2, r.stdout + r.stderr)
+        self.assertIn("Nothing was written", r.stderr)
+
     def test_v2_only_model_blobs_are_not_orphans(self):
         w = blob(self.store, b"v2 only weights")
         cfg = blob(self.store, b"v2 only config")

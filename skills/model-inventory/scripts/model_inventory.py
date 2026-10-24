@@ -616,7 +616,15 @@ def plan_bytes(items: list[dict]) -> int:
     for it in items:
         for p in map(Path, it["paths"]):
             if p.is_dir():
-                total += sum(f.stat().st_size for f in p.rglob("*") if f.is_file() and not f.is_symlink())
+                root = str(p.resolve()) + os.sep
+                for f in p.rglob("*"):
+                    if f.is_symlink():
+                        # links leaving the tree are materialized by archive — count their targets
+                        t = os.path.realpath(f)
+                        if not t.startswith(root) and os.path.isfile(t):
+                            total += os.path.getsize(t)
+                    elif f.is_file():
+                        total += f.stat().st_size
             elif p.exists():
                 if p.name.startswith("sha256-"):
                     if p.name in seen:
