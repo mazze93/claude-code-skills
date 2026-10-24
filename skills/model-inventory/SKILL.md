@@ -115,8 +115,11 @@ in-use signal. Lead with what can't be got back.
    python3 -I <skill>/scripts/model_inventory.py archive --dest <chosen-dir> \
      --from-json <records-dir>/model-scan.json --item '<id>' [--item '<id>' …]
    ```
-   It refuses a destination on the same disk as the source (that frees
-   nothing), copies each item under `model-archive-<timestamp>/` keeping its
+   It checks free space first and refuses (writing nothing) if the
+   selection won't fit; Ollama blobs identical across stores are stored once
+   per run and listed under `dedup` in `MANIFEST.json` for restore. It
+   copies bytes + mtime only, so exFAT/FAT drives work. It refuses a
+   destination on the same disk as the source (that frees nothing), copies each item under `model-archive-<timestamp>/` keeping its
    absolute layout, checks every file's SHA-256 against the original — and
    for Ollama blobs, against the hash in the blob's own name — then writes
    `SHA256SUMS` and `MANIFEST.json`. Any mismatch aborts with exit 1.

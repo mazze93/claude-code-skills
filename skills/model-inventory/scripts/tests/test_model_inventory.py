@@ -139,6 +139,48 @@ class ModelInventoryTest(unittest.TestCase):
         for p in tuned["paths"]:
             self.assertTrue(Path(p).exists(), f"original removed: {p}")
 
+    def test_archive_dedups_identical_blobs_across_stores(self):
+        shared = self.users / "Shared" / ".ollama" / "models"
+        manifest(shared, "base", "latest", [("model", blob(shared, b"base weights"))])
+        _, out = self.scan()
+        items = json.loads(out.read_text())["items"]
+        ids = [i["id"] for i in items if i["name"] == "base:latest"]
+        self.assertEqual(len(ids), 2)
+        dest = Path(self.tmp.name) / "arch3"
+        dest.mkdir()
+        args = ["archive", "--dest", str(dest), "--from-json", str(out), "--allow-same-disk"]
+        for i in ids:
+            args += ["--item", i]
+        r = self.run_cli(*args)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        run = next(dest.iterdir())
+        stored = [p for p in run.rglob("sha256-*") if p.is_file()]
+        names = [p.name for p in stored]
+        self.assertEqual(len(names), len(set(names)), "an identical blob must be stored once")
+        man = json.loads((run / "MANIFEST.json").read_text())
+        self.assertEqual(len(man["dedup"]), 1)
+        self.assertTrue((run / man["dedup"][0]["same_as"]).exists())
+        check = subprocess.run(["shasum", "-a", "256", "-c", "SHA256SUMS"], cwd=run, capture_output=True, text=True)
+        self.assertEqual(check.returncode, 0, check.stdout)
+
+    def test_archive_refuses_when_destination_too_small(self):
+        _, out = self.scan()
+        items = json.loads(out.read_text())["items"]
+        tuned = next(i for i in items if i["name"] == "tuned:latest")
+        dest = Path(self.tmp.name) / "arch4"
+        dest.mkdir()
+        # pretend the item is larger than any disk: point it at a huge sparse file
+        big = Path(self.tmp.name) / "huge.bin"
+        with open(big, "wb") as f:
+            f.truncate(1 << 50)  # 1 PiB logical size, no blocks
+        tuned["paths"].append(str(big))
+        out.write_text(json.dumps({"items": items}))
+        r = self.run_cli("archive", "--dest", str(dest), "--from-json", str(out), "--item", tuned["id"],
+                         "--allow-same-disk")
+        self.assertEqual(r.returncode, 2)
+        self.assertIn("Nothing was written", r.stderr)
+        self.assertEqual(list(dest.iterdir()), [])
+
     def test_archive_catches_corrupt_blob(self):
         _, out = self.scan()
         items = json.loads(out.read_text())["items"]
@@ -231,7 +273,9 @@ class ModelInventoryTest(unittest.TestCase):
     def test_manifests_v2_links_are_internal(self):
         v2 = self.store / "manifests-v2" / "ollama.com" / "library" / "base"
         v2.mkdir(parents=True)
-        target = next((self.store / "blobs").iterdir())
+        # link a blob that belongs to a model (not an orphan), so the check is deterministic
+        base = json.loads((self.store / "manifests/registry.ollama.ai/library/base/latest").read_text())
+        target = self.store / "blobs" / base["layers"][0]["digest"].replace(":", "-")
         (v2 / "latest").symlink_to(target)
         (self.store / "manifests-v2" / "ollama.com" / "library" / "ghost").mkdir()
         (self.store / "manifests-v2" / "ollama.com" / "library" / "ghost" / "latest").symlink_to(target)
@@ -241,6 +285,23 @@ class ModelInventoryTest(unittest.TestCase):
                          "Ollama's own v2 index links are not outside dependents")
         self.assertIn("ghost:latest", items, "v2-only entries must be surfaced, not skipped")
         self.assertEqual(items["ghost:latest"]["verdict"], "unknown-archive-first")
+
+    def test_symlinked_home_does_not_walk_into_store(self):
+        # $HOME reached through a symlink (like /var -> /private/var): the sweep must
+        # still recognise the managed store and not report its internals as dependents.
+        link = Path(self.tmp.name) / "homelink"
+        link.symlink_to(self.home)
+        self.env["HOME"] = str(link)
+        v2 = self.store / "manifests-v2" / "ollama.com" / "library" / "base"
+        v2.mkdir(parents=True)
+        base = json.loads((self.store / "manifests/registry.ollama.ai/library/base/latest").read_text())
+        (v2 / "latest").symlink_to(self.store / "blobs" / base["layers"][0]["digest"].replace(":", "-"))
+        items, _ = self.scan()
+        links = [e for e in items["base:latest"]["evidence"] if "symlink(s)" in e]
+        # exactly the one outside dependent from setUp (.studio_links); a second would be
+        # the store's own manifests-v2 link, picked up by a sweep that walked into the store
+        self.assertEqual(len(links), 1)
+        self.assertTrue(links[0].startswith("1 symlink(s)"), links[0])
 
     def test_scan_never_modifies_store(self):
         before = sorted((p, p.stat().st_mtime_ns) for p in self.store.rglob("*") if not p.is_symlink())

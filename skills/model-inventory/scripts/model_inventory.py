@@ -410,7 +410,8 @@ def scan_training(roots: list[Path], managed: list[Path], items: list[Item],
     seen_runs: set[str] = set()
     for root in roots:
         for dirpath, dirnames, filenames in walk_local(root):
-            if any(dirpath.startswith(m) for m in managed_s):
+            real = os.path.realpath(dirpath)  # managed_s is resolved; /var → /private/var etc.
+            if any(real == m or real.startswith(m + os.sep) for m in managed_s):
                 dirnames[:] = []
                 continue
             for d in list(dirnames):
@@ -546,6 +547,35 @@ def sha256(p: Path) -> str:
     return h.hexdigest()
 
 
+def copy_data(src, dst, *, follow_symlinks=True):
+    """Copy bytes and mtime only. copy2's copystat tries flags/xattrs that exFAT
+    and FAT archive drives reject; content is what the SHA-256 check protects."""
+    shutil.copyfile(src, dst, follow_symlinks=follow_symlinks)
+    try:
+        st = os.stat(src, follow_symlinks=follow_symlinks)
+        os.utime(dst, (st.st_atime, st.st_mtime), follow_symlinks=follow_symlinks)
+    except OSError:
+        pass
+    return dst
+
+
+def plan_bytes(items: list[dict]) -> int:
+    """Bytes the archive will write: Ollama blobs counted once across all items
+    (identical content shared by stores), everything else per path."""
+    seen, total = set(), 0
+    for it in items:
+        for p in map(Path, it["paths"]):
+            if p.is_dir():
+                total += sum(f.stat().st_size for f in p.rglob("*") if f.is_file() and not f.is_symlink())
+            elif p.exists():
+                if p.name.startswith("sha256-"):
+                    if p.name in seen:
+                        continue
+                    seen.add(p.name)
+                total += p.stat().st_size
+    return total
+
+
 def cmd_archive(a: argparse.Namespace) -> int:
     dest = Path(a.dest).expanduser()
     if not dest.is_dir():
@@ -557,8 +587,17 @@ def cmd_archive(a: argparse.Namespace) -> int:
     if missing:
         print("× unknown item id(s): " + "; ".join(missing), file=sys.stderr)
         return 2
+    need = plan_bytes([by_id[x] for x in a.item])
+    free = shutil.disk_usage(dest).free
+    margin = 1 << 30
+    if need + margin > free:
+        print(f"× needs {human(need)} (+1G margin) but {dest} has {human(free)} free — "
+              "archive fewer items or free space first. Nothing was written.", file=sys.stderr)
+        return 2
+    print(f"plan: {human(need)} to write, {human(free)} free on destination")
     run = dest / f"model-archive-{time.strftime('%Y%m%d-%H%M%S')}"
-    sums, manifest = [], []
+    sums, manifest, dedup = [], [], []
+    stored_blobs: dict[str, str] = {}  # blob name → archive-relative path of its one stored copy
     for iid in a.item:
         it = by_id[iid]
         src_paths = [Path(p) for p in it["paths"]]
@@ -575,11 +614,18 @@ def cmd_archive(a: argparse.Namespace) -> int:
             target = run / str(src).lstrip("/")
             target.parent.mkdir(parents=True, exist_ok=True)
             if src.is_dir():
-                shutil.copytree(src, target, symlinks=True, dirs_exist_ok=True)
+                shutil.copytree(src, target, symlinks=True, dirs_exist_ok=True, copy_function=copy_data)
                 files = [p for p in target.rglob("*") if p.is_file() and not p.is_symlink()]
+            elif src.name.startswith("sha256-") and src.name in stored_blobs:
+                # Same content-addressed blob already stored in this run (another
+                # store holds an identical copy). Record where it lives instead.
+                dedup.append({"path": str(target.relative_to(run)), "same_as": stored_blobs[src.name]})
+                continue
             else:
-                shutil.copy2(src, target)
+                copy_data(src, target)
                 files = [target]
+                if src.name.startswith("sha256-"):
+                    stored_blobs[src.name] = str(target.relative_to(run))
             for f in files:
                 orig = src / f.relative_to(target) if src.is_dir() else src
                 got, want = sha256(f), sha256(orig)
@@ -593,7 +639,13 @@ def cmd_archive(a: argparse.Namespace) -> int:
     (run / "SHA256SUMS").write_text("\n".join(sums) + "\n")
     (run / "MANIFEST.json").write_text(json.dumps(
         {"archived": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "host": os.uname().nodename,
-         "items": manifest}, indent=2))
+         "items": manifest,
+         "dedup": dedup,
+         "restore": "copy each path back to its original absolute location (the archive "
+                    "mirrors it); for every `dedup` entry, copy `same_as` to `path` first"},
+        indent=2))
+    if dedup:
+        print(f"deduplicated {len(dedup)} identical blob(s) — see MANIFEST.json `dedup` for restore")
     print(f"\narchive: {run}\nverify later: cd '{run}' && shasum -a 256 -c SHA256SUMS")
     print("Nothing was deleted. Remove originals only after you've confirmed the archive.")
     return 0
