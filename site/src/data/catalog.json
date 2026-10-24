@@ -217,6 +217,13 @@
           "added": "2026-05-23T17:04:07-04:00"
         },
         {
+          "name": "model-inventory",
+          "plugin": "workspace",
+          "description": "Inventory on-device AI models (Ollama, Hugging Face, LM Studio, MLX, Unsloth and loose .gguf/.safetensors), judge what deleting each would lose \u2014 re-downloadable, locally built, fine-tuned, orphaned \u2014 and archive to a user-chosen drive with SHA-256 verification before anything is removed. Use when models are eating disk space, before deleting any model, when the user asks \"which models do I use\", \"did I train anything\", \"is it safe to delete\", or when disk-audit hands off its model bucket.",
+          "summary": "Inventory on-device AI models (Ollama, Hugging Face, LM Studio, MLX, Unsloth and loose .gguf/.safetensors), judge what deleting each would lose \u2014 re-downloadable, locally built, fine-tuned, orphaned \u2014",
+          "added": "2026-10-23T21:09:49-04:00"
+        },
+        {
           "name": "pr-triage",
           "plugin": "workspace",
           "description": "Triage open GitHub pull requests across one or all mazze93 repos by *what kind of stuck* they are (merge conflict, failing CI, changes requested, awaiting review, abandoned, ready-to-merge, healthy) rather than just sorting by age. Use when asked to \"triage PRs\", \"what PRs need attention\", \"find stuck/stale/abandoned PRs\", \"which PRs are ready to merge\", or to generate a PR status report for terminal, Slack, or a GitHub comment/markdown file.",
@@ -249,6 +256,13 @@
   ],
   "recent": [
     {
+      "name": "model-inventory",
+      "plugin": "workspace",
+      "description": "Inventory on-device AI models (Ollama, Hugging Face, LM Studio, MLX, Unsloth and loose .gguf/.safetensors), judge what deleting each would lose \u2014 re-downloadable, locally built, fine-tuned, orphaned \u2014 and archive to a user-chosen drive with SHA-256 verification before anything is removed. Use when models are eating disk space, before deleting any model, when the user asks \"which models do I use\", \"did I train anything\", \"is it safe to delete\", or when disk-audit hands off its model bucket.",
+      "summary": "Inventory on-device AI models (Ollama, Hugging Face, LM Studio, MLX, Unsloth and loose .gguf/.safetensors), judge what deleting each would lose \u2014 re-downloadable, locally built, fine-tuned, orphaned \u2014",
+      "added": "2026-10-23T21:09:49-04:00"
+    },
+    {
       "name": "high-signal-engine",
       "plugin": "lab",
       "description": "Operate as a high-signal research and execution engine for substantive work: research and synthesis across sources, technical and architecture decisions, tooling/CI/CD choices, security review and hardening, threat modeling, content strategy and SEO outlines, and any \"should I / which X / what's the best approach\" question. Enforces a Summary / Insights / Sources / Action answer shape, primary-source bias with cross-checking, an always-on security lens, a single committed recommendation instead of \"it depends\", and conversion of every answer into a reusable artifact (commands, configs, checklists, templates, scripts). Default stack when unstated: Astro + Cloudflare, local-first, security-aware. Use it whenever a question deserves a researched, opinionated, actionable answer \u2014 even if the user doesn't ask for structure. Do NOT use for casual chat, greetings, \"what can you do\", trivial one-fact lookups, or onboarding.",
@@ -261,17 +275,10 @@
       "description": "Capture a Claude session as an analysis-ready ledger \u2014 every tool call with its outcome (including failures the tool never flagged), a typed failure log, prompts, findings, sources, deliverables and open items \u2014 then build SQLite + CSV and a navigable Excel workbook with charts. Use whenever the user asks to record, log, audit, export or \"make a spreadsheet of\" a session or conversation, wants tool use or failures treated as data, asks what went wrong or what caught it, wants to compare sessions, or wants hooks so tool results survive compaction. Also use near the end of a long build session when a post-mortem, field note or essay needs evidence.",
       "summary": "Capture a Claude session as an analysis-ready ledger \u2014 every tool call with its outcome (including failures the tool never flagged), a typed failure log, prompts, findings, sources, deliverables and o",
       "added": "2026-10-11T16:29:45-04:00"
-    },
-    {
-      "name": "preflight",
-      "plugin": "workspace",
-      "description": "Probe session environment readiness for committing, signing, or deploying \u2014 TTY, GPG/pinentry, ssh-agent, git remote\u2194auth match, and MCP connectivity. Reports an applied fix or an exact paste-into-your-own-terminal command for every failure. Use at the start of any session that will commit, sign, tag, push, or deploy, or when a commit/push fails for environment reasons.",
-      "summary": "Probe session environment readiness for committing, signing, or deploying \u2014 TTY, GPG/pinentry, ssh-agent, git remote\u2194auth match, and MCP connectivity.",
-      "added": "2026-09-16T17:04:09-04:00"
     }
   ],
   "totals": {
     "plugins": 6,
-    "skills": 26
+    "skills": 27
   }
 }
