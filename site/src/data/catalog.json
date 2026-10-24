@@ -217,6 +217,13 @@
           "added": "2026-05-23T17:04:07-04:00"
         },
         {
+          "name": "model-inventory",
+          "plugin": "workspace",
+          "description": "Inventory on-device AI models (Ollama, Hugging Face, LM Studio, MLX, Unsloth and loose .gguf/.safetensors), judge what deleting each would lose \u2014 re-downloadable, locally built, fine-tuned, orphaned \u2014 and archive to a user-chosen drive with SHA-256 verification before anything is removed. Use when models are eating disk space, before deleting any model, when the user asks \"which models do I use\", \"did I train anything\", \"is it safe to delete\", or when disk-audit hands off its model bucket.",
+          "summary": "Inventory on-device AI models (Ollama, Hugging Face, LM Studio, MLX, Unsloth and loose .gguf/.safetensors), judge what deleting each would lose \u2014 re-downloadable, locally built, fine-tuned, orphaned \u2014",
+          "added": null
+        },
+        {
           "name": "pr-triage",
           "plugin": "workspace",
           "description": "Triage open GitHub pull requests across one or all mazze93 repos by *what kind of stuck* they are (merge conflict, failing CI, changes requested, awaiting review, abandoned, ready-to-merge, healthy) rather than just sorting by age. Use when asked to \"triage PRs\", \"what PRs need attention\", \"find stuck/stale/abandoned PRs\", \"which PRs are ready to merge\", or to generate a PR status report for terminal, Slack, or a GitHub comment/markdown file.",
@@ -272,6 +279,6 @@
   ],
   "totals": {
     "plugins": 6,
-    "skills": 26
+    "skills": 27
   }
 }

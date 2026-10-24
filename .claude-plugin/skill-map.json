@@ -69,6 +69,7 @@
         "workspace-sync",
         "claude-md-audit",
         "disk-audit",
+        "model-inventory",
         "ship",
         "pr-triage",
         "git-forensics",
