@@ -24,6 +24,8 @@ def manifest(store: Path, name: str, tag: str, layers: list[tuple[str, str]] | N
     mdir = store / "manifests" / "registry.ollama.ai" / "library" / name
     mdir.mkdir(parents=True, exist_ok=True)
     body = {"schemaVersion": 2,
+            "config": {"mediaType": "application/vnd.docker.container.image.v1+json",
+                       "digest": blob(store, f"config:{name}:{tag}".encode()), "size": 1},
             "layers": None if layers is None else
             [{"mediaType": f"application/vnd.ollama.image.{k}", "digest": d, "size": 1} for k, d in layers]}
     (mdir / tag).write_text(json.dumps(body))
@@ -158,8 +160,9 @@ class ModelInventoryTest(unittest.TestCase):
         names = [p.name for p in stored]
         self.assertEqual(len(names), len(set(names)), "an identical blob must be stored once")
         man = json.loads((run / "MANIFEST.json").read_text())
-        self.assertEqual(len(man["dedup"]), 1)
-        self.assertTrue((run / man["dedup"][0]["same_as"]).exists())
+        self.assertEqual(len(man["dedup"]), 2, "model + config blob are both identical across stores")
+        for d in man["dedup"]:
+            self.assertTrue((run / d["same_as"]).exists())
         check = subprocess.run(["shasum", "-a", "256", "-c", "SHA256SUMS"], cwd=run, capture_output=True, text=True)
         self.assertEqual(check.returncode, 0, check.stdout)
 
@@ -180,6 +183,19 @@ class ModelInventoryTest(unittest.TestCase):
         self.assertEqual(r.returncode, 2)
         self.assertIn("Nothing was written", r.stderr)
         self.assertEqual(list(dest.iterdir()), [])
+
+    def test_archive_includes_config_blob(self):
+        _, out = self.scan()
+        items = json.loads(out.read_text())["items"]
+        tuned = next(i for i in items if i["name"] == "tuned:latest")
+        cfg = json.loads(Path(tuned["paths"][0]).read_text())["config"]["digest"].replace(":", "-")
+        self.assertTrue(any(p.endswith(cfg) for p in tuned["paths"]), "config blob missing from item")
+        dest = Path(self.tmp.name) / "arch5"
+        dest.mkdir()
+        r = self.run_cli("archive", "--dest", str(dest), "--from-json", str(out),
+                         "--item", tuned["id"], "--allow-same-disk")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertTrue(list(next(dest.iterdir()).rglob(cfg)), "config blob not archived — restore would fail")
 
     def test_archive_catches_corrupt_blob(self):
         _, out = self.scan()

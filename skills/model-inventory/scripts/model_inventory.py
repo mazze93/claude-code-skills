@@ -234,11 +234,14 @@ def scan_ollama(stores: list[Path], check_registry: bool, items: list[Item]) -> 
             referenced |= digests | ({cfg} if cfg else set())
             for d in digests:
                 digest_owners.setdefault(d, set()).add(str(store))
-            size = sum(allocated(blob_path(store, d)) for d in digests)
+            # The config blob is part of the model: without it Ollama can't load a
+            # restored copy. It's tiny, which is why it's easy to forget.
+            owned = digests | ({cfg} if cfg else set())
+            size = sum(allocated(blob_path(store, d)) for d in owned)
             kinds = [l.get("mediaType", "").rsplit(".", 1)[-1] for l in layers]
             ev = [f"layers: {summarize_kinds(layers)}",
                   f"manifest written {time.strftime('%Y-%m-%d', time.localtime(mf.stat().st_mtime))}"]
-            paths = [str(mf)] + [str(blob_path(store, d)) for d in digests]
+            paths = [str(mf)] + [str(blob_path(store, d)) for d in sorted(owned)]
             if not layers:
                 verdict = "cloud-stub"
                 ev.append("no local layers — runs remotely, nothing to lose or reclaim")
