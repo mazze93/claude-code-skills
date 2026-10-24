@@ -36,7 +36,8 @@ WEIGHT_SUFFIXES = {".gguf", ".safetensors", ".bin", ".pt", ".pth", ".mlx", ".npz
 # and these trees are large and never hold user training output.
 SWEEP_SKIP = {"node_modules", ".git", "Library", ".Trash", ".npm", ".cargo",
               ".rustup", "site-packages", ".venv", "venv", "blobs", "hub"}
-MIN_WEIGHT_BYTES = 50 * 1024 * 1024  # smaller .bin/.pt files are rarely weights
+MIN_WEIGHT_BYTES = 50 * 1024 * 1024  # floor for ambiguous suffixes (.bin/.pt/... are often not weights)
+AMBIGUOUS_SUFFIXES = {".bin", ".pt", ".pth", ".npz", ".onnx", ".mlx"}  # .gguf/.safetensors: 1 MiB floor
 
 VERDICT_ORDER = ["keep-archive-first", "unknown-archive-first", "orphan",
                  "re-downloadable", "cloud-stub"]
@@ -109,8 +110,9 @@ def ollama_stores(extra: list[Path]) -> tuple[list[Path], list[Path]]:
             if key in seen:
                 continue
             seen.add(key)
-            if (c / "manifests").is_dir() or (c / "blobs").is_dir():
-                next(os.scandir(c / "manifests"), None)
+            probe = [d for d in ("manifests", "manifests-v2", "blobs") if (c / d).is_dir()]
+            if probe:
+                next(os.scandir(c / probe[0]), None)  # raises PermissionError if unreadable
                 out.append(c)
         except PermissionError:
             blocked.append(c)
@@ -181,14 +183,37 @@ def file_digest(p: Path) -> str:
     return "sha256:" + h.hexdigest()
 
 
-def scan_ollama(stores: list[Path], check_registry: bool, items: list[Item]) -> dict[str, set[str]]:
-    loaded = ollama_running()
+def manifest_deps(store: Path, m: dict, _depth: int = 0) -> set[str]:
+    """Every blob digest a manifest needs to load: layers, config, and — for a
+    manifest list — the list's variant manifests and *their* layers and configs.
+    Archiving less than this produces a copy that verifies but can't be restored."""
+    deps: set[str] = set()
+    cfg = (m.get("config") or {}).get("digest")
+    if cfg:
+        deps.add(cfg)
+    for l in m.get("layers") or []:
+        deps.add(l["digest"])
+        if l.get("mediaType", "").endswith("manifest.list.v2+json") and _depth < 4:
+            lst = read_json(blob_path(store, l["digest"])) or {}
+            for v in lst.get("manifests") or []:
+                deps.add(v["digest"])
+                deps |= manifest_deps(store, read_json(blob_path(store, v["digest"])) or {}, _depth + 1)
+    if m.get("mediaType", "").endswith("manifest.list.v2+json") and _depth < 4:
+        for v in m.get("manifests") or []:  # the manifest itself is a list (manifests-v2 targets)
+            deps.add(v["digest"])
+            deps |= manifest_deps(store, read_json(blob_path(store, v["digest"])) or {}, _depth + 1)
+    return deps
+
+
+def scan_ollama(stores: list[Path], check_registry: bool, items: list[Item],
+                offline: bool = False) -> dict[str, set[str]]:
+    loaded = set() if offline else ollama_running()
     digest_owners: dict[str, set[str]] = {}
     for store in stores:
         mroot = store / "manifests"
         referenced: set[str] = set()
         try:
-            manifests = [p for p in mroot.rglob("*") if p.is_file()]
+            manifests = [p for p in mroot.rglob("*") if p.is_file()] if mroot.is_dir() else []
         except PermissionError:
             items.append(Item(f"ollama:{store}", "ollama-store", str(store), "(unreadable)",
                               0, "unknown-archive-first",
@@ -211,11 +236,7 @@ def scan_ollama(stores: list[Path], check_registry: bool, items: list[Item]) -> 
                 lst = read_json(blob_path(store, l["digest"])) or {}
                 for v in lst.get("manifests") or []:
                     variant_of[v["digest"]] = parent
-                    vm = read_json(blob_path(store, v["digest"])) or {}
-                    referenced |= {x["digest"] for x in vm.get("layers") or []}
-                    if (vm.get("config") or {}).get("digest"):
-                        referenced.add(vm["config"]["digest"])
-                    referenced.add(v["digest"])
+            referenced |= manifest_deps(store, m)
         for mf in manifests:
             rel = mf.relative_to(mroot).parts  # host / namespace... / model / tag
             if len(rel) < 3:
@@ -236,7 +257,7 @@ def scan_ollama(stores: list[Path], check_registry: bool, items: list[Item]) -> 
                 digest_owners.setdefault(d, set()).add(str(store))
             # The config blob is part of the model: without it Ollama can't load a
             # restored copy. It's tiny, which is why it's easy to forget.
-            owned = digests | ({cfg} if cfg else set())
+            owned = manifest_deps(store, m)
             size = sum(allocated(blob_path(store, d)) for d in owned)
             kinds = [l.get("mediaType", "").rsplit(".", 1)[-1] for l in layers]
             ev = [f"layers: {summarize_kinds(layers)}",
@@ -286,12 +307,22 @@ def scan_ollama(stores: list[Path], check_registry: bool, items: list[Item]) -> 
                 if len(parts) < 3:
                     continue
                 name = "/".join(parts[1:-1]).removeprefix("library/") + ":" + parts[-1]
+                tgt = read_json(e) or {}
+                deps = manifest_deps(store, tgt)
+                try:
+                    own = Path(os.path.realpath(e))
+                    if own.name.startswith("sha256-"):
+                        deps.add(own.name.replace("-", ":", 1))
+                except OSError:
+                    pass
+                referenced |= deps  # installed: none of these may be reported orphan
                 if name not in v1_names:
-                    items.append(Item(f"ollama-v2:{e}", "ollama-model", str(store), name, 0,
+                    items.append(Item(f"ollama-v2:{e}", "ollama-model", str(store), name,
+                                      sum(allocated(blob_path(store, d)) for d in deps),
                                       "unknown-archive-first",
-                                      ["listed only in manifests-v2 (newer Ollama index); this "
-                                       "scanner doesn't size v2-only entries — check `ollama list`"],
-                                      [str(e)]))
+                                      ["listed only in manifests-v2 (newer Ollama index) — no "
+                                       "registry check is made for v2-only entries; ask"],
+                                      [str(e)] + [str(blob_path(store, d)) for d in sorted(deps)]))
         parents = {i.name: i.verdict for i in items if i.store == str(store)}
         for i in items:
             if i.store == str(store) and i.verdict.startswith("@variant:"):
@@ -372,11 +403,16 @@ def scan_lmstudio(items: list[Item]) -> None:
             continue
         for pub in root.iterdir():
             for model in (pub.iterdir() if pub.is_dir() else []):
+                marks = {q.name for q in model.rglob("*") if q.name in TRAINING_MARKERS}
+                if marks:
+                    verdict, ev = "keep-archive-first", [
+                        f"training files in an LM Studio model dir: {', '.join(sorted(marks))}"]
+                else:
+                    verdict, ev = "unknown-archive-first", [
+                        "in LM Studio's models dir; it keeps no download record, so a catalog "
+                        "download and a locally imported model look the same — ask"]
                 items.append(Item(f"lmstudio:{model}", "lmstudio-model", str(root),
-                                  f"{pub.name}/{model.name}", tree_bytes(model),
-                                  "re-downloadable",
-                                  ["LM Studio download; re-download from its catalog "
-                                   "(unless you placed a local file here yourself)"],
+                                  f"{pub.name}/{model.name}", tree_bytes(model), verdict, ev,
                                   [str(model)]))
 
 
@@ -441,8 +477,11 @@ def scan_training(roots: list[Path], managed: list[Path], items: list[Item],
                 if fp.suffix.lower() not in WEIGHT_SUFFIXES:
                     continue
                 size = allocated(fp)
-                if size < MIN_WEIGHT_BYTES or f.startswith("ggml-vocab-"):
+                if f.startswith("ggml-vocab-"):
                     continue  # tokenizer/vocab fixtures shipped with llama.cpp, not weights
+                floor = MIN_WEIGHT_BYTES if fp.suffix.lower() in AMBIGUOUS_SUFFIXES else 1 << 20
+                if size < floor:
+                    continue
                 items.append(Item(f"file:{fp}", "loose-weights", str(fp.parent), fp.name, size,
                                   "unknown-archive-first",
                                   ["weights file outside any managed store — origin unknown; "
@@ -492,7 +531,7 @@ def cmd_scan(a: argparse.Namespace) -> int:
         items.append(Item(f"ollama:{b}", "ollama-store", str(b), "(unreadable store)", 0,
                           "unknown-archive-first",
                           ["exists but is not readable as this user — rerun with sudo to inventory it"]))
-    owners = scan_ollama(stores, a.check_registry, items)
+    owners = scan_ollama(stores, a.check_registry and not a.offline, items, offline=a.offline)
     scan_hf(items)
     scan_lmstudio(items)
     blob_dirs = [str((s / "blobs").resolve()) for s in stores if (s / "blobs").is_dir()]
@@ -501,6 +540,14 @@ def cmd_scan(a: argparse.Namespace) -> int:
     managed = stores + hf_hub_dirs() + [HOME / ".lmstudio" / "models"]
     scan_training(roots, managed, items, blob_dirs, links)
     for i in items:
+        if i.kind == "ollama-orphans":
+            # An "orphan" blob something links to is in use — never call it removable.
+            linked = [l for p in i.paths for l in links.get(str(Path(p).resolve()), [])]
+            if linked:
+                i.verdict = "unknown-archive-first"
+                i.evidence.append(f"{len(linked)} symlink(s) still point at these blobs, e.g. "
+                                  f"{linked[0]} — in use despite no manifest; not removable")
+            continue
         if i.kind != "ollama-model":
             continue
         overlap: dict[str, int] = {}
@@ -609,16 +656,37 @@ def cmd_archive(a: argparse.Namespace) -> int:
             print(f"× {it['name']}: destination is on the same disk as the source — "
                   "archiving there frees nothing. Choose another volume.", file=sys.stderr)
             return 2
+        gone = [str(x) for x in src_paths if not x.exists()]
+        if gone:
+            print(f"× {it['name']}: {len(gone)} source path(s) vanished since the scan, e.g. {gone[0]} "
+                  "— an archive without them can't be restored. Rescan and retry. "
+                  f"Partial run left at {run} (not valid).", file=sys.stderr)
+            return 1
         for src in src_paths:
-            if not src.exists():
-                print(f"! missing, skipped: {src}", file=sys.stderr)
-                continue
             # Preserve the absolute layout under the run dir so a restore is a plain copy back.
             target = run / str(src).lstrip("/")
             target.parent.mkdir(parents=True, exist_ok=True)
             if src.is_dir():
                 shutil.copytree(src, target, symlinks=True, dirs_exist_ok=True, copy_function=copy_data)
-                files = [p for p in target.rglob("*") if p.is_file() and not p.is_symlink()]
+                # Relative links that stay inside the copied tree (HF snapshots → ../../blobs)
+                # keep working. Anything else would still point at the originals: replace it
+                # with a verified copy of what it points to.
+                for ln in [q for q in target.rglob("*") if q.is_symlink()]:
+                    inside = os.path.realpath(ln)
+                    if inside.startswith(str(target.resolve()) + os.sep) and os.path.exists(inside):
+                        continue
+                    orig_link = src / ln.relative_to(target)
+                    real = Path(os.path.realpath(orig_link))
+                    if not real.is_file():
+                        print(f"× {it['name']}: link {orig_link} points at {real}, which isn't a "
+                              "file that can be archived", file=sys.stderr)
+                        return 1
+                    ln.unlink()
+                    copy_data(real, ln)
+                    ev_note = f"{ln.relative_to(run)} was a link to {real}; stored as a copy"
+                    dedup.append({"path": str(ln.relative_to(run)), "materialized_from": str(real)})
+                    print(f"  ! {ev_note}")
+                files = [q for q in target.rglob("*") if q.is_file() and not q.is_symlink()]
             elif src.name.startswith("sha256-") and src.name in stored_blobs:
                 # Same content-addressed blob already stored in this run (another
                 # store holds an identical copy). Record where it lives instead.
@@ -631,6 +699,7 @@ def cmd_archive(a: argparse.Namespace) -> int:
                     stored_blobs[src.name] = str(target.relative_to(run))
             for f in files:
                 orig = src / f.relative_to(target) if src.is_dir() else src
+                orig = Path(os.path.realpath(orig))  # materialized links hash against their target
                 got, want = sha256(f), sha256(orig)
                 expect = orig.name.removeprefix("sha256-") if orig.name.startswith("sha256-") else want
                 if got != want or got != expect:
@@ -662,6 +731,7 @@ def main() -> int:
     s.add_argument("--store", action="append", help="extra Ollama models dir to inventory (repeatable; no tree globbing)")
     s.add_argument("--refs", action="append", help="project tree to grep for model-name references (repeatable)")
     s.add_argument("--check-registry", action="store_true", help="compare Ollama manifests with the registry (network)")
+    s.add_argument("--offline", action="store_true", help="no network at all: skips the registry and Ollama's /api/ps")
     s.add_argument("--json", help="write the full report here")
     s.set_defaults(fn=cmd_scan)
     r = sub.add_parser("archive", help="copy + SHA-256-verify items to DEST; never deletes")

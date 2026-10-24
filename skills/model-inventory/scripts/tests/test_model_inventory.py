@@ -319,6 +319,135 @@ class ModelInventoryTest(unittest.TestCase):
         self.assertEqual(len(links), 1)
         self.assertTrue(links[0].startswith("1 symlink(s)"), links[0])
 
+    # ---- regressions from Greptile review of PR #13 -------------------------------
+
+    def _family_with_variant(self, store):
+        """parent 'fam:latest' whose manifest list names a variant manifest blob."""
+        vlayer = blob(store, b"variant weights")
+        vcfg = blob(store, b"variant config")
+        variant = json.dumps({"schemaVersion": 2,
+                              "config": {"mediaType": "x", "digest": vcfg, "size": 1},
+                              "layers": [{"mediaType": "application/vnd.ollama.image.model",
+                                          "digest": vlayer, "size": 1}]}).encode()
+        vdigest = blob(store, variant)
+        lst = blob(store, json.dumps({"mediaType": "application/vnd.ollama.manifest.list.v2+json",
+                                      "manifests": [{"digest": vdigest}]}).encode())
+        mdir = store / "manifests" / "registry.ollama.ai" / "library" / "fam"
+        mdir.mkdir(parents=True, exist_ok=True)
+        (mdir / "latest").write_text(json.dumps({"layers": [
+            {"mediaType": "application/vnd.ollama.image.model", "digest": blob(store, b"fam w"), "size": 1},
+            {"mediaType": "application/vnd.ollama.manifest.list.v2+json", "digest": lst, "size": 1}]}))
+        return vlayer, vcfg, vdigest, lst
+
+    def test_archive_includes_nested_variant_dependencies(self):
+        vlayer, vcfg, vdigest, lst = self._family_with_variant(self.store)
+        _, out = self.scan()
+        fam = next(i for i in json.loads(out.read_text())["items"] if i["name"] == "fam:latest")
+        dest = Path(self.tmp.name) / "a-nested"
+        dest.mkdir()
+        r = self.run_cli("archive", "--dest", str(dest), "--from-json", str(out), "--item", fam["id"],
+                         "--allow-same-disk")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        run = next(dest.iterdir())
+        for d in (vlayer, vcfg, vdigest, lst):
+            self.assertTrue(list(run.rglob(d.replace(":", "-"))), f"missing nested dependency {d}")
+
+    def test_archive_fails_when_a_source_vanished(self):
+        _, out = self.scan()
+        tuned = next(i for i in json.loads(out.read_text())["items"] if i["name"] == "tuned:latest")
+        adapter = next(Path(p) for p in tuned["paths"] if "/blobs/" in p
+                       and Path(p).read_bytes() == b"lora")
+        adapter.unlink()
+        dest = Path(self.tmp.name) / "a-gone"
+        dest.mkdir()
+        r = self.run_cli("archive", "--dest", str(dest), "--from-json", str(out), "--item", tuned["id"],
+                         "--allow-same-disk")
+        self.assertEqual(r.returncode, 1)
+        self.assertIn("vanished", r.stderr)
+        self.assertNotIn("copied and verified", r.stdout)
+
+    def test_archive_materializes_links_that_leave_the_tree(self):
+        weights = Path(self.tmp.name) / "elsewhere.safetensors"
+        weights.write_bytes(os.urandom(4096))
+        (self.home / "work" / "run1" / "model.safetensors").symlink_to(weights)  # absolute link
+        _, out = self.scan()
+        run1 = next(i for i in json.loads(out.read_text())["items"] if i["name"] == "run1")
+        dest = Path(self.tmp.name) / "a-link"
+        dest.mkdir()
+        r = self.run_cli("archive", "--dest", str(dest), "--from-json", str(out), "--item", run1["id"],
+                         "--allow-same-disk")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        archived = next(next(dest.iterdir()).rglob("model.safetensors"))
+        self.assertFalse(archived.is_symlink(), "archive must not depend on the original disk")
+        data = weights.read_bytes()
+        weights.unlink()
+        self.assertEqual(archived.read_bytes(), data)
+
+    def test_v2_only_model_blobs_are_not_orphans(self):
+        w = blob(self.store, b"v2 only weights")
+        cfg = blob(self.store, b"v2 only config")
+        m = json.dumps({"config": {"digest": cfg}, "layers": [
+            {"mediaType": "application/vnd.ollama.image.model", "digest": w, "size": 1}]}).encode()
+        md = blob(self.store, m)
+        v2 = self.store / "manifests-v2" / "ollama.com" / "library" / "solo"
+        v2.mkdir(parents=True)
+        (v2 / "latest").symlink_to(self.store / "blobs" / md.replace(":", "-"))
+        items, _ = self.scan()
+        self.assertIn("solo:latest", items)
+        orphan_paths = " ".join(p for i in items.values() if i["kind"] == "ollama-orphans" for p in i["paths"])
+        for d in (w, cfg, md):
+            self.assertNotIn(d.replace(":", "-"), orphan_paths, f"installed blob {d} reported orphan")
+
+    def test_linked_orphan_is_not_removable(self):
+        o = blob(self.store, b"linked orphan")
+        (self.home / "work" / "uses.gguf").symlink_to(self.store / "blobs" / o.replace(":", "-"))
+        items, _ = self.scan()
+        orph = [i for i in items.values() if i["kind"] == "ollama-orphans"]
+        self.assertTrue(orph)
+        self.assertEqual(orph[0]["verdict"], "unknown-archive-first")
+        self.assertTrue(any("still point" in e for e in orph[0]["evidence"]))
+
+    def test_lmstudio_without_download_proof_is_unknown(self):
+        imported = self.home / ".lmstudio" / "models" / "me" / "tuned"
+        imported.mkdir(parents=True)
+        (imported / "w.gguf").write_bytes(os.urandom(2048))
+        trained = self.home / ".lmstudio" / "models" / "me" / "ft"
+        trained.mkdir(parents=True)
+        (trained / "adapter_config.json").write_text("{}")
+        items, _ = self.scan()
+        self.assertEqual(items["me/tuned"]["verdict"], "unknown-archive-first")
+        self.assertEqual(items["me/ft"]["verdict"], "keep-archive-first")
+
+    def test_blobs_only_store_is_kept_and_small_gguf_found(self):
+        lone = Path(self.tmp.name) / "lone" / "models"
+        blob(lone, b"lonely")
+        (self.home / "work" / "small.gguf").write_bytes(os.urandom(2 * 1024 * 1024))
+        out = Path(self.tmp.name) / "s.json"
+        r = self.run_cli("scan", "--store", str(lone), "--json", str(out))
+        self.assertEqual(r.returncode, 0, r.stderr)
+        rep = json.loads(out.read_text())
+        self.assertIn(str(lone), rep["stores"]["ollama"])
+        self.assertIn("small.gguf", {i["name"] for i in rep["items"]})
+
+    def test_offline_makes_no_requests(self):
+        hits = []
+
+        class Rec(BaseHTTPRequestHandler):
+            def do_GET(self):
+                hits.append(self.path); self.send_response(404); self.end_headers()
+
+            def log_message(self, *a):
+                pass
+        srv = HTTPServer(("127.0.0.1", 0), Rec)
+        threading.Thread(target=srv.serve_forever, daemon=True).start()
+        self.addCleanup(srv.server_close)
+        self.addCleanup(srv.shutdown)
+        self.env["OLLAMA_HOST"] = f"127.0.0.1:{srv.server_port}"
+        self.env["MODEL_INVENTORY_REGISTRY_URL"] = f"http://127.0.0.1:{srv.server_port}"
+        r = self.run_cli("scan", "--offline", "--check-registry")
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(hits, [], "offline scan contacted the network")
+
     def test_scan_never_modifies_store(self):
         before = sorted((p, p.stat().st_mtime_ns) for p in self.store.rglob("*") if not p.is_symlink())
         self.scan()

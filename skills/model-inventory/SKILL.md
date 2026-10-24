@@ -40,7 +40,8 @@ python3 -I <skill>/scripts/model_inventory.py scan --check-registry \
 
 - `--check-registry` makes one read-only GET per Ollama model to its registry
   and compares layer digests. Without it every Ollama model stays
-  `unknown-archive-first`. Skip it only if the user wants zero network.
+  `unknown-archive-first`. For zero network use `--offline`, which also skips
+  the `/api/ps` "loaded now" probe to `$OLLAMA_HOST` (possibly remote).
 - `--refs` greps the user's project trees for each model's name — a cheap
   "is anything wired to this" signal. Ask which roots matter; don't guess.
 - `--root` (default `$HOME`) is where it sweeps for training runs and loose
@@ -60,7 +61,7 @@ What it finds:
 |---|---|
 | Ollama | `$OLLAMA_MODELS`, `~/.ollama/models`, every `/Users/*/.ollama/models` (incl. `/Users/Shared`), `--store` — manifests parsed, blobs sized, unreferenced blobs flagged, manifest-list runner variants tied to their parent, `manifests-v2`-only entries surfaced |
 | Hugging Face (incl. MLX, Unsloth bases) | `$HF_HUB_CACHE`, `$HF_HOME/hub`, `~/.cache/huggingface/hub` |
-| LM Studio | `~/.lmstudio/models`, `~/.cache/lm-studio/models` |
+| LM Studio | `~/.lmstudio/models`, `~/.cache/lm-studio/models` — `unknown-archive-first` (LM Studio keeps no download record), `keep-archive-first` if training files are inside |
 | Training runs | any dir with `adapter_config.json`, `adapter_model.*`, `trainer_state.json`, `training_args.bin`, or `checkpoint-*` |
 | Loose weights | `.gguf` / `.safetensors` / large `.bin`/`.pt` outside the managed stores |
 | Links | symlinks into a store's blobs (e.g. Unsloth Studio's `.studio_links`) — deleting the model breaks them |
@@ -100,14 +101,18 @@ in-use signal. Lead with what can't be got back.
 1. **Ask for the drive.** List what's mounted, then ask with AskUserQuestion
    (one option per volume, plus "Other"):
    ```sh
-   df -h | awk 'NR==1 || ($NF ~ /^\/Volumes\// && $NF != "/Volumes/Recovery")'
-   diskutil list external physical
+   for v in /Volumes/*/; do
+     v=${v%/}; [ -L "$v" ] || [ "$v" = /Volumes/Recovery ] && continue
+     diskutil info "$v" | grep -qE 'Device Location: +External|Removable Media: +Removable' || continue
+     printf '%s\t%s free\t%s\n' "$v" "$(df -h "$v" | awk 'NR==2{print $4}')" \
+       "$(diskutil info "$v" | awk -F': +' '/File System Personality/{print $2}')"
+   done
    ```
-   Match the mount point column (`$NF`) anchored at `^/Volumes/`: a bare
-   `/Volumes/` pattern also matches `/System/Volumes/*` (VM, Preboot, Data)
-   and the Recovery volume, none of which are archive targets. If nothing
-   external is mounted, say so and stop — don't fall back to an internal
-   path. Check free space covers the selection.
+   Iterate the mount points themselves — parsing `df` columns breaks on
+   names with spaces (`/Volumes/My Passport`), and a bare `/Volumes/` match
+   also hits `/System/Volumes/*` and Recovery. `/Volumes/Macintosh HD` is a
+   symlink to `/` and is skipped. If nothing external is mounted, say so and
+   stop — don't fall back to an internal path.
 2. **Ask for the folder** on that volume (offer a sensible default such as
    `<volume>/model-archive`, but let them change it).
 3. Copy and verify:
@@ -116,7 +121,11 @@ in-use signal. Lead with what can't be got back.
      --from-json <records-dir>/model-scan.json --item '<id>' [--item '<id>' …]
    ```
    It checks free space first and refuses (writing nothing) if the
-   selection won't fit; Ollama blobs identical across stores are stored once
+   selection won't fit; it fails (exit 1) if any scanned source has vanished
+   since the scan, rather than writing a partial archive that verifies; it
+   archives each Ollama model's full dependency closure (layers, config,
+   manifest-list variants and their layers); links that point outside a
+   copied tree are replaced by verified copies of their targets; Ollama blobs identical across stores are stored once
    per run and listed under `dedup` in `MANIFEST.json` for restore. It
    copies bytes + mtime only, so exFAT/FAT drives work. It refuses a
    destination on the same disk as the source (that frees nothing), copies each item under `model-archive-<timestamp>/` keeping its
