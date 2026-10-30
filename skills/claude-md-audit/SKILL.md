@@ -23,6 +23,13 @@ python3 ~/Projects/skills/claude-code-skills/skills/claude-md-audit/scan.py ~/Pr
 Pass a single project directory instead to scan just that project. The
 `claude-md-drift-on-start.sh` SessionStart hook does this automatically for
 the project each new session opens in, so most drift arrives already flagged.
+The hook uses `--json` (structured findings) and never parses the text form.
+
+The scanned repository is treated as untrusted. Only regular, non-symlinked
+files that stay inside the root are read, capped at 1 MiB, with bad encoding
+replaced rather than fatal. Anything else is reported as `skipped`. Paths are
+escaped, so a file or directory name can't forge a finding line. Regression
+tests: `python3 -m unittest discover -s tests -v` from this directory.
 
 Dead-path hits leave out tokens that can't be claims about the repo's
 filesystem: those with no file extension, no trailing slash, and a first
