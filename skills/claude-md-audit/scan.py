@@ -14,6 +14,26 @@ CHECKS = [
     (r"claude-3|claude 3|sonnet[- ]3|opus[- ]3|haiku[- ]3", "old Claude model gen"),
 ]
 
+EXT = re.compile(r"\.[A-Za-z][A-Za-z0-9]{0,5}$")      # a file extension, not ".3" or "..."
+DOMAIN = re.compile(r"^[\w-]+\.[a-z]{2,}$")             # github.com, ghcr.io, gcr.io
+
+
+def not_a_path_claim(tok, repo_dir):
+    """True for backticked tokens that can't be a claim about this repo's
+    filesystem: owner/repo slugs, branch names, platforms, prose (try/catch),
+    registry or domain refs, slash-separated enums. Structure-based: a token
+    is dropped only if it has no file extension AND its first segment is not
+    an existing directory here. Anything that could be a real path is kept."""
+    if tok.endswith("/"):
+        return False                                    # an explicit directory claim
+    segs = tok.split("/")
+    if DOMAIN.match(segs[0]):
+        return True
+    if os.path.isdir(os.path.join(repo_dir, segs[0])) or EXT.search(segs[-1]):
+        return False
+    return len(segs) == 2 or len(segs) >= 4
+
+
 for f in files:
     txt = open(f).read()
     repo_dir = os.path.dirname(f) or "."
@@ -26,6 +46,7 @@ for f in files:
         m for m in set(re.findall(r"`([\w./-]+/[\w./-]+)`", txt))
         if not m.startswith(("http", "~", "/"))
         and not os.path.exists(os.path.join(repo_dir, m)) and not os.path.exists(m)
+        and not not_a_path_claim(m, repo_dir)
     )
     if dead:
         issues.append("dead path refs (verify each): " + ", ".join(dead[:8]))

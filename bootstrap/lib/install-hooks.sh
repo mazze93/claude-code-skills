@@ -21,7 +21,7 @@ echo "── Install hooks ─────────────────�
 mkdir -p "$HOOKS_DST"
 
 # Symlink each hook from the repo into ~/.claude/scripts/
-for hook in on-prompt.sh on-session-end.sh post-tool-use.sh credential-guard.sh; do
+for hook in on-prompt.sh on-session-end.sh post-tool-use.sh credential-guard.sh claude-md-drift-on-start.sh; do
   src="$HOOKS_SRC/$hook"
   dst="$HOOKS_DST/$hook"
 
