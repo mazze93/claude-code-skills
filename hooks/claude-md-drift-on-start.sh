@@ -46,7 +46,7 @@ out=$(cd /tmp && python3 -I "$scan" "$top" 2>&1) || warn "scan.py failed: $(prin
 
 # Findings are "   - " lines; a missing global CLAUDE.md is critical.
 findings=$(printf '%s\n' "$out" | grep -E '^   - ' || true)
-missing_global=$(printf '%s\n' "$out" | grep -F 'MISSING' || true)
+missing_global=$(printf '%s\n' "$out" | grep -F '~/.claude/CLAUDE.md: MISSING' || true)
 [ -z "$findings" ] && [ -z "$missing_global" ] && exit 0
 
 n=$(printf '%s\n' "$findings" | grep -c . || true)
