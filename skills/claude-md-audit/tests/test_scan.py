@@ -4,8 +4,10 @@ Each security case was demonstrated against the pre-fix code (Strix review of
 PR #15, re-probed 2026-10-30): newline-forged findings, a CLAUDE.md symlinked
 to an unbounded device, one bad UTF-8 byte aborting the scan. Also covered: a
 control byte in a scanner error made warn() emit invalid JSON (a robustness
-bug, not an injection). Mutation-checked: run against the 729cd9b versions,
-every safety test fails. Run from skills/claude-md-audit:
+bug, not an injection). Mutation-checked 2026-10-30: disabling each of the
+eight guards on its own (containment/symlink guard, size cap, path escaping,
+replace-decoding, hook @json quoting, hook's own global check, jq-built warn,
+JSON validation) turns that guard's test red. Run from skills/claude-md-audit:
     python3 -m unittest discover -s tests -v
 """
 import importlib.util
