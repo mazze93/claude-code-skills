@@ -58,7 +58,8 @@
         "corroborate",
         "touchstone",
         "decision-telemetry",
-        "core-sample"
+        "core-sample",
+        "muster-triage"
       ],
       "tier": "pro",
       "checkout": null
