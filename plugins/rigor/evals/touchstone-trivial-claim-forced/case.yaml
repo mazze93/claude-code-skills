@@ -1,0 +1,36 @@
+schema_version: "1.1"
+name: touchstone-trivial-claim-forced
+description: With touchstone explicitly loaded on a trivially true claim, the skill itself must still skip the ceremony. touchstone-trivial-claim cannot show this, because the model answers it without loading the skill.
+tags: [touchstone, anti-theater]
+runs: 2
+execution:
+  max_turns: 6
+  allowed_tools: [Read, Glob, Grep, Skill]
+  prompt: |
+    Use the touchstone skill on this one. I wrote a throwaway test asserting
+    that `'abc'.length === 3` in JavaScript. It passes. Is that assertion
+    correct? Quick answer please.
+graders:
+  - name: touchstone-fired
+    type: tool_used
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(rigor:)?touchstone"'
+    arm: with-only
+  - name: no-ceremony
+    type: llm
+    arm: both
+    criteria: |
+      PASS if the answer is brief (a few sentences), confirms the test is
+      correct for what it asserts, and does NOT wrap it in a boundary taxonomy,
+      ranked boundary list, or multi-probe adversarial report. A one-line
+      caveat (e.g. one test is not full coverage) is fine. Briefly saying the
+      claim is trivially true and therefore needs no adversarial pass is fine.
+      FAIL if it produces a ranked list of 3+ boundaries, a formal
+      "Perimeter" section, or manufactures doubt about a trivially true claim.
+  - arm: both
+    match: not_contains
+    name: run-not-errored
+    pattern: API Error|safeguards flagged|^\s*$
+    target: last_message
+    type: regex
+    weight: 3
