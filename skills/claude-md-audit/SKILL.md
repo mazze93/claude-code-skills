@@ -13,11 +13,29 @@ instructions are worse than none — agents obey them confidently.
 
 **Lane 1 — deterministic (cloud Claude or plain script; this is the verdict lane):**
 
-Run `scan.py` from this skill's directory against the workspace root:
+Run `scan.py` from this skill's directory against the workspace root (it ships
+in the `workspace` plugin, so it is not under `~/.claude/skills/`):
 
 ```sh
-python3 ~/.claude/skills/claude-md-audit/scan.py ~/Projects
+python3 ~/Projects/skills/claude-code-skills/skills/claude-md-audit/scan.py ~/Projects
 ```
+
+Pass a single project directory instead to scan just that project. The
+`claude-md-drift-on-start.sh` SessionStart hook does this automatically for
+the project each new session opens in, so most drift arrives already flagged.
+The hook uses `--json` (structured findings) and never parses the text form.
+
+The scanned repository is treated as untrusted. Only regular, non-symlinked
+files that stay inside the root are read, capped at 1 MiB, with bad encoding
+replaced rather than fatal. Anything else is reported as `skipped`. Paths are
+escaped, so a file or directory name can't forge a finding line. Regression
+tests: `python3 -m unittest discover -s tests -v` from this directory.
+
+Dead-path hits leave out tokens that can't be claims about the repo's
+filesystem: those with no file extension, no trailing slash, and a first
+segment that isn't an existing directory (owner/repo slugs, branch names,
+`linux/amd64`, `try/catch`), plus domain refs (`ghcr.io/…`) and
+slash-separated enums.
 
 It flags, per CLAUDE.md:
 - backticked path references that don't exist on disk (verify each hit —

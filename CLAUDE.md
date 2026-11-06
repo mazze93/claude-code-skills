@@ -89,7 +89,13 @@ The bootstrap sub-scripts (`bootstrap/lib/`) handle their domains independently;
 
 ### Hooks
 
-Three hooks, each versioned in comments:
+Five hooks, each versioned in comments. Two aren't described below:
+`credential-guard.sh` (PreToolUse on Bash, a fail-closed block on commands
+that print secrets) and `claude-md-drift-on-start.sh`:
+
+**`claude-md-drift-on-start.sh`** (SessionStart, matcher: startup) — runs `skills/claude-md-audit/scan.py` on the project being opened. Silent when clean. On findings, injects them as context plus a one-line `systemMessage`. Flags only, never rewrites. Fails loud: a missing scanner or dependency shows a message instead of skipping silently.
+
+The other three:
 
 **`on-prompt.sh`** (UserPromptSubmit) — two tiers:
 - Tier 1 (always): scoring classifier emits task type + token budget hint (`plan/implement/refactor/debug/review/read/general`)

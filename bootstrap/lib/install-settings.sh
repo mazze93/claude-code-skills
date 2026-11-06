@@ -62,6 +62,40 @@ else
   fi
 fi
 
+# ── SessionStart CLAUDE.md drift hook ─────────────────────────────────────────
+# The guard means a missing script (e.g. the source checkout isn't on main yet)
+# says so in the session instead of failing silently.
+DRIFT_SCRIPT="~/.claude/scripts/claude-md-drift-on-start.sh"
+DRIFT_CMD="f=$DRIFT_SCRIPT; [ -e \"\$f\" ] && bash \"\$f\" || echo '{\"systemMessage\":\"claude-md drift hook not active: $DRIFT_SCRIPT missing. Run bootstrap from a claude-code-skills checkout on main.\"}'"
+
+already=$(jq --arg s "claude-md-drift-on-start.sh" '
+  .hooks.SessionStart // [] |
+  map(select(any(.hooks[]?; .command | contains($s)))) |
+  length
+' "$SETTINGS" 2>/dev/null || echo 0)
+
+if [[ "$already" -gt 0 ]]; then
+  _skip "SessionStart CLAUDE.md drift hook"
+else
+  TMPFILE=$(mktemp)
+  jq --arg cmd "$DRIFT_CMD" '
+    .hooks.SessionStart = (
+      (.hooks.SessionStart // []) +
+      [{"matcher": "startup", "hooks": [{"type": "command", "command": $cmd, "timeout": 15}]}]
+    )
+  ' "$SETTINGS" > "$TMPFILE"
+
+  if [[ "$DRY_RUN" == "--dry-run" ]]; then
+    echo "  [settings] dry: would add SessionStart(startup) drift hook to $SETTINGS"
+    rm -f "$TMPFILE"
+  else
+    cp "$SETTINGS" "${SETTINGS}.bak.$(date +%Y%m%d-%H%M%S)"
+    mv "$TMPFILE" "$SETTINGS"
+    _ok "added SessionStart(startup) CLAUDE.md drift hook"
+    _ok "backup saved: ${SETTINGS}.bak.*"
+  fi
+fi
+
 # ── Verify minimum version ─────────────────────────────────────────────────────
 CURRENT_MIN=$(jq -r '.minimumVersion // empty' "$SETTINGS" 2>/dev/null)
 REQUIRED_MIN="2.1.150"

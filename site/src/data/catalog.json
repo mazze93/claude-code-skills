@@ -179,6 +179,13 @@
           "added": "2026-05-29T16:23:22-04:00"
         },
         {
+          "name": "muster-triage",
+          "plugin": "rigor",
+          "description": "Classify stale or unmerged jj/git bookmarks by content (stable patch-id), not ahead-count or tip-tree diffs, then touchstone the class before any archive or delete. Use when ws muster reports stale unmerged tips, when consolidating branches into main, when a tip looks stranded but might already be on trunk, when retiring bookmarks to archive/* tags, or when the user says triage bookmarks, de-puzzle muster, retire to archives, or ask whether a branch is safe to abandon. Complements corroborate (what is this change) and touchstone (is this class claim true). Never auto-abandon; per-bookmark OK required.",
+          "summary": "Classify stale or unmerged jj/git bookmarks by content (stable patch-id), not ahead-count or tip-tree diffs, then touchstone the class before any archive or delete.",
+          "added": null
+        },
+        {
           "name": "touchstone",
           "plugin": "rigor",
           "description": "Apply an adversarial verification posture to any claim of correctness, completeness, or \"passing\" status \u2014 tests, proofs, invariants, security reviews, audits, or a \"this is resolved\" / \"this is safe\" assertion. touchstone does not accept N/N passing as sufficient; it enumerates the boundaries the existing proof doesn't reach, builds concrete probes against the highest-risk ones, and reports honestly whether they held. Use this skill whenever the user asks to verify, audit, stress-test, adversarially probe, or sanity-check a claim of correctness or completion \u2014 including phrases like \"is this actually done,\" \"does this actually work,\" \"find the hole in this,\" \"before I ship this,\" \"is this really verified,\" or when reviewing test suites, security findings, proofs, invariants, or any status marked \"closed,\" \"verified,\" or \"resolved.\" Also trigger when a claim is stated with unusually high confidence (100%, all tests green, fully verified, no known issues) \u2014 exactly the pattern this skill exists to challenge.",
@@ -279,6 +286,6 @@
   ],
   "totals": {
     "plugins": 6,
-    "skills": 27
+    "skills": 28
   }
 }
