@@ -40,11 +40,19 @@ fi
 # Derive from $CWD, not $HOME.
 MEMORY_DIR="$HOME/.claude/projects/$(printf '%s' "$CWD" | sed 's|[^A-Za-z0-9]|-|g')/memory"
 
+# v7 (2026-11-06): count real tool calls, not string matches. The old
+#     `grep -c '"name":"Edit"'` also matched the tool *definitions* Claude Code
+#     records in api-request-shape / attachment lines, so every session showed
+#     phantom edits/writes that grew each time the tool list was re-recorded
+#     (e.g. an MCP reconnect). Only assistant-message tool_use blocks count now.
 EDITS=0; WRITES=0; TOOL_CALLS=0
 if [[ -f "$TRANSCRIPT" ]]; then
-  EDITS=$(grep -c '"name":"Edit"' "$TRANSCRIPT" 2>/dev/null || true)
-  WRITES=$(grep -c '"name":"Write"' "$TRANSCRIPT" 2>/dev/null || true)
-  TOOL_CALLS=$(grep -c '"type":"tool_use"' "$TRANSCRIPT" 2>/dev/null || true)
+  _TOOLS=$(jq -r 'select(.type=="assistant") | .message.content[]? | select(.type=="tool_use") | .name' "$TRANSCRIPT" 2>/dev/null)
+  if [[ -n "$_TOOLS" ]]; then
+    EDITS=$(print -r -- "$_TOOLS" | grep -cx 'Edit' || true)
+    WRITES=$(print -r -- "$_TOOLS" | grep -cx 'Write' || true)
+    TOOL_CALLS=$(print -r -- "$_TOOLS" | wc -l | tr -d ' ')
+  fi
 fi
 TOTAL_CHANGES=$(( EDITS + WRITES ))
 
