@@ -59,7 +59,8 @@
         "touchstone",
         "decision-telemetry",
         "core-sample",
-        "muster-triage"
+        "muster-triage",
+        "claim-verification-gate"
       ],
       "tier": "pro",
       "checkout": null
