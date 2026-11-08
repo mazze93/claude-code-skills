@@ -46,7 +46,8 @@ idempotent runtime fixes are applied.
 | pinentry kind | Does the missing TTY actually matter here? |
 | `GPG_TTY` | Only load-bearing for terminal pinentry |
 | gpg-agent socket | Is the agent up? (auto-launched — idempotent) |
-| signing key in keyring | Does `user.signingkey` resolve to a real secret key? |
+| signing key in keyring | `gpg.format=openpgp`: does `user.signingkey` resolve to a real secret key? |
+| SSH signing key in agent | `gpg.format=ssh`: is the signing key's fingerprint loaded, and does a test `ssh-keygen -Y sign` succeed? |
 | passphrase cached | Can we sign *right now* without a human? |
 | `~/.ssh` contents | Which keys exist, by fingerprint |
 | key file mode | Is a private key group/world-readable? (ssh hard-refuses these, and the error masquerades as an auth failure) |
@@ -94,3 +95,12 @@ machine rather than recalling it — deprecated advice (`spctl --add`) has burne
 this workspace before.
 
 End with the one-line verdict: ready, or N items needing the human.
+
+## macOS ssh-add
+
+`--apple-use-keychain` exists only in Apple's `/usr/bin/ssh-add`. Homebrew's
+OpenSSH usually shadows it on `PATH` and rejects the flag (`illegal option -- -`),
+so the script always names `/usr/bin/ssh-add` by absolute path. Likewise, the
+`known_hosts` fix only appends GitHub's host key after checking it against
+GitHub's published ED25519 fingerprint — a bare `ssh-keyscan >> known_hosts`
+trusts whatever answers.

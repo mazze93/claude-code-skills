@@ -58,6 +58,19 @@ redact() {
 
 has() { command -v "$1" >/dev/null 2>&1; }
 
+# --apple-use-keychain exists only in Apple's /usr/bin/ssh-add. Homebrew's
+# OpenSSH is usually first on PATH and rejects it ("illegal option -- -"), so
+# name Apple's binary by absolute path whenever we suggest the keychain flag.
+if [ "$(uname -s)" = "Darwin" ] && [ -x /usr/bin/ssh-add ]; then
+  SSH_ADD_KC="/usr/bin/ssh-add --apple-use-keychain"
+else
+  SSH_ADD_KC="ssh-add"
+fi
+
+# GitHub's published ED25519 host key fingerprint:
+# https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/githubs-ssh-key-fingerprints
+GH_ED25519_FPR="SHA256:+DiY3wvvV6TuJJhbpZisF/zLDA0zPMSvHdkr4UvCOqU"
+
 # Run a command with a hard time limit when one is available, so a probe can
 # never hang the session even if a prompt slips past the non-interactive flags.
 cap() {
@@ -88,6 +101,11 @@ else
 fi
 
 # ── 2. GPG ───────────────────────────────────────────────────────────────────
+SIGNKEY="$(git config --get user.signingkey 2>/dev/null)"
+GPGSIGN="$(git config --get commit.gpgsign 2>/dev/null)"
+SIGN_FORMAT="$(git config --get gpg.format 2>/dev/null)"
+SIGN_FORMAT="${SIGN_FORMAT:-openpgp}"
+
 hdr "GPG signing"
 if ! has gpg; then
   action "gpg not installed" "brew install gnupg pinentry-mac"
@@ -152,10 +170,13 @@ else
     info "      in this transcript. GUI pinentry + agent cache is the safe path."
   fi
 
-  # 2e. signing key configured and actually in the keyring.
-  SIGNKEY="$(git config --get user.signingkey 2>/dev/null)"
-  GPGSIGN="$(git config --get commit.gpgsign 2>/dev/null)"
-  if [ -z "$SIGNKEY" ]; then
+  # 2e. signing key configured and actually in the keyring — openpgp only.
+  #     With gpg.format=ssh, user.signingkey is an SSH key (path or key::),
+  #     which can never be in the GPG keyring; it is checked in section 3d.
+  if [ "$SIGN_FORMAT" != "openpgp" ]; then
+    info "gpg.format=$SIGN_FORMAT — GPG keyring check does not apply"
+    [ "$SIGN_FORMAT" = "ssh" ] && info "SSH signing key is checked under 'SSH authentication' below"
+  elif [ -z "$SIGNKEY" ]; then
     if [ "$GPGSIGN" = "true" ]; then
       action "commit.gpgsign=true but user.signingkey is unset" \
         "git config --global user.signingkey <YOUR_KEY_ID>   # gpg --list-secret-keys --keyid-format=long"
@@ -268,12 +289,12 @@ case $? in
     # Loading a key can require a passphrase, which needs a prompt this shell
     # cannot serve. Hand it back rather than attempting it.
     warn "ssh-agent is running but holds no keys"
-    printf '    %srun in your own terminal:%s ssh-add --apple-use-keychain %s/id_ed25519\n' "$B" "$Z" "$SSH_DIR"
+    printf '    %srun in your own terminal:%s %s %s/id_ed25519\n' "$B" "$Z" "$SSH_ADD_KC" "$SSH_DIR"
     info "(ssh-add may prompt for a passphrase — it must be your terminal, not this one)"
     ;;
   *)
     warn "cannot reach an ssh-agent"
-    printf '    %srun in your own terminal:%s eval "$(ssh-agent -s)" && ssh-add --apple-use-keychain %s/id_ed25519\n' "$B" "$Z" "$SSH_DIR"
+    printf '    %srun in your own terminal:%s eval "$(ssh-agent -s)" && %s %s/id_ed25519\n' "$B" "$Z" "$SSH_ADD_KC" "$SSH_DIR"
     ;;
 esac
 
@@ -284,8 +305,10 @@ if has ssh; then
     ok "github.com accepts this SSH identity"
     SSH_OK=1
   elif printf '%s' "$GH_SSH_OUT" | grep -qi 'host key verification failed'; then
+    # Plain 'ssh-keyscan >> known_hosts' trusts whatever answers; only append
+    # the key if it matches GitHub's published fingerprint.
     action "github.com host key not trusted yet" \
-      "ssh-keyscan github.com >> ~/.ssh/known_hosts"
+      "k=\$(ssh-keyscan -t ed25519 github.com 2>/dev/null); echo \"\$k\" | ssh-keygen -lf - | grep -qF '$GH_ED25519_FPR' && echo \"\$k\" >> ~/.ssh/known_hosts && echo 'github.com trusted'"
   elif printf '%s' "$GH_SSH_OUT" | grep -qi 'UNPROTECTED PRIVATE KEY'; then
     # Already reported with the exact chmod in the permissions check above;
     # say why the connection failed rather than repeating the fix, and do not
@@ -296,6 +319,60 @@ if has ssh; then
     warn "github.com did not accept an SSH identity"
     # Collapse to one clean line: strip the '@@@@' banner rows and blank lines.
     info "$(printf '%s' "$GH_SSH_OUT" | grep -vE '^[@[:space:]]*$|^@+$' | tr -s ' ' | head -2 | tr '\n' ' ')"
+  fi
+fi
+
+# 3d. SSH commit signing (gpg.format=ssh). With a public-key signingkey,
+#     ssh-keygen -Y sign asks the agent to sign, so the key must be loaded.
+#     The private key file is never read: we fingerprint the .pub only.
+if [ "$SIGN_FORMAT" = "ssh" ]; then
+  SIGN_PUB=""; SIGN_PRIV=""; SIGN_TMP=""
+  case "$SIGNKEY" in
+    "")
+      if [ -n "$(git config --get gpg.ssh.defaultKeyCommand 2>/dev/null)" ]; then
+        info "SSH signing key comes from gpg.ssh.defaultKeyCommand — not probed"
+      elif [ "$GPGSIGN" = "true" ]; then
+        action "gpg.format=ssh and commit.gpgsign=true but user.signingkey is unset" \
+          "git config --global user.signingkey ~/.ssh/<KEY>.pub"
+      fi
+      ;;
+    key::*|ssh-*)
+      SIGN_TMP="$(mktemp)"; printf '%s\n' "${SIGNKEY#key::}" > "$SIGN_TMP"; SIGN_PUB="$SIGN_TMP"
+      ;;
+    *)
+      KP="${SIGNKEY/#\~/$HOME}"
+      case "$KP" in
+        *.pub) SIGN_PUB="$KP"; SIGN_PRIV="${KP%.pub}" ;;
+        *)     SIGN_PUB="$KP.pub"; SIGN_PRIV="$KP" ;;
+      esac
+      ;;
+  esac
+
+  if [ -n "$SIGN_PUB" ]; then
+    SIGN_FPR="$(ssh-keygen -lf "$SIGN_PUB" 2>/dev/null | awk '{print $2}')"
+    if [ -z "$SIGN_FPR" ]; then
+      action "SSH signing key $SIGNKEY has no readable public key — every signed commit will fail" \
+        "git config --global user.signingkey ~/.ssh/<KEY>.pub"
+    elif cap 8 ssh-add -l 2>/dev/null | grep -qF "$SIGN_FPR"; then
+      # Real probe: sign a throwaway blob via the agent. Agent signing needs no
+      # passphrase; cap guards against a confirm-on-use (-c) dialog.
+      if echo preflight | cap 10 ssh-keygen -Y sign -n git -f "$SIGN_PUB" >/dev/null 2>&1; then
+        ok "SSH signing key $SIGN_FPR is in the agent — signing works right now"
+      else
+        warn "SSH signing key $SIGN_FPR is in the agent but a test signature failed"
+      fi
+    else
+      ADD_TARGET="${SIGN_PRIV:-$SSH_DIR/<KEY>}"
+      action "SSH signing key $SIGN_FPR is not loaded in ssh-agent — signed commits will fail here" \
+        "$SSH_ADD_KC $ADD_TARGET"
+    fi
+  fi
+  [ -n "$SIGN_TMP" ] && rm -f "$SIGN_TMP"
+
+  ALLOWED="$(git config --get gpg.ssh.allowedSignersFile 2>/dev/null)"
+  ALLOWED="${ALLOWED/#\~/$HOME}"
+  if [ -n "$ALLOWED" ] && [ ! -f "$ALLOWED" ]; then
+    warn "gpg.ssh.allowedSignersFile=$ALLOWED does not exist — signatures will show as unverified"
   fi
 fi
 
