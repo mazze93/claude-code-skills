@@ -64,7 +64,6 @@ if [[ -n "$DRY_RUN" ]]; then
 else
   echo "  Bootstrap complete."
   echo "  → Restart Claude Code to activate hook changes."
-  echo "  → Edit ~/.claude/scripts/mem-map.conf if needed."
 fi
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
