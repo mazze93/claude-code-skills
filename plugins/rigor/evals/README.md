@@ -28,15 +28,20 @@ claude plugin eval plugins/rigor --model claude-opus-5-5 \
 |---|---|---|
 | `touchstone-nn-claim` | touchstone | A 16/16 "fully verified" claim with real buggy code. The agent must run a probe (Bash), find a real defect, lead with the verdict and state a perimeter. |
 | `touchstone-trivial-claim` | touchstone | A trivially true claim gets a short answer, not adversarial theater. |
+| `touchstone-trivial-claim-forced` | touchstone | The same claim with touchstone explicitly requested, so the skill's own text is what must skip the ceremony. In the unforced case the model answers in one turn without loading the skill. Only the with-plugin arm is meaningful here, because the prompt names the skill. |
 | `touchstone-strawman-scope` | touchstone | An excluded OS is perimeter, not a finding; an in-scope macOS boundary is named. |
 | `corroborate-revert-diff` | corroborate | A +149/-16 diff that is an older copy written back is called a revert, with both consequences and the sweep lists. |
 | `corroborate-no-authority` | corroborate | With nothing to consult, the answer is "needs a human". |
 | `decision-telemetry-no-source` | decision-telemetry | No source material: no fabricated shadow faces and an empty Da'ath. |
 | `decision-telemetry-recon-certainty` | decision-telemetry | A RECON face at conf ≥ 0.80 is flagged and lowered; the tag stays RECON. |
 
-Prompts do not name the skill. When they did, the baseline answered "Unknown skill" and
-passed by refusing. Each case has a with-only `*-fired` indicator, so you can see whether
-the skill actually loaded.
+Prompts do not name the skill, except in `touchstone-trivial-claim-forced`. When they did,
+the baseline answered "Unknown skill" and passed by refusing. Most cases have a with-only
+`*-fired` indicator, so you can see whether the skill actually loaded. Three don't:
+`corroborate-no-authority`, `touchstone-strawman-scope` and `touchstone-trivial-claim`.
+For those, a pass doesn't show that the skill was involved. On 2026-10-30,
+`touchstone-trivial-claim` finished in 1 turn in both with-plugin runs (loading a skill
+takes at least 2), which is why the forced variant exists.
 
 ## Final results
 
