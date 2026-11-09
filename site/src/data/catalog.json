@@ -158,6 +158,13 @@
       "checkout": null,
       "skills": [
         {
+          "name": "claim-verification-gate",
+          "plugin": "rigor",
+          "description": "Burden-of-proof gate on Claude contradicting the user's claims about their own experience or credit: what they did, found, built, said, lived through, or were credited for. Claude may not doubt, correct, or qualify such a claim unless an external artifact affirmatively says otherwise. Claude's own search coming up empty, its earlier statements, its memory, and its general knowledge are not evidence. Trigger before writing \"you didn't,\" \"there's no record,\" \"actually,\" or \"I couldn't find\" in response to a user's claim about themselves, and whenever Claude is about to repeat a doubt it raised earlier.",
+          "summary": "Burden-of-proof gate on Claude contradicting the user's claims about their own experience or credit: what they did, found, built, said, lived through, or were credited for.",
+          "added": "2026-11-08T04:38:32-05:00"
+        },
+        {
           "name": "core-sample",
           "plugin": "rigor",
           "description": "Capture a Claude session as an analysis-ready ledger \u2014 every tool call with its outcome (including failures the tool never flagged), a typed failure log, prompts, findings, sources, deliverables and open items \u2014 then build SQLite + CSV and a navigable Excel workbook with charts. Use whenever the user asks to record, log, audit, export or \"make a spreadsheet of\" a session or conversation, wants tool use or failures treated as data, asks what went wrong or what caught it, wants to compare sessions, or wants hooks so tool results survive compaction. Also use near the end of a long build session when a post-mortem, field note or essay needs evidence.",
@@ -263,6 +270,13 @@
   ],
   "recent": [
     {
+      "name": "claim-verification-gate",
+      "plugin": "rigor",
+      "description": "Burden-of-proof gate on Claude contradicting the user's claims about their own experience or credit: what they did, found, built, said, lived through, or were credited for. Claude may not doubt, correct, or qualify such a claim unless an external artifact affirmatively says otherwise. Claude's own search coming up empty, its earlier statements, its memory, and its general knowledge are not evidence. Trigger before writing \"you didn't,\" \"there's no record,\" \"actually,\" or \"I couldn't find\" in response to a user's claim about themselves, and whenever Claude is about to repeat a doubt it raised earlier.",
+      "summary": "Burden-of-proof gate on Claude contradicting the user's claims about their own experience or credit: what they did, found, built, said, lived through, or were credited for.",
+      "added": "2026-11-08T04:38:32-05:00"
+    },
+    {
       "name": "muster-triage",
       "plugin": "rigor",
       "description": "Classify stale or unmerged jj/git bookmarks by content (stable patch-id), not ahead-count or tip-tree diffs, then touchstone the class before any archive or delete. Use when ws muster reports stale unmerged tips, when consolidating branches into main, when a tip looks stranded but might already be on trunk, when retiring bookmarks to archive/* tags, or when the user says triage bookmarks, de-puzzle muster, retire to archives, or ask whether a branch is safe to abandon. Complements corroborate (what is this change) and touchstone (is this class claim true). Never auto-abandon; per-bookmark OK required.",
@@ -275,17 +289,10 @@
       "description": "Inventory on-device AI models (Ollama, Hugging Face, LM Studio, MLX, Unsloth and loose .gguf/.safetensors), judge what deleting each would lose \u2014 re-downloadable, locally built, fine-tuned, orphaned \u2014 and archive to a user-chosen drive with SHA-256 verification before anything is removed. Use when models are eating disk space, before deleting any model, when the user asks \"which models do I use\", \"did I train anything\", \"is it safe to delete\", or when disk-audit hands off its model bucket.",
       "summary": "Inventory on-device AI models (Ollama, Hugging Face, LM Studio, MLX, Unsloth and loose .gguf/.safetensors), judge what deleting each would lose \u2014 re-downloadable, locally built, fine-tuned, orphaned \u2014",
       "added": "2026-10-23T21:09:49-04:00"
-    },
-    {
-      "name": "high-signal-engine",
-      "plugin": "lab",
-      "description": "Operate as a high-signal research and execution engine for substantive work: research and synthesis across sources, technical and architecture decisions, tooling/CI/CD choices, security review and hardening, threat modeling, content strategy and SEO outlines, and any \"should I / which X / what's the best approach\" question. Enforces a Summary / Insights / Sources / Action answer shape, primary-source bias with cross-checking, an always-on security lens, a single committed recommendation instead of \"it depends\", and conversion of every answer into a reusable artifact (commands, configs, checklists, templates, scripts). Default stack when unstated: Astro + Cloudflare, local-first, security-aware. Use it whenever a question deserves a researched, opinionated, actionable answer \u2014 even if the user doesn't ask for structure. Do NOT use for casual chat, greetings, \"what can you do\", trivial one-fact lookups, or onboarding.",
-      "summary": "Operate as a high-signal research and execution engine for substantive work: research and synthesis across sources, technical and architecture decisions, tooling/CI/CD choices, security review and har",
-      "added": "2026-10-21T14:05:08-04:00"
     }
   ],
   "totals": {
     "plugins": 6,
-    "skills": 28
+    "skills": 29
   }
 }
