@@ -51,6 +51,7 @@ Verification discipline: establish what a change is, challenge a claim that it i
 
 | skill | description |
 |---|---|
+| [`claim-verification-gate`](skills/claim-verification-gate/SKILL.md) | Burden-of-proof gate on Claude contradicting the user's claims about their own experience or credit: what they did, found, built, said, lived through, |
 | [`core-sample`](skills/core-sample/SKILL.md) | Capture a Claude session as an analysis-ready ledger — every tool call with its outcome (including failures the tool never flagged), a typed failure l |
 | [`corroborate`](skills/corroborate/SKILL.md) | Establish what an uncommitted or unfamiliar change actually IS before committing, discarding, pushing, or merging it — by making the artifact testify  |
 | [`decision-telemetry`](skills/decision-telemetry/SKILL.md) | Build a dual-face decision transparency artifact: a visualization that shows both the clean recorded decision (Sephirothic face) and the shadow trace  |
