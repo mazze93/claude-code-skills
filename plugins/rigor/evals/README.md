@@ -34,6 +34,15 @@ claude plugin eval plugins/rigor --model claude-opus-5-5 \
 | `corroborate-no-authority` | corroborate | With nothing to consult, the answer is "needs a human". |
 | `decision-telemetry-no-source` | decision-telemetry | No source material: no fabricated shadow faces and an empty Da'ath. |
 | `decision-telemetry-recon-certainty` | decision-telemetry | A RECON face at conf ≥ 0.80 is flagged and lowered; the tag stays RECON. |
+| `test-evidence-observed-nothing` | test-evidence | A recording probe that is green on three versions but wrote 0 of 14 observations is a failed run, not "the fix holds". |
+| `test-evidence-guard-deleted` | test-evidence | A regression test that still passes with the fix's guard deleted is flagged, by running the mutation (Bash), with a NaN test that bites. |
+| `test-evidence-already-posted` | test-evidence | A note the evidence folder records as posted and archived is not re-posted, and no nudge comment is proposed. |
+
+The three `test-evidence-*` cases were added 2026-11-09 and **have not been run yet**; they
+have no rows in the results below. Fixtures come from the cloudflare/agents #2853 / PR #2854
+verification (observation gate, `continue` mutation, the posted T4 note). The
+`guard-deleted` fixture was checked by hand: its test prints `ok` with and without the
+`Number.isFinite` guard.
 
 Prompts do not name the skill, except in `touchstone-trivial-claim-forced`. When they did,
 the baseline answered "Unknown skill" and passed by refusing. Most cases have a with-only
