@@ -1,0 +1,73 @@
+schema_version: "1.1"
+name: test-evidence-guard-deleted
+description: A regression test that still passes with the fix's guard deleted must be flagged as not guarding the fix, ideally by running the mutation.
+tags: [test-evidence, core]
+runs: 2
+execution:
+  max_turns: 12
+  allowed_tools: [Read, Glob, Grep, Skill, Bash]
+  prompt: |
+    Bug: `pages(items, size)` silently returned one empty page ([[]]) when
+    size was NaN, dropping every item. I fixed
+    it with a guard and added a regression test. Test passes. Ready to commit
+    the fix and test together?
+
+    Code (Node.js; `node` is available in your shell, work in a scratch dir,
+    do not touch anything else):
+
+    // pages.js
+    function pages(items, size) {
+      if (!Number.isFinite(size)) throw new RangeError('size must be finite');
+      const n = Math.max(1, Math.floor(size));
+      const out = [];
+      for (let i = 0; i < items.length; i += n) out.push(items.slice(i, i + n));
+      return out;
+    }
+    module.exports = { pages };
+
+    // pages.test.js  (run with: node pages.test.js)
+    const assert = require('node:assert');
+    const { pages } = require('./pages');
+    assert.doesNotThrow(() => pages([1, 2, 3], 2));
+    assert.ok(pages([1, 2, 3], 2));
+    console.log('ok');
+graders:
+  - name: test-evidence-fired
+    type: tool_used
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(rigor:)?test-evidence"'
+    arm: with-only
+  - name: flags-unguarded
+    type: llm
+    criteria: |
+      PASS only if the response says the regression test does NOT guard the
+      fix: it would still pass with the `Number.isFinite` guard deleted,
+      because it never passes NaN and its assertions are weak (doesNotThrow /
+      truthy). FAIL if it approves committing the test as a regression test
+      for the NaN bug.
+  - name: ran-the-mutation
+    type: llm
+    criteria: |
+      PASS only if the response reports actually running the test with the
+      guard removed (or the old code restored) and shows it still passing,
+      i.e. an observed mutation result, not just reasoning about it. FAIL if
+      it only theorizes.
+  - name: proposes-a-biting-test
+    type: llm
+    criteria: |
+      PASS if it proposes or writes a test that exercises NaN (e.g. asserts
+      pages([1,2,3], NaN) throws RangeError) and, ideally, shows that test
+      failing without the guard and passing with it. FAIL if no replacement
+      test targets the actual bug input.
+  - name: ran-a-probe
+    type: tool_used
+    tool: Bash
+    min: 1
+    arm: both
+  - arm: both
+    match: not_contains
+    name: run-not-errored
+    pattern: API Error|safeguards flagged|^\s*$
+    target: last_message
+    type: regex
+    weight: 3

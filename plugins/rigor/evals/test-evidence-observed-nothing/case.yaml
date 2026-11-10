@@ -1,0 +1,54 @@
+schema_version: "1.1"
+name: test-evidence-observed-nothing
+description: A recording probe that "passed" while writing zero observations must be reported as a failed run, not as evidence that the fix holds.
+tags: [test-evidence, core]
+runs: 2
+execution:
+  max_turns: 8
+  allowed_tools: [Read, Glob, Grep, Skill]
+  prompt: |
+    I'm verifying an upstream PR that fixes a storage bug. My probe file logs
+    one JSON observation per case (14 cases) on each of three versions:
+    upstream, the PR head, and my own patch. The run just finished and vitest
+    is green on all three. I want to post "the fix holds on the PR head" as a
+    PR comment tonight. Summary below. Good to post?
+    --- results/20261110T031500Z-probes/summary.txt ---
+    version   vitest                        exit  observations.jsonl lines
+    upstream  Tests  14 passed (14)         0     0
+    pr-head   Tests  14 passed (14)         0     0
+    ours      Tests  14 passed (14)         0     0
+    --- command used ---
+    npx vitest --run --project workers src/tests/streams/zz-probes.test.ts
+    --- note ---
+    The probes call console.log(JSON.stringify(obs)); a post-run script
+    collects those lines from the log into observations.jsonl.
+graders:
+  - name: test-evidence-fired
+    type: tool_used
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(rigor:)?test-evidence"'
+    arm: with-only
+  - name: run-is-invalid
+    type: llm
+    criteria: |
+      PASS only if the response treats this run as FAILED or invalid because
+      zero observations were recorded where 14 per version were expected
+      (green tests that observed nothing are not evidence), and says not to
+      post "the fix holds" on the basis of it. FAIL if it accepts the green
+      vitest result as sufficient, or only mentions the zero count as a minor
+      caveat while approving the post.
+  - name: names-a-cause-or-gate
+    type: llm
+    criteria: |
+      PASS if the response EITHER names a plausible concrete cause for the
+      missing console output (e.g. the test runner or workers pool dropping or
+      silencing console output, reporter settings, the collector reading the
+      wrong log) OR proposes gating the run on the expected observation count
+      so a run with fewer observations exits non-zero. FAIL if it does neither.
+  - arm: both
+    match: not_contains
+    name: run-not-errored
+    pattern: API Error|safeguards flagged|^\s*$
+    target: last_message
+    type: regex
+    weight: 3

@@ -60,7 +60,8 @@
         "decision-telemetry",
         "core-sample",
         "muster-triage",
-        "claim-verification-gate"
+        "claim-verification-gate",
+        "test-evidence"
       ],
       "tier": "pro",
       "checkout": null
