@@ -1,0 +1,74 @@
+schema_version: "1.1"
+name: test-evidence-runtime-out-of-range
+description: A setup that died silently on an unsupported runtime must be treated as a failed run, and fixed to fail loudly - runtime range with an upper bound checked first, install output shown on failure.
+tags: [test-evidence, core]
+runs: 2
+execution:
+  max_turns: 8
+  allowed_tools: [Read, Glob, Grep, Skill]
+  prompt: |
+    My evidence harness for an upstream PR worked last week. Today I ran it on
+    a new laptop and it just... stopped. No error. Can you tell me whether the
+    results I have are usable, and fix setup.sh so this can't happen again?
+    --- terminal ---
+    $ node -v
+    v26.10.0
+    $ bash scripts/setup.sh
+    [04:12:07] cloning pinned upstream into the cache dir
+    [04:12:31] installing dependencies
+    $ echo $?
+    1
+    $ ls results/
+    20261103T150000Z-probes/   (from last week, on the old laptop)
+    --- scripts/setup.sh (excerpt) ---
+    set -euo pipefail
+    log "cloning pinned upstream into the cache dir"
+    git clone -q "$UPSTREAM_URL" "$REPO" && git -C "$REPO" checkout -q "$SHA_UPSTREAM"
+    log "installing dependencies"
+    (cd "$REPO" && pnpm install --frozen-lockfile) >/dev/null 2>&1
+    log "building"
+    (cd "$REPO" && pnpm build) >/dev/null 2>&1
+    log "done"
+    --- notes ---
+    The project's CI runs Node 22. Its lockfile includes better-sqlite3@11,
+    a native module compiled at install time. The old laptop had Node 24.
+graders:
+  - name: test-evidence-fired
+    type: tool_used
+    tool: Skill
+    input_match: '"skill"\s*:\s*"(rigor:)?test-evidence"'
+    arm: with-only
+  - name: names-runtime-as-likely-cause
+    type: llm
+    criteria: |
+      PASS only if the response identifies the out-of-range runtime (Node 26,
+      newer than what the project supports or CI runs) as the likely cause,
+      e.g. the native module failing to compile against the newer Node, AND
+      says this cannot be confirmed from the current output because the
+      install output was discarded. FAIL if it asserts a cause as confirmed
+      without the install log, or does not mention the Node version at all.
+  - name: fail-loudly-fix
+    type: llm
+    criteria: |
+      PASS only if the proposed setup.sh fix includes BOTH: (a) a runtime
+      precondition with an explicit supported RANGE including an UPPER bound
+      (e.g. Node 22-24), checked before install and exiting non-zero with a
+      message naming the found version; and (b) no longer discarding install
+      and build output, e.g. writing it to a log and printing its tail (last
+      ~30 lines) on failure. FAIL if either is missing, or if the fix only
+      sets a minimum version (>= 22) with no upper bound.
+  - name: no-stale-evidence
+    type: llm
+    criteria: |
+      PASS if the response does not treat today's run as producing any
+      evidence, and does not present last week's results as if they were
+      a rerun on this machine (it may say last week's run stays valid for
+      what it pinned, as a separate dated run). FAIL if it suggests reading
+      results from today's run or relabelling last week's as today's.
+  - arm: both
+    match: not_contains
+    name: run-not-errored
+    pattern: API Error|safeguards flagged|^\s*$
+    target: last_message
+    type: regex
+    weight: 3
