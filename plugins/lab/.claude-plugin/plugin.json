@@ -2,7 +2,7 @@
   "_generated": "by scripts/build_marketplace.py from skill-map.json \u2014 do not edit",
   "name": "lab",
   "description": "Probes and research aids that do not belong to one domain.",
-  "version": "0.1.0",
+  "version": "0.2.0-ceed94d4a2d0d",
   "author": {
     "name": "Mazze LeCzzare Frazer",
     "url": "https://mazzeleczzare.com"

@@ -13,6 +13,11 @@ source of the public storefront **store.mazzeleczzare.com** (`site/`). Treat
 - The catalogue is read **at build time** from `.claude-plugin/skill-map.json` —
   the single source of truth for plugin bundling *and* the store. Edit that file,
   never the generated artefacts; `scripts/validate_marketplace.py` fails CI on drift.
+- Plugin versions are generated too: `plugin.json` gets `0.2.0-c<content hash>`
+  (`build_marketplace.py`), because `claude plugin update` refreshes a cached
+  plugin only when the version string changes. Never hand-bump; regenerate.
+  `BASE_VERSION` changes only for a deliberate change of scheme. Tests:
+  `python3 -m unittest discover -s scripts/tests`.
 - `cd site && npm run check` = typecheck + build. Deploy is `.github/workflows/verify.yml`
   on `main` only — PRs build and typecheck but never deploy.
 - Priced plugins need a `checkout` URL in skill-map.json; nothing here processes payment.

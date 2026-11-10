@@ -92,6 +92,12 @@ jobs:
       - name: Generated artefacts match the map
         run: python3 scripts/build_marketplace.py --check
 
+      # Plugin versions are content hashes: `claude plugin update` refreshes a
+      # cached plugin only when the version string changes. A hardcoded version
+      # froze every install at its first download.
+      - name: Generator tests (content-derived plugin versions)
+        run: python3 -m unittest discover -s scripts/tests -v
+
       - name: Collisions, orphans, frontmatter
         run: python3 scripts/validate_marketplace.py
 
