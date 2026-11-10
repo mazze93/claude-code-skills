@@ -37,10 +37,12 @@ claude plugin eval plugins/rigor --model claude-opus-5-5 \
 | `test-evidence-observed-nothing` | test-evidence | A recording probe that is green on three versions but wrote 0 of 14 observations is a failed run, not "the fix holds". |
 | `test-evidence-guard-deleted` | test-evidence | A regression test that still passes with the fix's guard deleted is flagged, by running the mutation (Bash), with a NaN test that bites. |
 | `test-evidence-already-posted` | test-evidence | A note the evidence folder records as posted and archived is not re-posted, and no nudge comment is proposed. |
+| `test-evidence-runtime-out-of-range` | test-evidence | A setup that died silently on Node 26 (install output sent to `/dev/null`) is a failed run; the fix checks a runtime range with an upper bound before install and prints the install log's tail on failure. |
 
-The three `test-evidence-*` cases were added 2026-11-09 and **have not been run yet**; they
+The four `test-evidence-*` cases were added 2026-11-09/10 and **have not been run yet**; they
 have no rows in the results below. Fixtures come from the cloudflare/agents #2853 / PR #2854
-verification (observation gate, `continue` mutation, the posted T4 note). The
+verification (observation gate, `continue` mutation, the posted T4 note, the Node 26
+`better-sqlite3@11` install failure). The
 `guard-deleted` fixture was checked by hand: its test prints `ok` with and without the
 `Number.isFinite` guard.
 

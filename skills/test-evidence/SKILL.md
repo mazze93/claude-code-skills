@@ -159,12 +159,12 @@ every record.
 
 | Rule | Why |
 |---|---|
-| **Pin everything in one file**: upstream SHA, PR head SHA, tool versions, and the runtime as a **range with an upper bound** (e.g. Node 22–24) | A newer runtime broke a native dependency's build; no upper bound meant no warning |
+| **Pin everything in one file**: upstream SHA, PR head SHA, tool versions, and the runtime as a **range with an upper bound** (e.g. Node 22–24), **checked before install**: outside it, exit non-zero naming the version found | A newer runtime broke a native dependency's build; no upper bound meant no warning |
 | **Disposable clone outside the workspace** (a cache dir); results live in the evidence folder | The clone is rebuildable from pins; results are not |
 | Refuse to run on a dirty clone; restore it in an `EXIT` trap | A leftover edit silently changes what "upstream" means |
 | **Prove the version swap by blob hash** (`git show <sha>:<f>` then compare `git rev-parse <sha>:<f>` to `git hash-object <f>`) | Checking out the wrong file looks identical to checking out the right one |
 | **Append-only runs**: `results/<UTC>-<kind>/` with raw logs, JSONL observations, `manifest.json` (pins, versions, exit codes, file hashes), `summary.md`, `SHA256SUMS`. Never edit an old run | A rerun is new evidence, not a correction |
-| **Never discard install/build output** (`>/dev/null`); print the tail on failure | An install failure on an unsupported runtime was swallowed by `>/dev/null` and surfaced only later |
+| **Never discard install/build output** (`>/dev/null`): log it, and print its last ~30 lines on failure | On Node 26 a native module failed to compile; with output sent to `/dev/null` the setup died with no message |
 | **Judge success by an artifact** (the built file exists, N observations recorded), not a wrapper's exit code | A backgrounded setup died with its shell and reported nothing |
 | Scripts run under `bash` with `unalias -a`; overwrite with `>|` | User shell aliases and `noclobber` break ad-hoc scripts |
 | **Compare reruns by diffing sorted observations** against the previous run of the same kind | "Same result" is a diff, not a feeling |
