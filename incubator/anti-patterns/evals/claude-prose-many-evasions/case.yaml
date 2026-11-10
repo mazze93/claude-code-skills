@@ -1,0 +1,14 @@
+schema_version: "1.1"
+name: claude-prose-many-evasions
+expected_outcome: |
+  An audit that: identifies at least 5 of the 7 evasive hedges planted
+  in the draft, classifies each by pattern name (balance-roof,
+  hedge-chain, meta-descent, feeling-cloak, generality-shift,
+  citation-shield, pre-apology), quotes the sentence, applies the
+  pattern's diagnostic question, and names what the honest version
+  would commit to — NOT a rewrite. The audit must NOT flag the two
+  genuinely earned hedges in §Limitations. The audit must NOT produce
+  a rewrite; it must leave the writing decisions to the author.
+
+context:
+  scaffold_script: place-files.sh

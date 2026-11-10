@@ -1,0 +1,35 @@
+{
+  "expectations": [
+    {
+      "text": "The output identifies that the fine-tuning dataset includes 180k pairs derived from MMLU's auxiliary training and validation splits, and names this as a load-bearing sampling or distributional assumption underneath the \"matches Llama-3-70B on MMLU\" headline.",
+      "passed": true,
+      "evidence": "Section 3.3 cites verbatim: 'A 180k-pair subset derived from MMLU's auxiliary training and validation splits, lightly rewritten by GPT-4.' and calls it 'the textbook definition of benchmark contamination' that 'directly invalidates the MMLU/BBH/HumanEval columns as generalization evidence.' Appendix §9 ranks it red flag #1. The 10-point MMLU jump (68.4 to 78.2) is named as evidence the headline is driven by this contamination."
+    },
+    {
+      "text": "The output identifies that the Legal-Sum headline metric (91.4 vs. GPT-4's 92.1) is scored by GPT-4 itself, and names this as a distributional or definitional circularity in the \"matches GPT-4 on legal summarization\" sub-claim, distinct from the MMLU-contamination issue.",
+      "passed": true,
+      "evidence": "Section 3.1 states: 'Judge: GPT-4, 1-10 rubric, mean x10' and 'If these were produced by GPT-4, then GPT-4 judging summaries against GPT-4-produced references is circular - it biases the eval toward whoever sounds the most like GPT-4.' Section 3.2 adds 'GPT-4-as-judge is well-documented to favour verbose, GPT-4-styled outputs regardless of factuality.' This is clearly separated from the MMLU contamination issue, which gets its own Section 3.3."
+    },
+    {
+      "text": "The output contains at least two probes, and each probe includes hypothesis (specific direction and magnitude), protocol (reproducible), falsification criterion (threshold chosen in advance), and compute estimate on the user's M3 Max.",
+      "passed": true,
+      "evidence": "Five tests are specified, each with a compute budget on the M3 Max (~2h, ~8h, ~3h, ~2h, ~3h). Test 1 has an explicit protocol (run MMLU-Redux and MMLU-Pro, compare to 78.2), a quantitative falsification threshold ('If ModelZip-7B <= Llama-3-8B on MMLU-Redux, we stop') and Section 7 pins a magnitude ('holds within 3-5 points'). Test 2 has a detailed protocol (30-50 docs, blind, multi-rater rubric with named dimensions), threshold ('faithfulness fail rate > Llama-3-70B's by any meaningful margin ... or named-entity/numeric/citation error counts rise') and Section 7's 'statistically indistinguishable' bar. Tests 3-5 add further reproducible protocols and compute estimates."
+    },
+    {
+      "text": "The output ranks or orders the probes explicitly with a clear first-probe recommendation sized to the user's 20-hour M3 Max budget.",
+      "passed": true,
+      "evidence": "Section 5 is titled '20-hour plan on the M3 Max bench' and states: 'Tests are ordered so we can stop early on a failure.' Tests are numbered 1-5 with Test 1 (~2h contamination probe) explicitly first and flagged 'cheap, high-information.' The closing budget tally reads 'If Test 1 fails, stop (~2 hours used). If Test 2 fails, stop (~10 hours used). Everything past Test 2 is only worth running if Tests 1-2 look promising' and sums to ~20 hours including a 2-hour reserve."
+    },
+    {
+      "text": "The output does NOT render a verdict on whether to use ModelZip-7B.",
+      "passed": true,
+      "evidence": "The output explicitly refuses a verdict: 'None of the above makes ModelZip-7B useless' and 'we can't make this call from the whitepaper.' Section 7 lays out positive, negative, and ambiguous outcomes conditional on the test results rather than deciding now. The recommendation is procedural ('Do not commit this week. Approve a scoped 20-hour evaluation') not a thumbs-up or thumbs-down on the model itself."
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  }
+}

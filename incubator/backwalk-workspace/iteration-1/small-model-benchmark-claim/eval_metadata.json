@@ -1,0 +1,11 @@
+{
+  "eval_name": "small-model-benchmark-claim",
+  "prompt": "My team is evaluating ModelZip-7B as a replacement for our current Llama-3-70B-based pipeline for legal-document summarization. The vendor just sent us the attached whitepaper making some strong claims about matching larger models. I'm meeting with engineering leadership tomorrow afternoon and I need to be able to say something more useful than \"looks interesting.\" We have an M3 Max with 128GB memory on the research bench, maybe 20 hours of compute budget this week.\n\nWalk backwards through the claim in the whitepaper — what should I actually be testing before we commit to this, and what would each test tell me? Write it up as an analysis document I can share with the team.\n\nInput files: modelzip_whitepaper.md",
+  "assertions": [
+    "The output identifies that the fine-tuning dataset includes 180k pairs derived from MMLU's auxiliary training and validation splits, and names this as a load-bearing sampling or distributional assumption underneath the \"matches Llama-3-70B on MMLU\" headline.",
+    "The output identifies that the Legal-Sum headline metric (91.4 vs. GPT-4's 92.1) is scored by GPT-4 itself, and names this as a distributional or definitional circularity in the \"matches GPT-4 on legal summarization\" sub-claim, distinct from the MMLU-contamination issue.",
+    "The output contains at least two probes, and each probe includes hypothesis (specific direction and magnitude), protocol (reproducible), falsification criterion (threshold chosen in advance), and compute estimate on the user's M3 Max.",
+    "The output ranks or orders the probes explicitly with a clear first-probe recommendation sized to the user's 20-hour M3 Max budget.",
+    "The output does NOT render a verdict on whether to use ModelZip-7B."
+  ]
+}

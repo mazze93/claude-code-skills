@@ -1,0 +1,35 @@
+{
+  "expectations": [
+    {
+      "text": "The output identifies that the fine-tuning dataset includes 180k pairs derived from MMLU's auxiliary training and validation splits, and names this as a load-bearing sampling or distributional assumption underneath the \"matches Llama-3-70B on MMLU\" headline.",
+      "passed": true,
+      "evidence": "Section 2 states: 'Training included (a) 180k GPT-4-rewritten pairs from MMLU's auxiliary train/validation splits and (b) a \"benchmark-aware refinement pipeline\" that *explicitly scored training candidates against MMLU*' and the MMLU row is marked 'Independent of training signal? No'. Section 3.D (Benchmark-targeted training) names this as load-bearing: 'The claim that ModelZip-7B \"matches Llama-3-70B on MMLU\" is partially a measurement of how much training compute was spent making MMLU-shaped questions easy, not an estimate of generalization to MMLU-adjacent reasoning.'"
+    },
+    {
+      "text": "The output identifies that the Legal-Sum headline metric (91.4 vs. GPT-4's 92.1) is scored by GPT-4 itself, and names this as a distributional or definitional circularity in the \"matches GPT-4 on legal summarization\" sub-claim, distinct from the MMLU-contamination issue.",
+      "passed": true,
+      "evidence": "Section 1 table: 'Vendor's \"Legal-Sum\" metric: 500 vendor-held (doc, ref-summary) pairs, GPT-4-judged ... 91.4 vs 92.1 (-0.7) ... GPT-4 is the judge; corpus is proprietary; training data was GPT-4-rewritten'. Section 3.A 'Judge-dependence (distributional)' explicitly names this as distributional circularity: 'Legal-Sum is scored by GPT-4. ModelZip-7B's training set includes a 180k-pair subset lightly rewritten by GPT-4... If GPT-4 preferentially rates outputs that resemble its own output distribution, a model trained on GPT-4-rewritten data will score higher under GPT-4-as-judge.' Section 3.B 'Reference-summary circularity (definitional)' treats the circularity separately from the MMLU/benchmark-shaping issue in 3.D."
+    },
+    {
+      "text": "The output contains at least two probes, and each probe includes hypothesis (specific direction and magnitude), protocol (reproducible), falsification criterion (threshold chosen in advance), and compute estimate on the user's M3 Max.",
+      "passed": true,
+      "evidence": "Section 5 contains five probes (Probes 1-5), each with Hypothesis (e.g., 'advantage will shrink by at least 50% or invert'; 'unsupported-claim rate will be at least 1.4x Llama-3-70B's'), numbered Protocol steps, Falsification with specific thresholds (e.g., 'below +0.3 rubric points', '>=1.4x', 'below 60%'), and Compute estimates targeted at M3 Max/128GB with wall-clock hours (e.g., '~5.5-7h wall-clock', '~3-4h wall-clock', '~6-8h wall-clock')."
+    },
+    {
+      "text": "The output ranks or orders the probes explicitly with a clear first-probe recommendation sized to the user's 20-hour M3 Max budget.",
+      "passed": true,
+      "evidence": "Section 6 'Probe ordering' presents an explicit ranked table with 'First-run priority' column, Probe 1 marked 'Yes' as first-priority after the reproducibility gate. Includes '20-hour budget allocation suggestion. Reproducibility (2h) + Probe 1 (7h) + Probe 2 (4h) + Probe 3 compute half (2h) = ~15h. Leaves ~5h for either Probe 4 or a focused subset of Probe 5.' and a one-sentence rationale explaining why Probe 1 goes first."
+    },
+    {
+      "text": "The output does NOT render a verdict on whether to use ModelZip-7B.",
+      "passed": true,
+      "evidence": "Opening note: 'Nothing below concludes \"use it\" or \"don't use it.\"' Section 7: 'What *not* to say: that the whitepaper is misleading, that the vendor is being dishonest, or that ModelZip-7B is or isn't the right choice.' Section 8: 'Not a verdict on ModelZip-7B. The model may be excellent for this use case. The probes decide.'"
+    }
+  ],
+  "summary": {
+    "passed": 5,
+    "failed": 0,
+    "total": 5,
+    "pass_rate": 1.0
+  }
+}
