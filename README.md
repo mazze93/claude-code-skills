@@ -90,6 +90,14 @@ Plugin skills are **relative symlinks** into `skills/`, not copies. Copies mean
 every skill exists twice, and the day the two disagree is the day nobody can
 tell which one is loaded.
 
+**Versions are generated too.** Each `plugin.json` carries
+`0.2.0-c<12 hex>`: a SHA-256 over every file the plugin ships, read through the
+symlinks. Claude Code caches a plugin per version and `claude plugin update`
+only refreshes it when the version string changes, so the version must move
+whenever content does. Never hand-bump it; regenerate. To pick up changes on a
+machine: `claude plugin marketplace update mazze93`, then
+`claude plugin update <plugin>@mazze93`.
+
 ### Guards
 
 Every one of these exists because of a failure that already happened here.
@@ -99,6 +107,7 @@ Every one of these exists because of a failure that already happened here.
 | `scripts/check_revert.py` | a change that silently restores an older version of a file. On 2026-08-31 a skill install wrote through a symlink and replaced two consolidated `SKILL.md` files with pre-consolidation copies — a `+149/-16` diff that read as new work and was a revert of a 10-into-2 consolidation |
 | `scripts/validate_marketplace.py` | name collisions, double-claimed skills, orphans that ship to nobody, missing or too-thin frontmatter, dangling symlinks. It caught a plugin named the same as a skill on its first run |
 | `scripts/build_marketplace.py --check` | a generated artefact hand-edited into drift |
+| `scripts/tests/test_build_marketplace.py` | a plugin version that doesn't move when its content does. Until 2026-11-10 every plugin was hardcoded `0.1.0`, so `claude plugin update` never refreshed an install: `rigor` stayed at an October copy missing three of its skills. The tests follow the skill symlinks, and three of them were mutation-checked |
 | `scripts/skill_writethrough_check.sh` | an installer writing through a `~/.claude/skills` symlink into this working tree — the mechanism behind the 2026-08-31 incident |
 
 Install the pre-commit hook so the first three run before every commit:

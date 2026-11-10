@@ -2,7 +2,7 @@
   "_generated": "by scripts/build_marketplace.py from skill-map.json \u2014 do not edit",
   "name": "workspace",
   "description": "Fleet and repository operations across a multi-repo workspace: sync, audit, triage, ship.",
-  "version": "0.1.0",
+  "version": "0.2.0-c478fd67156aa",
   "author": {
     "name": "Mazze LeCzzare Frazer",
     "url": "https://mazzeleczzare.com"
