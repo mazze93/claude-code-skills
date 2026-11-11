@@ -1,0 +1,20 @@
+schema_version: "1.1"
+name: small-model-benchmark-claim
+expected_outcome: |
+  A backwalk-formatted analysis document that: pulls the whitepaper's
+  "matches Llama-3-70B on MMLU with 10x less compute" headline apart
+  by scope and qualifier; identifies at least one load-bearing
+  distributional assumption (the fine-tuning data was filtered using
+  MMLU-validation-derived prompts, which the whitepaper mentions in
+  passing); identifies the GPT-4-as-judge circularity in the "matches
+  GPT-4 on legal summarization" sub-claim; proposes at least two
+  concrete probes with explicit hypothesis / protocol / falsification /
+  compute-on-M3-Max; orders probes by cutting-power-per-cost with the
+  cheapest-and-most-cutting first; and closes with a "what this is not"
+  section stating it is not a verdict on the method. The analysis
+  should be sized to the user's actual 20-hour M3 Max budget — probes
+  that need H100 time without a caveat are a failure. The analysis
+  should NOT recommend "just don't use it" or make a verdict either way.
+
+context:
+  scaffold_script: place-files.sh

@@ -1,0 +1,24 @@
+schema_version: "1.1"
+name: paper-matches-gpt4-claim
+expected_outcome: |
+  A backwalk analysis that pulls apart the preprint's central claim
+  ("CurriculumRL matches GPT-4 on multi-step reasoning with a 3B
+  model") by naming: (a) the GPT-4-as-judge evaluation harness
+  (circular — the same model being matched against is the arbiter of
+  the matching); (b) the benchmark construction (the reasoning
+  benchmark was curated by the authors from GPT-4-generated candidate
+  problems, so it is in-distribution for GPT-4 and may be
+  out-of-distribution for everything else); (c) the comparison to
+  "GPT-4 (web-API, default settings)" — a paper-chosen configuration
+  of the comparison target; (d) at least one operational concern
+  (the curriculum phase-count and dataset-size at the edge of
+  reported ablation). The analysis proposes at least two probes
+  sized to a one-week A100 + an M4 Ultra: probe 1 should be the
+  cheapest-most-cutting (e.g., re-evaluate the released checkpoint
+  with a non-GPT-4 judge on a held-out benchmark, inference-only,
+  tractable in hours). The output does NOT recommend "pivot the
+  thesis" or "don't pivot" — it produces the probe surface that
+  makes the decision defensible.
+
+context:
+  scaffold_script: place-files.sh
