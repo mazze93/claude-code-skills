@@ -76,7 +76,8 @@
         "ship",
         "pr-triage",
         "git-forensics",
-        "preflight"
+        "preflight",
+        "one-yes-application"
       ],
       "tier": "pro",
       "checkout": null
