@@ -244,16 +244,15 @@ def build(check: bool = False) -> int:
     import subprocess
 
     def first_seen(rel: str) -> str | None:
-        # --diff-merges=off: never report a merge commit as the add. On a PR's
-        # merge ref (refs/pull/N/merge) a git that diffs merges against their
-        # first parent names that merge as the commit that added a new skill,
-        # and GitHub recreates the merge on every push, so `added` changed per
-        # run and --check could never pass. The authoring commit is stable.
         try:
             out = subprocess.run(
-                ["git", "log", "--diff-merges=off", "--diff-filter=A", "--follow",
-                 "--format=%aI", "-1", "--", rel],
+                ["git", "log", "--diff-filter=A", "--follow", "--format=%aI", "-1", "--", rel],
                 cwd=ROOT, capture_output=True, text=True, timeout=15).stdout.strip()
+            # git versions disagree on a UTC author offset: older ones print
+            # "+00:00", newer ones "Z". Normalise so --check gives the same
+            # answer on every runner.
+            if out.endswith("Z"):
+                out = out[:-1] + "+00:00"
             return out or None
         except Exception:
             return None   # shallow clone or tarball: nothing is "new", the safe direction
