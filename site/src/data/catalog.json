@@ -245,6 +245,13 @@
           "added": "2026-10-23T21:09:49-04:00"
         },
         {
+          "name": "one-yes-application",
+          "plugin": "workspace",
+          "description": "Take a job posting to a submitted application with exactly one yes from the applicant. Fit verdict first, claims only from the proof bank, one shared build, three gates, plain-named submit copies, one ask, then fill-upload-submit as a single cleared run that survives session restarts and never re-submits blind. Records every application in opportunity-ledger's private records. Use when asked to apply to a job, prepare or submit an application, check fit for a posting, or resume a half-finished application.",
+          "summary": "Take a job posting to a submitted application with exactly one yes from the applicant.",
+          "added": "2026-11-18T22:33:16+00:00"
+        },
+        {
           "name": "pr-triage",
           "plugin": "workspace",
           "description": "Triage open GitHub pull requests across one or all mazze93 repos by *what kind of stuck* they are (merge conflict, failing CI, changes requested, awaiting review, abandoned, ready-to-merge, healthy) rather than just sorting by age. Use when asked to \"triage PRs\", \"what PRs need attention\", \"find stuck/stale/abandoned PRs\", \"which PRs are ready to merge\", or to generate a PR status report for terminal, Slack, or a GitHub comment/markdown file.",
@@ -277,6 +284,13 @@
   ],
   "recent": [
     {
+      "name": "one-yes-application",
+      "plugin": "workspace",
+      "description": "Take a job posting to a submitted application with exactly one yes from the applicant. Fit verdict first, claims only from the proof bank, one shared build, three gates, plain-named submit copies, one ask, then fill-upload-submit as a single cleared run that survives session restarts and never re-submits blind. Records every application in opportunity-ledger's private records. Use when asked to apply to a job, prepare or submit an application, check fit for a posting, or resume a half-finished application.",
+      "summary": "Take a job posting to a submitted application with exactly one yes from the applicant.",
+      "added": "2026-11-18T22:33:16+00:00"
+    },
+    {
       "name": "test-evidence",
       "plugin": "rigor",
       "description": "Decide what is worth testing, prove each test can fail, and turn test runs into evidence that survives a rerun. Use when writing, reviewing, or planning tests; before declaring a bug fixed; when verifying someone else's fix, including an upstream or open-source PR; when probing whether a dependency honours its documented contract; when a test is flaky; or when results must be reported to maintainers and recorded. Covers what to test and at which level, tests that lie, the bug-first rule with a mutation step, observation-count gates for probes that record rather than assert, pinned and checksummed evidence runs, gated upstream reporting, idempotent recording, and watching a PR to close-out. Delegates adversarial challenge of a claim to touchstone and \"what is this change\" to corroborate.",
@@ -289,17 +303,10 @@
       "description": "Burden-of-proof gate on Claude contradicting the user's claims about their own experience or credit: what they did, found, built, said, lived through, or were credited for. Claude may not doubt, correct, or qualify such a claim unless an external artifact affirmatively says otherwise. Claude's own search coming up empty, its earlier statements, its memory, and its general knowledge are not evidence. Trigger before writing \"you didn't,\" \"there's no record,\" \"actually,\" or \"I couldn't find\" in response to a user's claim about themselves, and whenever Claude is about to repeat a doubt it raised earlier.",
       "summary": "Burden-of-proof gate on Claude contradicting the user's claims about their own experience or credit: what they did, found, built, said, lived through, or were credited for.",
       "added": "2026-11-08T04:38:32-05:00"
-    },
-    {
-      "name": "muster-triage",
-      "plugin": "rigor",
-      "description": "Classify stale or unmerged jj/git bookmarks by content (stable patch-id), not ahead-count or tip-tree diffs, then touchstone the class before any archive or delete. Use when ws muster reports stale unmerged tips, when consolidating branches into main, when a tip looks stranded but might already be on trunk, when retiring bookmarks to archive/* tags, or when the user says triage bookmarks, de-puzzle muster, retire to archives, or ask whether a branch is safe to abandon. Complements corroborate (what is this change) and touchstone (is this class claim true). Never auto-abandon; per-bookmark OK required.",
-      "summary": "Classify stale or unmerged jj/git bookmarks by content (stable patch-id), not ahead-count or tip-tree diffs, then touchstone the class before any archive or delete.",
-      "added": "2026-11-03T04:47:19-05:00"
     }
   ],
   "totals": {
     "plugins": 6,
-    "skills": 30
+    "skills": 31
   }
 }

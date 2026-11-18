@@ -183,8 +183,16 @@ def build(check: bool = False) -> int:
 
     def write(path: Path, text: str) -> None:
         if check:
-            if not path.is_file() or path.read_text(encoding="utf-8") != text:
-                drift.append(str(path.relative_to(ROOT)))
+            old = path.read_text(encoding="utf-8") if path.is_file() else ""
+            if old != text:
+                rel = str(path.relative_to(ROOT))
+                drift.append(rel)
+                # Show what differs, so a drift on CI is diagnosable from the log.
+                import difflib
+                diff = list(difflib.unified_diff(
+                    old.splitlines(), text.splitlines(),
+                    f"committed/{rel}", f"generated/{rel}", lineterm="", n=1))
+                print("\n".join(diff[:60]))
             return
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(text, encoding="utf-8")
@@ -240,6 +248,11 @@ def build(check: bool = False) -> int:
             out = subprocess.run(
                 ["git", "log", "--diff-filter=A", "--follow", "--format=%aI", "-1", "--", rel],
                 cwd=ROOT, capture_output=True, text=True, timeout=15).stdout.strip()
+            # git versions disagree on a UTC author offset: older ones print
+            # "+00:00", newer ones "Z". Normalise so --check gives the same
+            # answer on every runner.
+            if out.endswith("Z"):
+                out = out[:-1] + "+00:00"
             return out or None
         except Exception:
             return None   # shallow clone or tarball: nothing is "new", the safe direction
