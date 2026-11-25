@@ -1,0 +1,71 @@
+name: claude-steward
+
+# ── What this is ────────────────────────────────────────────────────────────
+# A Pro-plan stand-in for Claude Ship's PR Steward. Comment `@claude` on a PR
+# (e.g. "@claude steward this" or "@claude fix the marketplace job") and
+# Claude works the failing checks and bot-review threads per
+# .claude/skills/steward/SKILL.md, then posts one summary comment.
+#
+# Deliberately NOT included: an automatic review on every PR. Greptile and
+# Cursor Security Agent already review here; a third reviewer is more noise.
+# For a Claude review, run `/ship` locally, or comment `@claude review this`.
+#
+# Requires repo secret CLAUDE_CODE_OAUTH_TOKEN (`claude setup-token`) and the
+# Claude GitHub App installed on this repo. Runs bill to the Pro subscription.
+#
+# Safety: public repo, so the trigger is OWNER-only. Claude cannot approve or
+# merge; branch protection on `main` is the merge gate. Deploy stays in
+# verify.yml on push to main only, which Claude never pushes to.
+
+on:
+  issue_comment:
+    types: [created]
+  pull_request_review_comment:
+    types: [created]
+  pull_request_review:
+    types: [submitted]
+
+# One steward per PR. Don't cancel in flight: a killed run can leave a
+# half-pushed fix.
+concurrency:
+  group: claude-steward-${{ github.event.issue.number || github.event.pull_request.number }}
+  cancel-in-progress: false
+
+jobs:
+  steward:
+    # ── Gate: PRs only, owner only, explicit @claude ──
+    if: >-
+      (github.event_name != 'issue_comment' || github.event.issue.pull_request) &&
+      (github.event.comment.author_association == 'OWNER' ||
+       github.event.review.author_association == 'OWNER') &&
+      contains(github.event.comment.body || github.event.review.body, '@claude')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
+      id-token: write
+      actions: read
+    steps:
+      # ── Tooling the gates need (mirrors verify.yml) ──
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # check_revert.py needs history
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install zsh (hooks are zsh)
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq zsh
+
+      # ── Steward ──
+      - uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: >-
+            --max-turns 25
+            --append-system-prompt "You are this repository's PR steward. Read and follow .claude/skills/steward/SKILL.md before acting. Never push to main, approve, merge, or force-push."
+            --allowedTools "Bash(python3 scripts/*),Bash(python3 -m unittest *),Bash(bash -n *),Bash(zsh -n *),Bash(bash bootstrap/bootstrap.sh --dry-run),Bash(npm ci),Bash(npm run *),Bash(bash vendor/http-cache-semantics/build.sh),Bash(git diff *),Bash(git log *),Bash(git status)"
