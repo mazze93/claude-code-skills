@@ -96,6 +96,40 @@ else
   fi
 fi
 
+# ── PreToolUse ephemeral-storage guard ────────────────────────────────────────
+# Denies Write/Edit/NotebookEdit into /tmp, the scratchpad or $TMPDIR; warns on
+# Bash commands that mention them. See hooks/ephemeral-guard.sh.
+EPH_CMD="bash ~/.claude/scripts/ephemeral-guard.sh"
+EPH_MATCHER="Write|Edit|NotebookEdit|Bash"
+
+already=$(jq --arg cmd "$EPH_CMD" '
+  .hooks.PreToolUse // [] |
+  map(select(any(.hooks[]?; .command == $cmd))) |
+  length
+' "$SETTINGS" 2>/dev/null || echo 0)
+
+if [[ "$already" -gt 0 ]]; then
+  _skip "PreToolUse ephemeral-guard hook"
+else
+  TMPFILE=$(mktemp)
+  jq --arg cmd "$EPH_CMD" --arg matcher "$EPH_MATCHER" '
+    .hooks.PreToolUse = (
+      (.hooks.PreToolUse // []) +
+      [{"matcher": $matcher, "hooks": [{"type": "command", "command": $cmd}]}]
+    )
+  ' "$SETTINGS" > "$TMPFILE"
+
+  if [[ "$DRY_RUN" == "--dry-run" ]]; then
+    echo "  [settings] dry: would add PreToolUse ephemeral-guard hook to $SETTINGS"
+    rm -f "$TMPFILE"
+  else
+    cp "$SETTINGS" "${SETTINGS}.bak.$(date +%Y%m%d-%H%M%S)"
+    mv "$TMPFILE" "$SETTINGS"
+    _ok "added PreToolUse ephemeral-guard hook (matcher: $EPH_MATCHER)"
+    _ok "backup saved: ${SETTINGS}.bak.*"
+  fi
+fi
+
 # ── Verify minimum version ─────────────────────────────────────────────────────
 CURRENT_MIN=$(jq -r '.minimumVersion // empty' "$SETTINGS" 2>/dev/null)
 REQUIRED_MIN="2.1.150"
