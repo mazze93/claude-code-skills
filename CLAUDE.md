@@ -94,9 +94,12 @@ The bootstrap sub-scripts (`bootstrap/lib/`) handle their domains independently;
 
 ### Hooks
 
-Five hooks, each versioned in comments. Two aren't described below:
+Six hooks, each versioned in comments. Three aren't described below:
 `credential-guard.sh` (PreToolUse on Bash, a fail-closed block on commands
-that print secrets) and `claude-md-drift-on-start.sh`:
+that print secrets), `ephemeral-guard.sh` (PreToolUse on Write|Edit|NotebookEdit|Bash:
+denies file writes into `/tmp`, the session scratchpad or `$TMPDIR`, attaches a
+non-blocking reminder to Bash commands that mention them; fails open) and
+`claude-md-drift-on-start.sh`:
 
 **`claude-md-drift-on-start.sh`** (SessionStart, matcher: startup) — runs `skills/claude-md-audit/scan.py` on the project being opened. Silent when clean. On findings, injects them as context plus a one-line `systemMessage`. Flags only, never rewrites. Fails loud: a missing scanner or dependency shows a message instead of skipping silently.
 
