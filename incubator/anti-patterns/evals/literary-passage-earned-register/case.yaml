@@ -1,0 +1,17 @@
+schema_version: "1.1"
+name: literary-passage-earned-register
+expected_outcome: |
+  An audit that correctly identifies the register (literary / memoir,
+  not analytical) and therefore does NOT flag affective language,
+  careful phrasing, or thematic ambiguity as feeling-cloak when it is
+  the subject matter of the writing. It SHOULD still flag the one
+  specific evasion in the piece: the final paragraph's rhetorical
+  retreat from an actual claim ("perhaps there is no answer at all,
+  perhaps the asking is the thing") when the preceding paragraphs
+  have built toward a specific position. A failing audit would
+  (a) flag "weight," "longing," "held," "ache" as feeling-cloak when
+  they are the earned subject of literary analysis, or (b) miss the
+  genuine evasion in the final paragraph.
+
+context:
+  scaffold_script: place-files.sh

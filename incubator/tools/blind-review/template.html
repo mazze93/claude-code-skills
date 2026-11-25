@@ -1,0 +1,751 @@
+<title>__PAGE_TITLE__</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&family=Literata:wght@400;600&display=swap">
+<style>
+/* ==========================================================================
+   Layout concept: a review bench. One case at a time; the shared prompt once;
+   two answers side by side across a gold seam; the decision underneath.
+   Palette: Haven/Ink (light) and Kintsugi (dark), from mazzeleczzare.com.
+   No fixed or sticky layers, so there is no z-index stack to document.
+   ========================================================================== */
+:root {
+  --bg: #f4f0e7;
+  --surface: #f9f6ee;
+  --sunk: #ede9e0;
+  --ink: #1c1714;
+  --ink-2: #47413e;
+  --ink-3: #6a6460;
+  --prose: #1b2130;
+  --line: rgba(28, 23, 20, 0.14);
+  --line-strong: rgba(28, 23, 20, 0.30);
+  --teal: #186058;
+  --on-teal: #f9f6ee;
+  --coral: #b02818;
+  --gold: #8a6a3a;
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-ui: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "DM Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-prose: "Literata", Georgia, serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0b0e15; --surface: #121723; --sunk: #080a10;
+    --ink: #e4e7df; --ink-2: #c8cec8; --ink-3: #8a9890; --prose: #c4bdab;
+    --line: rgba(200, 206, 200, 0.16); --line-strong: rgba(200, 206, 200, 0.34);
+    --teal: #5ccfcf; --on-teal: #0b0e15; --coral: #f07178; --gold: #cda24e;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0b0e15; --surface: #121723; --sunk: #080a10;
+  --ink: #e4e7df; --ink-2: #c8cec8; --ink-3: #8a9890; --prose: #c4bdab;
+  --line: rgba(200, 206, 200, 0.16); --line-strong: rgba(200, 206, 200, 0.34);
+  --teal: #5ccfcf; --on-teal: #0b0e15; --coral: #f07178; --gold: #cda24e;
+  color-scheme: dark;
+}
+
+/* ---- Base ---------------------------------------------------------------- */
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink-2);
+  font-family: var(--font-ui); font-size: 15px; line-height: 1.5;
+}
+.wrap {
+  max-width: 1320px; margin: 0 auto;
+  padding-block: 28px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 24px;
+}
+h1, h2, h3 { color: var(--ink); margin: 0; text-wrap: balance; }
+p { margin: 0; }
+button, textarea, input { font: inherit; color: inherit; }
+:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+.label {
+  font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--ink-3);
+}
+
+/* ---- Masthead ------------------------------------------------------------ */
+.mast { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.mast h1 { font-family: var(--font-display); font-weight: 600; font-size: clamp(30px, 4.2vw, 44px); line-height: 1.05; }
+.mast-side { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.progress { font-family: var(--font-mono); font-size: 13px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+.intro { max-width: 68ch; color: var(--ink-2); }
+
+/* ---- Buttons ------------------------------------------------------------- */
+.btn {
+  border: 1px solid var(--line-strong); background: transparent; color: var(--ink);
+  padding: 8px 14px; border-radius: 4px; cursor: pointer; min-height: 40px;
+}
+.btn:hover { border-color: var(--ink-3); }
+.btn[disabled] { opacity: 0.55; cursor: not-allowed; }
+.btn-primary { background: var(--teal); border-color: var(--teal); color: var(--on-teal); font-weight: 600; }
+.btn-primary:hover { border-color: var(--teal); filter: brightness(1.06); }
+
+/* ---- Case switcher ------------------------------------------------------- */
+.cases { display: flex; flex-wrap: wrap; gap: 8px; }
+.case-tab {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
+  border: 1px solid var(--line); background: var(--surface); color: var(--ink-2);
+  padding: 10px 14px; border-radius: 4px; cursor: pointer; text-align: left; min-width: 0;
+}
+.case-tab[aria-pressed="true"] { border-color: var(--teal); color: var(--ink); box-shadow: inset 0 -2px 0 var(--teal); }
+.case-tab .name { font-weight: 600; overflow-wrap: anywhere; }
+.chip { font-family: var(--font-mono); font-size: 11.5px; letter-spacing: 0.04em; color: var(--ink-3); }
+.chip[data-state="reviewed"] { color: var(--teal); }
+.chip[data-state="unsaved"] { color: var(--coral); }
+
+/* ---- Notices ------------------------------------------------------------- */
+.notice { border-left: 3px solid var(--gold); background: var(--surface); padding: 10px 14px; max-width: 80ch; }
+.notice[data-kind="error"] { border-left-color: var(--coral); }
+
+/* ---- Prompt -------------------------------------------------------------- */
+.prompt { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 16px 18px; display: flex; flex-direction: column; gap: 8px; }
+.prompt-text { font-family: var(--font-prose); color: var(--prose); font-size: 16px; line-height: 1.6; max-width: 78ch; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* ---- Bench: two answers across a seam ------------------------------------ */
+.switch { display: none; gap: 0; }
+.switch button {
+  flex: 1; border: 1px solid var(--line-strong); background: transparent; color: var(--ink-2);
+  padding: 10px; min-height: 44px; cursor: pointer; font-weight: 600;
+}
+.switch button:first-child { border-radius: 4px 0 0 4px; }
+.switch button:last-child { border-radius: 0 4px 4px 0; border-left: 0; }
+.switch button[aria-pressed="true"] { background: var(--teal); border-color: var(--teal); color: var(--on-teal); }
+.bench { display: grid; grid-template-columns: minmax(0, 1fr) 1px minmax(0, 1fr); gap: 20px; align-items: stretch; }
+.seam { background: linear-gradient(to bottom, transparent, var(--gold) 12%, var(--gold) 88%, transparent); }
+.answer { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.answer-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.answer-head h2 { font-family: var(--font-display); font-weight: 600; font-size: 26px; }
+.outline { font-size: 13.5px; }
+.outline summary { cursor: pointer; color: var(--ink-2); padding: 6px 0; }
+.outline ol { margin: 6px 0 0; padding-left: 20px; display: flex; flex-direction: column; gap: 2px; max-height: 220px; overflow: auto; }
+.outline li.sub { margin-left: 14px; }
+.outline button { background: none; border: 0; padding: 4px 0; color: var(--teal); cursor: pointer; text-align: left; }
+.outline button:hover { text-decoration: underline; }
+.pane {
+  height: min(72vh, 900px); overflow: auto; background: var(--surface);
+  border: 1px solid var(--line); border-radius: 4px; padding: 18px 20px;
+}
+
+/* ---- Rendered answer ----------------------------------------------------- */
+.md { font-family: var(--font-prose); color: var(--prose); font-size: 16px; line-height: 1.65; overflow-wrap: anywhere; }
+.md > * { max-width: 72ch; }
+.md h1, .md h2, .md h3, .md h4 { font-family: var(--font-ui); color: var(--ink); line-height: 1.25; margin: 1.5em 0 0.5em; }
+.md h1 { font-size: 22px; margin-top: 0; }
+.md h2 { font-size: 18px; padding-top: 0.6em; border-top: 1px solid var(--line); }
+.md h3 { font-size: 16px; }
+.md h4 { font-size: 15px; }
+.md p, .md ul, .md ol, .md blockquote, .md pre { margin: 0 0 1em; }
+.md ul, .md ol { padding-left: 1.4em; }
+.md li { margin-bottom: 0.35em; }
+.md a { color: var(--teal); }
+.md code { font-family: var(--font-mono); font-size: 0.86em; background: var(--sunk); padding: 0.1em 0.3em; border-radius: 3px; }
+.md pre { background: var(--sunk); padding: 12px 14px; border-radius: 4px; overflow-x: auto; max-width: 100%; }
+.md pre code { background: none; padding: 0; }
+.md blockquote { border-left: 3px solid var(--gold); padding-left: 14px; color: var(--ink-2); }
+.md hr { border: 0; border-top: 1px solid var(--line); margin: 1.6em 0; }
+.md .table-scroll { overflow-x: auto; max-width: 100%; margin: 0 0 1em; }
+.md table { border-collapse: collapse; font-family: var(--font-ui); font-size: 14px; font-variant-numeric: tabular-nums; }
+.md th, .md td { border: 1px solid var(--line); padding: 6px 10px; text-align: left; vertical-align: top; }
+.md th { background: var(--sunk); color: var(--ink); }
+.md-plain { font-family: var(--font-mono); font-size: 13px; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--prose); margin: 0; }
+
+/* ---- Decision ------------------------------------------------------------ */
+.decision { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 18px; display: flex; flex-direction: column; gap: 14px; }
+.decision fieldset { border: 0; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.decision legend { padding: 0; margin-bottom: 12px; font-family: var(--font-display); font-weight: 600; font-size: 24px; color: var(--ink); line-height: 1.2; }
+.choices { display: flex; flex-wrap: wrap; gap: 10px; }
+.choice { display: flex; align-items: center; gap: 8px; border: 1px solid var(--line-strong); border-radius: 4px; padding: 10px 14px; cursor: pointer; min-height: 44px; }
+.choice:has(input:checked) { border-color: var(--teal); box-shadow: inset 0 0 0 1px var(--teal); color: var(--ink); }
+.choice:has(input:disabled) { cursor: default; opacity: 0.75; }
+.choice input { accent-color: var(--teal); width: 18px; height: 18px; margin: 0; }
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field label { color: var(--ink); font-weight: 600; }
+.field .hint { color: var(--ink-3); font-size: 13.5px; }
+textarea { width: 100%; max-width: 78ch; min-height: 96px; resize: vertical; background: var(--bg); border: 1px solid var(--line-strong); border-radius: 4px; padding: 10px 12px; line-height: 1.5; }
+.actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.status { font-size: 14px; color: var(--ink-2); }
+.status[data-kind="ok"] { color: var(--teal); }
+.status[data-kind="error"] { color: var(--coral); }
+
+/* ---- Reveal -------------------------------------------------------------- */
+.reveal { border-top: 1px solid var(--line); padding-top: 14px; display: flex; flex-direction: column; gap: 12px; }
+.reveal h3 { font-size: 16px; }
+.reveal .table-scroll { overflow-x: auto; }
+.reveal table { border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
+.reveal th, .reveal td { border: 1px solid var(--line); padding: 6px 12px; text-align: left; }
+.reveal th { background: var(--sunk); color: var(--ink); font-weight: 600; }
+.reveal td.num { text-align: right; font-family: var(--font-mono); }
+
+/* ---- Export -------------------------------------------------------------- */
+.export { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 18px; display: flex; flex-direction: column; gap: 12px; }
+.export textarea { font-family: var(--font-mono); font-size: 12.5px; min-height: 220px; max-width: 100%; }
+.about { color: var(--ink-3); font-size: 13.5px; max-width: 86ch; display: flex; flex-direction: column; gap: 4px; }
+.about code { font-family: var(--font-mono); font-size: 0.92em; }
+
+/* ---- Narrow: one answer at a time, with a persistent A/B switch ---------- */
+@media (max-width: 900px) {
+  .switch { display: flex; }
+  .bench { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .seam { display: none; }
+  .bench[data-show="A"] .answer[data-slot="B"],
+  .bench[data-show="B"] .answer[data-slot="A"] { display: none; }
+  .pane { height: 64vh; padding: 14px; }
+  .decision legend { font-size: 21px; }
+}
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }
+</style>
+
+<div class="wrap">
+  <header class="mast">
+    <div>
+      <p class="label">Blind paired review</p>
+      <h1>__PAGE_TITLE__</h1>
+    </div>
+    <div class="mast-side">
+      <span class="progress" id="progress" aria-live="polite">0 of 0 reviewed</span>
+      <button class="btn" id="export-open" type="button">Export answers</button>
+    </div>
+  </header>
+
+  <p class="intro">Each case shows one prompt and two answers to it. One answer was written with the skill and one without; which is which stays hidden until you record a preference. Read as much of each as you need to choose.</p>
+
+  <div class="notice" id="store-notice" role="status" hidden></div>
+
+  <nav class="cases" id="cases" aria-label="Cases"></nav>
+
+  <section class="prompt" aria-labelledby="prompt-label">
+    <p class="label" id="prompt-label">The prompt both answers received</p>
+    <p class="prompt-text" id="prompt-text"></p>
+  </section>
+
+  <div class="switch" id="switch" role="group" aria-label="Answer shown">
+    <button type="button" data-show="A" aria-pressed="true">Answer A</button>
+    <button type="button" data-show="B" aria-pressed="false">Answer B</button>
+  </div>
+
+  <div class="bench" id="bench" data-show="A">
+    <article class="answer" data-slot="A" aria-labelledby="answer-a-title">
+      <div class="answer-head"><h2 id="answer-a-title">Answer A</h2></div>
+      <details class="outline" id="outline-A"><summary>Outline</summary><ol></ol></details>
+      <div class="pane" id="pane-A" role="region" aria-label="Answer A text" tabindex="0"></div>
+    </article>
+    <div class="seam" aria-hidden="true"></div>
+    <article class="answer" data-slot="B" aria-labelledby="answer-b-title">
+      <div class="answer-head"><h2 id="answer-b-title">Answer B</h2></div>
+      <details class="outline" id="outline-B"><summary>Outline</summary><ol></ol></details>
+      <div class="pane" id="pane-B" role="region" aria-label="Answer B text" tabindex="0"></div>
+    </article>
+  </div>
+
+  <form class="decision" id="decision" novalidate>
+    <fieldset>
+      <legend>Which answer would help you choose what to verify next?</legend>
+      <div class="choices">
+        <label class="choice"><input type="radio" name="choice" id="choice-a" value="A"> Answer A</label>
+        <label class="choice"><input type="radio" name="choice" id="choice-b" value="B"> Answer B</label>
+        <label class="choice"><input type="radio" name="choice" id="choice-tie" value="tie"> Tie</label>
+      </div>
+    </fieldset>
+    <div class="field">
+      <label for="evidence">What evidence in the answer makes it better?</label>
+      <span class="hint" id="evidence-hint">Optional. Point at something specific in the text.</span>
+      <textarea id="evidence" aria-describedby="evidence-hint"></textarea>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary" id="record" type="submit">Record preference</button>
+      <button class="btn" id="retry-save" type="button" hidden>Try saving again</button>
+      <span class="status" id="status" role="status" aria-live="polite"></span>
+    </div>
+    <div class="reveal" id="reveal" hidden>
+      <h3 id="reveal-title"></h3>
+      <div class="table-scroll">
+        <table>
+          <thead><tr><th scope="col">Measure</th><th scope="col" id="reveal-col-a">Answer A</th><th scope="col" id="reveal-col-b">Answer B</th></tr></thead>
+          <tbody id="reveal-body"></tbody>
+        </table>
+      </div>
+      <p id="reveal-summary"></p>
+    </div>
+  </form>
+
+  <section class="export" id="export" aria-labelledby="export-title" hidden>
+    <h2 id="export-title">Export answers</h2>
+    <p>Every case is listed with its state, including cases you have not reviewed.</p>
+    <textarea id="export-json" readonly aria-label="Review answers as JSON"></textarea>
+    <div class="actions">
+      <button class="btn" id="export-copy" type="button">Copy JSON</button>
+      <button class="btn" id="export-save" type="button" hidden>Save as file</button>
+      <button class="btn" id="export-close" type="button">Close</button>
+      <span class="status" id="export-status" role="status" aria-live="polite"></span>
+    </div>
+  </section>
+
+  <footer class="about" id="about"></footer>
+</div>
+
+<script type="application/json" id="packet">__PACKET_JSON__</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.6/purify.min.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  // ==========================================================================
+  // Data and state
+  // ==========================================================================
+  var packet = JSON.parse(document.getElementById("packet").textContent);
+  var cases = packet.cases;
+  var LOCAL_KEY = "blind-review:" + packet.meta.packet_id;
+
+  var state = {
+    current: 0,
+    reviews: {},        // caseId -> review record
+    saved: {},          // caseId -> true once the store confirmed the write
+    activeMs: {},       // caseId -> ms of visible reading before the decision
+    tickStart: null,
+    db: null,
+    uid: null,
+    downloads: null,
+    reviewerDocWritten: false,
+    busy: false
+  };
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  // ==========================================================================
+  // Pure helpers
+  // ==========================================================================
+  function reviewState(review) {
+    if (!review) { return "unreviewed"; }
+    return review.evidence && review.evidence.trim() ? "reviewed_with_comment" : "reviewed_no_comment";
+  }
+
+  function armOf(caseData, choice) {
+    if (choice === "tie") { return "tie"; }
+    return caseData.slots[choice].arm;
+  }
+
+  function formatDuration(seconds) {
+    var s = Math.round(seconds);
+    if (s < 60) { return s + " s"; }
+    return Math.floor(s / 60) + " min " + (s % 60) + " s";
+  }
+
+  function buildExport() {
+    return {
+      packet: packet.meta,
+      reviewer: state.uid,
+      exported_at: new Date().toISOString(),
+      cases: cases.map(function (c) {
+        var r = state.reviews[c.id];
+        return {
+          case: c.id,
+          state: reviewState(r),
+          choice: r ? r.choice : null,
+          preferred_arm: r ? r.preferred_arm : null,
+          evidence: r ? r.evidence : null,
+          active_seconds: r ? r.active_seconds : null,
+          decided_at: r ? r.decided_at : null,
+          saved_to_record: Boolean(state.saved[c.id])
+        };
+      })
+    };
+  }
+
+  // ==========================================================================
+  // Local fallback copy (per browser; the shared record is the source of truth)
+  // ==========================================================================
+  function readLocal() {
+    try { return JSON.parse(localStorage.getItem(LOCAL_KEY) || "{}"); } catch (e) { return {}; }
+  }
+  function writeLocal() {
+    try { localStorage.setItem(LOCAL_KEY, JSON.stringify(state.reviews)); } catch (e) { /* storage blocked */ }
+  }
+
+  // ==========================================================================
+  // Reading timer: counts only while the page is visible and the case undecided
+  // ==========================================================================
+  function stopTick() {
+    if (state.tickStart === null) { return; }
+    var id = cases[state.current].id;
+    state.activeMs[id] = (state.activeMs[id] || 0) + (Date.now() - state.tickStart);
+    state.tickStart = null;
+  }
+  function startTick() {
+    var id = cases[state.current].id;
+    if (state.reviews[id] || document.hidden) { state.tickStart = null; return; }
+    state.tickStart = Date.now();
+  }
+
+  // ==========================================================================
+  // Rendering
+  // ==========================================================================
+  function renderMarkdown(pane, text) {
+    pane.textContent = "";
+    if (window.marked && window.DOMPurify) {
+      var holder = document.createElement("div");
+      holder.className = "md";
+      holder.innerHTML = window.DOMPurify.sanitize(window.marked.parse(text), { USE_PROFILES: { html: true } });
+      Array.prototype.forEach.call(holder.querySelectorAll("table"), function (table) {
+        var scroll = document.createElement("div");
+        scroll.className = "table-scroll";
+        table.parentNode.insertBefore(scroll, table);
+        scroll.appendChild(table);
+      });
+      Array.prototype.forEach.call(holder.querySelectorAll("a[href]"), function (a) {
+        a.setAttribute("target", "_blank");
+        a.setAttribute("rel", "noopener noreferrer");
+      });
+      pane.appendChild(holder);
+    } else {
+      var pre = document.createElement("pre");
+      pre.className = "md-plain";
+      pre.textContent = text;
+      pane.appendChild(pre);
+    }
+    pane.scrollTop = 0;
+  }
+
+  function renderOutline(slot) {
+    var details = $("outline-" + slot);
+    var list = details.querySelector("ol");
+    var pane = $("pane-" + slot);
+    var headings = pane.querySelectorAll(".md h2, .md h3");
+    list.textContent = "";
+    details.hidden = headings.length === 0;
+    details.open = false;
+    details.querySelector("summary").textContent = "Outline (" + headings.length + " sections)";
+    Array.prototype.forEach.call(headings, function (h) {
+      var li = document.createElement("li");
+      if (h.tagName === "H3") { li.className = "sub"; }
+      var b = document.createElement("button");
+      b.type = "button";
+      b.textContent = h.textContent;
+      b.addEventListener("click", function () {
+        pane.scrollTop = h.offsetTop - pane.offsetTop - 8;
+        pane.focus({ preventScroll: true });
+      });
+      li.appendChild(b);
+      list.appendChild(li);
+    });
+  }
+
+  function renderCaseTabs() {
+    var nav = $("cases");
+    nav.textContent = "";
+    cases.forEach(function (c, i) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "case-tab";
+      b.setAttribute("aria-pressed", String(i === state.current));
+      var name = document.createElement("span");
+      name.className = "name";
+      name.textContent = "Case " + (i + 1) + ": " + c.title;
+      var chip = document.createElement("span");
+      chip.className = "chip";
+      var r = state.reviews[c.id];
+      if (!r) { chip.textContent = "Not reviewed"; chip.dataset.state = "unreviewed"; }
+      else if (state.db && !state.saved[c.id]) { chip.textContent = "Reviewed, not saved"; chip.dataset.state = "unsaved"; }
+      else { chip.textContent = reviewState(r) === "reviewed_with_comment" ? "Reviewed, with note" : "Reviewed, no note"; chip.dataset.state = "reviewed"; }
+      b.appendChild(name);
+      b.appendChild(chip);
+      b.addEventListener("click", function () { showCase(i); });
+      nav.appendChild(b);
+    });
+    var done = cases.filter(function (c) { return state.reviews[c.id]; }).length;
+    $("progress").textContent = done + " of " + cases.length + " reviewed";
+  }
+
+  function addRevealRow(body, label, a, b) {
+    var tr = document.createElement("tr");
+    var th = document.createElement("th");
+    th.scope = "row"; th.textContent = label;
+    var tdA = document.createElement("td"); tdA.className = "num"; tdA.textContent = a;
+    var tdB = document.createElement("td"); tdB.className = "num"; tdB.textContent = b;
+    tr.appendChild(th); tr.appendChild(tdA); tr.appendChild(tdB);
+    body.appendChild(tr);
+  }
+
+  function renderDecision() {
+    var c = cases[state.current];
+    var r = state.reviews[c.id];
+    var locked = Boolean(r);
+    ["choice-a", "choice-b", "choice-tie"].forEach(function (id) {
+      var input = $(id);
+      input.checked = locked ? input.value === r.choice : false;
+      input.disabled = locked;
+    });
+    $("evidence").value = locked ? (r.evidence || "") : "";
+    $("record").textContent = locked ? "Update note" : "Record preference";
+    $("retry-save").hidden = !(locked && state.db && !state.saved[c.id]);
+
+    var reveal = $("reveal");
+    reveal.hidden = !locked;
+    if (!locked) { return; }
+    var label = packet.meta.arm_labels;
+    var a = c.slots.A, b = c.slots.B;
+    $("reveal-title").textContent = "Answer A was written " + label[a.arm] + ". Answer B was written " + label[b.arm] + ".";
+    $("reveal-col-a").textContent = "Answer A (" + label[a.arm] + ")";
+    $("reveal-col-b").textContent = "Answer B (" + label[b.arm] + ")";
+    var body = $("reveal-body");
+    body.textContent = "";
+    addRevealRow(body, "Rubric checks passed", a.rubric_passed + " of " + a.rubric_total, b.rubric_passed + " of " + b.rubric_total);
+    addRevealRow(body, "Length (words)", a.words.toLocaleString(), b.words.toLocaleString());
+    addRevealRow(body, "Run time", a.seconds === null ? "not recorded" : Math.round(a.seconds) + " s", b.seconds === null ? "not recorded" : Math.round(b.seconds) + " s");
+    addRevealRow(body, "Reported tokens", a.tokens === null ? "not recorded" : a.tokens.toLocaleString(), b.tokens === null ? "not recorded" : b.tokens.toLocaleString());
+    var picked = r.choice === "tie" ? "a tie" : "Answer " + r.choice + " (" + label[r.preferred_arm] + ")";
+    $("reveal-summary").textContent = "You chose " + picked + " after " + formatDuration(r.active_seconds) + " of reading. The preference is locked; you can still edit your note.";
+  }
+
+  function setStatus(kind, text) {
+    var el = $("status");
+    el.dataset.kind = kind;
+    el.textContent = text;
+  }
+
+  function showCase(index) {
+    stopTick();
+    state.current = index;
+    var c = cases[index];
+    $("prompt-text").textContent = c.prompt;
+    ["A", "B"].forEach(function (slot) {
+      renderMarkdown($("pane-" + slot), c.slots[slot].text);
+      renderOutline(slot);
+    });
+    setStatus("", "");
+    renderCaseTabs();
+    renderDecision();
+    startTick();
+  }
+
+  // ==========================================================================
+  // Saving: "Saved" is shown only after the store resolves the write
+  // ==========================================================================
+  function describeDbError(err) {
+    var code = err && err.code ? err.code : "unavailable";
+    if (code === "invalid_argument") { return "this view is not allowed to write to the review record"; }
+    if (code === "quota_exceeded") { return "the review record is full"; }
+    if (code === "revoked" || code === "not_granted") { return "access to the review record was withdrawn"; }
+    return "the review record could not be reached";
+  }
+
+  function ensureReviewerDoc() {
+    if (state.reviewerDocWritten) { return Promise.resolve(); }
+    return state.db.doc("reviews/" + state.uid)
+      .set({ reviewer: state.uid, packet_id: packet.meta.packet_id })
+      .then(function () { state.reviewerDocWritten = true; });
+  }
+
+  function writeOnce(caseId) {
+    return ensureReviewerDoc().then(function () {
+      return state.db.doc("reviews/" + state.uid + "/cases/" + caseId).set(state.reviews[caseId]);
+    });
+  }
+
+  function saveReview(caseId) {
+    if (!state.db || !state.uid) {
+      setStatus("", "Kept in this browser only. Use Export answers to hand it over.");
+      return Promise.resolve(false);
+    }
+    state.busy = true;
+    state.reviews[caseId].reviewer = state.uid;
+    $("record").disabled = true;
+    setStatus("", "Saving...");
+    return writeOnce(caseId)
+      .catch(function (err) {
+        if (err && err.code === "unavailable") {
+          return new Promise(function (resolve) { setTimeout(resolve, 600 + Math.random() * 900); })
+            .then(function () { return writeOnce(caseId); });
+        }
+        throw err;
+      })
+      .then(function () {
+        state.saved[caseId] = true;
+        setStatus("ok", "Saved to the review record.");
+        return true;
+      })
+      .catch(function (err) {
+        state.saved[caseId] = false;
+        setStatus("error", "Not saved: " + describeDbError(err) + ". Your answer is kept in this browser; try again or use Export answers.");
+        return false;
+      })
+      .then(function (ok) {
+        state.busy = false;
+        $("record").disabled = false;
+        renderCaseTabs();
+        renderDecision();
+        return ok;
+      });
+  }
+
+  function onSubmit(event) {
+    event.preventDefault();
+    if (state.busy) { return; }
+    var c = cases[state.current];
+    var existing = state.reviews[c.id];
+    var evidence = $("evidence").value.trim();
+
+    if (existing) {
+      if (evidence === (existing.evidence || "")) { setStatus("", "No change to save."); return; }
+      existing.evidence = evidence;
+      existing.state = reviewState(existing);
+      existing.note_updated_at = new Date().toISOString();
+    } else {
+      var picked = document.querySelector('input[name="choice"]:checked');
+      if (!picked) { setStatus("error", "Choose Answer A, Answer B or Tie first."); $("choice-a").focus(); return; }
+      stopTick();
+      var review = {
+        case: c.id,
+        packet_id: packet.meta.packet_id,
+        reviewer: state.uid,
+        choice: picked.value,
+        preferred_arm: armOf(c, picked.value),
+        slot_a_arm: c.slots.A.arm,
+        slot_b_arm: c.slots.B.arm,
+        evidence: evidence,
+        active_seconds: Math.round((state.activeMs[c.id] || 0) / 1000),
+        decided_at: new Date().toISOString()
+      };
+      review.state = reviewState(review);
+      state.reviews[c.id] = review;
+    }
+    writeLocal();
+    renderCaseTabs();
+    renderDecision();
+    saveReview(c.id);
+  }
+
+  // ==========================================================================
+  // Export
+  // ==========================================================================
+  function openExport() {
+    $("export-json").value = JSON.stringify(buildExport(), null, 2);
+    $("export").hidden = false;
+    $("export-status").textContent = "";
+    $("export-save").hidden = !state.downloads;
+    $("export-json").focus();
+  }
+
+  function copyExport() {
+    var box = $("export-json");
+    var done = function () { $("export-status").textContent = "Copied."; };
+    var fallback = function () { box.select(); $("export-status").textContent = "Copy was blocked here. The text is selected; copy it with your keyboard."; };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(box.value).then(done, fallback);
+    } else { fallback(); }
+  }
+
+  function saveExportFile() {
+    if (!state.downloads) { return; }
+    state.downloads.save({ filename: packet.meta.packet_id + "-blind-review.json", data: $("export-json").value })
+      .then(function () { $("export-status").textContent = "File handed to your device."; })
+      .catch(function (err) {
+        var code = err && err.code;
+        $("export-status").textContent = code === "declined" ? "Save cancelled." : "Could not save a file here. Use Copy JSON.";
+      });
+  }
+
+  // ==========================================================================
+  // Store connection
+  // ==========================================================================
+  function showStoreNotice(kind, text) {
+    var el = $("store-notice");
+    el.hidden = !text;
+    el.dataset.kind = kind;
+    el.textContent = text;
+  }
+
+  function loadSaved() {
+    var timedOut = false;
+    var timer = setTimeout(function () {
+      timedOut = true;
+      showStoreNotice("error", "The review record has not answered yet. You can review now; answers are kept in this browser and saved when it responds.");
+    }, 10000);
+    return state.db.collection("reviews/" + state.uid + "/cases").get().then(function (snap) {
+      clearTimeout(timer);
+      if (timedOut) { showStoreNotice("", ""); }
+      snap.docs.forEach(function (d) {
+        var r = d.data();
+        if (!r || r.packet_id !== packet.meta.packet_id) { return; }
+        state.reviewerDocWritten = true;
+        if (!cases.some(function (c) { return c.id === r.case; })) { return; }
+        state.reviews[r.case] = Object.assign({}, r);
+        state.saved[r.case] = true;
+      });
+    }).catch(function (err) {
+      clearTimeout(timer);
+      showStoreNotice("error", "Saved answers could not be loaded: " + describeDbError(err) + ". New answers are kept in this browser.");
+    });
+  }
+
+  function connect() {
+    if (!window.claude || !window.claude.use) {
+      showStoreNotice("", "This view has no review record behind it. Answers stay in this browser; use Export answers to hand them over.");
+      return Promise.resolve();
+    }
+    return Promise.all([window.claude.use("db"), window.claude.use("user"), window.claude.use("downloads")])
+      .then(function (caps) {
+        state.downloads = caps[2];
+        var user = caps[1];
+        return (user ? user.id() : Promise.resolve(null)).then(function (uid) {
+          if (!caps[0] || !uid) {
+            showStoreNotice("", "This view cannot save to the review record. Answers stay in this browser; use Export answers to hand them over.");
+            return;
+          }
+          state.db = caps[0];
+          state.uid = uid;
+          return loadSaved();
+        });
+      });
+  }
+
+  // ==========================================================================
+  // Boot
+  // ==========================================================================
+  function renderAbout() {
+    var m = packet.meta;
+    var lines = [
+      "Packet " + m.packet_id + ": " + cases.length + " cases, " + m.runs_per_cell + " run per case per arm, run on " + m.run_date + ".",
+      "Skill revision " + m.skill_revision + ". Executor model: " + m.executor_model + ".",
+      "Which answer sits in slot A was fixed per case when this page was built. The assignment is in the page source."
+    ];
+    var about = $("about");
+    lines.forEach(function (line) { var p = document.createElement("p"); p.textContent = line; about.appendChild(p); });
+  }
+
+  function start() {
+    state.reviews = readLocal();
+    renderAbout();
+    showCase(0);
+    $("decision").addEventListener("submit", onSubmit);
+    $("retry-save").addEventListener("click", function () { if (!state.busy) { saveReview(cases[state.current].id); } });
+    $("export-open").addEventListener("click", openExport);
+    $("export-close").addEventListener("click", function () { $("export").hidden = true; $("export-open").focus(); });
+    $("export-copy").addEventListener("click", copyExport);
+    $("export-save").addEventListener("click", saveExportFile);
+    Array.prototype.forEach.call(document.querySelectorAll("#switch button"), function (b) {
+      b.addEventListener("click", function () {
+        $("bench").dataset.show = b.dataset.show;
+        Array.prototype.forEach.call(document.querySelectorAll("#switch button"), function (o) {
+          o.setAttribute("aria-pressed", String(o === b));
+        });
+      });
+    });
+    document.addEventListener("visibilitychange", function () { if (document.hidden) { stopTick(); } else { startTick(); } });
+    connect().then(function () {
+      renderCaseTabs();
+      if (state.reviews[cases[state.current].id]) {
+        state.tickStart = null;
+        renderDecision();
+      } else if (state.tickStart === null) {
+        startTick();
+      }
+    });
+  }
+
+  start();
+})();
+</script>

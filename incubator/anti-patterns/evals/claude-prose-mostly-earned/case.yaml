@@ -1,0 +1,17 @@
+schema_version: "1.1"
+name: claude-prose-mostly-earned
+expected_outcome: |
+  An audit that correctly discriminates earned from evasive hedges:
+  identifies 1-2 genuinely evasive hedges (the "there's something
+  complicated about" meta-descent and the "might be oversimplifying
+  but" pre-apology that doesn't name a specific limit), AND lists
+  the majority of the document's uncertainty markers as earned —
+  specifically the "we observed" / "we did not observe" factual
+  hedges, the "pending the post-mortem" temporal hedges, and the
+  "the logs do not disambiguate X from Y" epistemic hedges that
+  track specific unresolved questions. A failing audit would either
+  (a) flag everything as evasive (cargo-culting the lens) or (b)
+  flag nothing (not reading closely).
+
+context:
+  scaffold_script: place-files.sh
