@@ -164,6 +164,39 @@ else
   fi
 fi
 
+# ── PreToolUse commit trailer guard ───────────────────────────────────────────
+# Denies a git commit whose message lacks mazze's Signed-off-by line.
+# See hooks/commit-trailer-guard.sh.
+CTG_CMD="bash ~/.claude/scripts/commit-trailer-guard.sh"
+
+already=$(jq --arg cmd "$CTG_CMD" '
+  .hooks.PreToolUse // [] |
+  map(select(any(.hooks[]?; .command == $cmd))) |
+  length
+' "$SETTINGS" 2>/dev/null || echo 0)
+
+if [[ "$already" -gt 0 ]]; then
+  _skip "PreToolUse commit-trailer-guard hook"
+else
+  TMPFILE=$(mktemp)
+  jq --arg cmd "$CTG_CMD" '
+    .hooks.PreToolUse = (
+      (.hooks.PreToolUse // []) +
+      [{"matcher": "Bash", "hooks": [{"type": "command", "command": $cmd}]}]
+    )
+  ' "$SETTINGS" > "$TMPFILE"
+
+  if [[ "$DRY_RUN" == "--dry-run" ]]; then
+    echo "  [settings] dry: would add PreToolUse commit-trailer-guard hook to $SETTINGS"
+    rm -f "$TMPFILE"
+  else
+    cp "$SETTINGS" "${SETTINGS}.bak.$(date +%Y%m%d-%H%M%S)"
+    mv "$TMPFILE" "$SETTINGS"
+    _ok "added PreToolUse commit-trailer-guard hook (matcher: Bash)"
+    _ok "backup saved: ${SETTINGS}.bak.*"
+  fi
+fi
+
 # ── Verify minimum version ─────────────────────────────────────────────────────
 CURRENT_MIN=$(jq -r '.minimumVersion // empty' "$SETTINGS" 2>/dev/null)
 REQUIRED_MIN="2.1.150"
