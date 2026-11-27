@@ -33,6 +33,10 @@ mkrepo "$T/nr"      "$NOREPLY" ""            ""                   # local norepl
 mkrepo "$T/unsign"  ""        ""             "init, no trailer"
 mkrepo "$T/other"   ""        "Someone Else" ""
 printf 'subject\n\n%s\n' "$SO" > "$T/real/msg-ok.txt"
+mkrepo "$T/merge-bad" "" "" "init"$'\n\n'"$SO"     # signed HEAD, unsigned MERGE_MSG
+printf 'Merge branch x\n' > "$T/merge-bad/.git/MERGE_MSG"
+mkrepo "$T/merge-ok"  "" "" "init, no trailer"         # unsigned HEAD, signed MERGE_MSG
+printf 'Merge branch x\n\n%s\n' "$SO" > "$T/merge-ok/.git/MERGE_MSG"
 printf 'subject only\n' > "$T/real/msg-bad.txt"
 
 check() {  # check <DENY|silent> <cwd> <command>
@@ -114,6 +118,38 @@ check DENY "$T/unsign" "$NR git commit --amend --no-edit"
 check DENY "$T/other" "$NR git commit -s -m x"
 check DENY "$R" "$NR git commit"
 check DENY "$R" "$NR git commit -m \"Signed-off-by: Someone Else <a@b.c>\""
+
+# ── PR #29 review findings (cursor[bot]): one regression fixture each ───────
+# 1 option injection: a dashed rev must never reach git log (it wrote files)
+check DENY "$R" "git commit -C --output=$T/injected.out"
+n=$((n+1)); if [[ -e "$T/injected.out" ]]; then echo "FAIL  hook wrote $T/injected.out via git log --output"; fail=$((fail+1)); else echo "ok    nofile <-C --output=... wrote nothing>"; fi
+check DENY "$R" "git commit --reuse-message=--output=$T/injected2.out"
+# 2 heredoc piped into a shell runs its body
+check DENY "$R" "cat <<'EOF' | bash
+git commit -m unsigned
+EOF"
+check DENY "$R" "cat <<EOF | /bin/sh
+git commit -m unsigned
+EOF"
+# 3 a file path ending in .sh / named bash.* is not a shell
+check silent "$R" "cat > x.sh <<'EOF'
+git commit -m doc-line
+EOF"
+check silent "$R" "cat > docs/bash.md <<'EOF'
+git commit -m doc-line
+EOF"
+# 4 --no-edit only reuses HEAD with --amend and no new message; merges use MERGE_MSG
+check DENY "$R" "git commit --no-edit -m unsigned"
+check DENY "$R" "git commit --amend --no-edit -m unsigned"
+check DENY "$T/merge-bad" "git commit --no-edit"
+check silent "$T/merge-ok" "git commit --no-edit"
+# 5 flags quoted inside the message are text
+check DENY "$R" "git commit -m \"see -C HEAD\""
+check DENY "$R" "git commit -am \"uses -F msg-ok.txt\""
+check DENY "$R" "git commit --message=\"-C HEAD\""
+check silent "$R" "git commit --reuse-message=HEAD"
+# 6 backticks start a command
+check DENY "$R" "echo \`git commit -m unsigned\`"
 
 # ── fail-closed on unreadable input only when it mentions git commit ──────────
 out="$(printf 'not json git commit -m x' | bash "$HOOK")"; n=$((n+1))

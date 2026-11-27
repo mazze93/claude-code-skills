@@ -65,18 +65,19 @@ fi
 
 # Heredoc bodies and multi-line quoted strings are data (a README being written,
 # a PR body), not commands: blank them before looking for commands, except a
-# heredoc fed to a shell (bash <<EOF runs its body). Newlines
+# heredoc fed to a shell (`bash <<EOF`, `cat <<EOF | sh` run their body; a
+# shell counts only at command position, so `cat > x.sh <<EOF` is text). Newlines
 # are kept so line numbers still line up. The Signed-off-by check below still
 # reads the raw command, where the message text lives.
 y="$(printf '%s\n' "$cmd" | perl -0777 -pe '
-  s/(^[^\n]*?)(?<!<)(<<-?[ \t]*(["\x27]?)([A-Za-z_][A-Za-z0-9_]*)\3[^\n]*\n)(.*?)(^[ \t]*\4[ \t]*$)/do { my ($pre, $hd, $body, $end) = ($1, $2, $5, $6); ($pre =~ m{(?:^|[^\w-])(?:bash|sh|zsh|ksh|dash)\b}) ? "$pre$hd$body$end" : $pre . $hd . ($body =~ tr|\n||cdr) . $end }/gsme;
+  s/(^[^\n]*?)(?<!<)(<<-?[ \t]*(["\x27]?)([A-Za-z_][A-Za-z0-9_]*)\3[^\n]*\n)(.*?)(^[ \t]*\4[ \t]*$)/do { my ($pre, $hd, $body, $end) = ($1, $2, $5, $6); ("$pre$hd" =~ m{(?:^|[;&|(`]|\$\()\s*(?:(?:sudo|env|exec|command)\s+)*(?:\S*\/)?(?:bash|sh|zsh|ksh|dash)(?![^\s;&|)])}m) ? "$pre$hd$body$end" : $pre . $hd . ($body =~ tr|\n||cdr) . $end }/gsme;
   s/"((?:[^"\\\n]|\\.)*\n(?:[^"\\]|\\.)*)"/"\"" . ($1 =~ tr|\n||cdr) . "\""/gse;
   s/\x27([^\x27\n]*\n[^\x27]*)\x27/"\x27" . ($1 =~ tr|\n||cdr) . "\x27"/gse;
 ' 2>/dev/null)" || y="$cmd"
 [[ -n "$y" ]] || y="$cmd"
 
 # ── Is there a `git commit` at command position? ──────────────────────────────
-START='(^|[;&|({]|\$\()[[:space:]]*'
+START='(^|[;&|({`]|\$\()[[:space:]]*'
 ASSIGN='([A-Za-z_][A-Za-z0-9_]*=("[^"]*"|'"'[^']*'"'|[^[:space:]]*)[[:space:]]+)*'
 GITOPTS='([[:space:]]+(-[cC][[:space:]]+[^[:space:]]+|--?[[:alnum:]-]+(=[^[:space:]]+)?))*'
 COMMIT_RE="${START}(env[[:space:]]+)?${ASSIGN}git${GITOPTS}[[:space:]]+commit([[:space:]]|\$|[;&|)])"
@@ -89,6 +90,10 @@ args="$(printf '%s\n' "$x" | grep -E 'git.*[[:space:]]commit([[:space:]]|$)' | h
   | sed -E 's/.*[[:space:]]commit([[:space:]]|$)/ /')"
 raw_args="$(printf '%s\n' "$y" | grep -E 'git.*[[:space:]]commit([[:space:]]|$)' | head -1 \
   | sed -E 's/.*[[:space:]]commit([[:space:]]|$)/ /')"
+# Message values are text, not flags: `-m "see -C HEAD"` must not read as -C.
+raw_args="$(printf '%s\n' "$raw_args" | sed -E \
+  "s/(^|[[:space:]])(-[[:alpha:]]*m|--message)(=|[[:space:]]+)?(\"[^\"]*\"|'[^']*'|[^[:space:]]+)/\\1/g")"
+has_msg=""; printf '%s\n' "$args" | grep -Eq '(^|[[:space:]])(-[[:alpha:]]*[mF]|--message|--file)([=[:space:]]|$)' && has_msg=yes
 
 unquote() { local v="$1"; v="${v#\"}"; v="${v%\"}"; v="${v#\'}"; v="${v%\'}"; printf '%s' "$v"; }
 resolve() {  # resolve path $2 against dir $1
@@ -117,8 +122,8 @@ elif printf '%s\n' "$args" | grep -Eq '(^|[[:space:]])(--signoff|-[[:alpha:]]*s[
   [[ "$name" == "Mazze LeCzzare Frazer" ]] && signed=yes
 fi
 if [[ -z "$signed" ]]; then
-  ffile="$(printf '%s\n' "$raw_args" | grep -oE "(-F|--file)(=|[[:space:]]+)${QV}" | tail -1 \
-    | sed -E 's/^(-F|--file)(=|[[:space:]]+)//')"
+  ffile="$(printf '%s\n' "$raw_args" | grep -oE "(^|[[:space:]])(-F|--file)(=|[[:space:]]+)${QV}" | tail -1 \
+    | sed -E 's/^[[:space:]]*(-F|--file)(=|[[:space:]]+)//')"
   if [[ -n "$ffile" && "$(unquote "$ffile")" != "-" ]]; then
     f="$(resolve "$dir" "$ffile")"
     [[ -r "$f" ]] && grep -Fq "$SIGNOFF" "$f" && signed=yes
@@ -126,11 +131,25 @@ if [[ -z "$signed" ]]; then
 fi
 if [[ -z "$signed" ]]; then
   rev=""
-  if printf '%s\n' "$args" | grep -Eq '(^|[[:space:]])--no-edit([[:space:]]|$)'; then rev=HEAD; fi
-  r="$(printf '%s\n' "$raw_args" | grep -oE "(-C|-c|--reuse-message|--reedit-message)(=|[[:space:]]+)${QV}" | tail -1 \
-    | sed -E 's/^(-C|-c|--reuse-message|--reedit-message)(=|[[:space:]]+)//')"
+  if [[ -z "$has_msg" ]] && printf '%s\n' "$args" | grep -Eq '(^|[[:space:]])--no-edit([[:space:]]|$)'; then
+    if printf '%s\n' "$args" | grep -Eq '(^|[[:space:]])--amend([[:space:]]|$)'; then
+      rev=HEAD
+    else  # finishing a merge/cherry-pick: git uses MERGE_MSG, not HEAD
+      mm="$(gitd rev-parse --git-path MERGE_MSG)"
+      [[ -n "$mm" && "$mm" != /* ]] && mm="$dir/$mm"
+      [[ -n "$mm" && -r "$mm" ]] && grep -Fq "$SIGNOFF" "$mm" && signed=yes
+    fi
+  fi
+  r="$(printf '%s\n' "$raw_args" | grep -oE "(^|[[:space:]])(-C|-c|--reuse-message|--reedit-message)(=|[[:space:]]+)${QV}" | tail -1 \
+    | sed -E 's/^[[:space:]]*(-C|-c|--reuse-message|--reedit-message)(=|[[:space:]]+)//')"
   [[ -n "$r" ]] && rev="$(unquote "$r")"
-  if [[ -n "$rev" ]] && gitd log -1 --format=%B "$rev" | grep -Fq "$SIGNOFF"; then signed=yes; fi
+  # The rev comes from the command text: a dashed token (`-C --output=/path`)
+  # would be an option to git log and write files before any approval. Reject
+  # it, resolve to a commit id first, and hand git log only that id.
+  if [[ -n "$rev" && "$rev" != -* ]]; then
+    sha="$(gitd rev-parse --verify --quiet "${rev}^{commit}")"
+    if [[ "$sha" =~ ^[0-9a-f]{40,64}$ ]] && gitd log -1 --format=%B "$sha" | grep -Fq "$SIGNOFF"; then signed=yes; fi
+  fi
 fi
 [[ -n "$signed" ]] || deny "this commit message has no '$SIGNOFF <mazze@mazzeleczzare.com>' line. mazze's CLAUDE.md requires it on every commit Claude writes, above the Co-Authored-By line. Add it to the message (or pass -s) and retry."
 
