@@ -94,14 +94,19 @@ The bootstrap sub-scripts (`bootstrap/lib/`) handle their domains independently;
 
 ### Hooks
 
-Seven hooks, each versioned in comments. Four aren't described below:
+Eight hooks, each versioned in comments. Five aren't described below:
 `credential-guard.sh` (PreToolUse on Bash, a fail-closed block on commands
 that print secrets), `ephemeral-guard.sh` (PreToolUse on Write|Edit|NotebookEdit|Bash:
 denies file writes into `/tmp`, the session scratchpad or `$TMPDIR`, attaches a
 non-blocking reminder to Bash commands that mention them; fails open),
 `rm-ask.sh` (PreToolUse on Bash: turns `rm` and `find -delete`/`-exec rm` into
 a permission prompt, replacing the `rm -i` alias that agent shells no longer
-get; fails toward asking; tests in `hooks/tests/rm-ask.test.sh`) and
+get; fails toward asking; tests in `hooks/tests/rm-ask.test.sh`),
+`commit-trailer-guard.sh` (PreToolUse on Bash: denies a `git commit` whose
+message lacks `Signed-off-by: Mazze LeCzzare Frazer`; heredoc bodies and
+multi-line strings count as text unless fed to a shell; fails closed for
+commits only; tests in
+`hooks/tests/commit-trailer-guard.test.sh`) and
 `claude-md-drift-on-start.sh`:
 
 **`claude-md-drift-on-start.sh`** (SessionStart, matcher: startup) — runs `skills/claude-md-audit/scan.py` on the project being opened. Silent when clean. On findings, injects them as context plus a one-line `systemMessage`. Flags only, never rewrites. Fails loud: a missing scanner or dependency shows a message instead of skipping silently.
